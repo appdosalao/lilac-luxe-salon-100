@@ -1,0 +1,573 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 328 100% 99%;
+    --foreground: 260 15% 15%;
+
+    --card: 328 50% 98%;
+    --card-foreground: 260 15% 15%;
+
+    --popover: 328 50% 98%;
+    --popover-foreground: 260 15% 15%;
+
+    --primary: 267 83% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 320 30% 95%;
+    --secondary-foreground: 260 15% 25%;
+
+    --muted: 320 20% 96%;
+    --muted-foreground: 260 10% 55%;
+
+    --accent: 285 85% 85%;
+    --accent-foreground: 260 20% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 320 20% 90%;
+    --input: 320 20% 92%;
+    --ring: 267 83% 58%;
+
+    --radius: 1rem;
+
+    /* Custom salon colors */
+    --lilac-primary: 267 83% 58%;
+    --lilac-light: 285 85% 85%;
+    --lilac-lighter: 300 100% 95%;
+    --pink-accent: 320 85% 75%;
+    --lavender: 260 60% 80%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(267 83% 58%), hsl(285 85% 85%));
+    --gradient-soft: linear-gradient(180deg, hsl(328 100% 99%), hsl(300 100% 95%));
+    --gradient-accent: linear-gradient(45deg, hsl(320 85% 75%), hsl(285 85% 85%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -8px hsl(267 83% 58% / 0.15);
+    --shadow-elegant: 0 8px 30px -12px hsl(267 83% 58% / 0.25);
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Touch-friendly default */
+    touch-action: manipulation;
+    /* Better text rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Safe area support for notched devices */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Better focus visibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  /* Prevent zoom on iOS inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@layer utilities {
+  /* Container responsive utility classes */
+  .container-responsive {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 clamp(0.75rem, 4vw, 2rem);
+  }
+
+  @media (min-width: 640px) {
+    .container-responsive {
+      max-width: 640px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container-responsive {
+      max-width: 768px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-responsive {
+      max-width: 1024px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-responsive {
+      max-width: 1200px;
+    }
+  }
+
+  /* Responsive grid utilities */
+  .grid-responsive {
+    display: grid;
+    gap: clamp(1rem, 4vw, 2rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .grid-responsive {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .grid-responsive-2 {
+    display: grid;
+    gap: clamp(1rem, 4vw, 2rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .grid-responsive-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .grid-responsive-3 {
+    display: grid;
+    gap: clamp(1rem, 4vw, 2rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive-3 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .grid-responsive-4 {
+    display: grid;
+    gap: clamp(1rem, 4vw, 2rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .grid-responsive-5 {
+    display: grid;
+    gap: clamp(1rem, 4vw, 2rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive-5 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive-5 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .grid-responsive-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  /* Responsive text utilities with better scaling */
+  .text-responsive-xs {
+    font-size: clamp(0.6rem, 2vw, 0.75rem);
+    line-height: 1.4;
+  }
+
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+    line-height: 1.5;
+  }
+
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    line-height: 1.6;
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 4vw, 1.125rem);
+    line-height: 1.6;
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.125rem, 5vw, 1.25rem);
+    line-height: 1.5;
+  }
+
+  .text-responsive-2xl {
+    font-size: clamp(1.25rem, 6vw, 1.5rem);
+    line-height: 1.4;
+  }
+
+  .text-responsive-3xl {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+    line-height: 1.3;
+  }
+
+  .text-responsive-4xl {
+    font-size: clamp(1.875rem, 8vw, 2.5rem);
+    line-height: 1.2;
+  }
+
+  /* Responsive spacing utilities */
+  .space-responsive {
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  .space-responsive-sm {
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .space-responsive-lg {
+    gap: clamp(1rem, 4vw, 2rem);
+  }
+
+  .space-responsive-xl {
+    gap: clamp(1.5rem, 5vw, 3rem);
+  }
+
+  /* Responsive padding utilities */
+  .p-responsive {
+    padding: clamp(0.75rem, 4vw, 1.5rem);
+  }
+
+  .p-responsive-sm {
+    padding: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .p-responsive-lg {
+    padding: clamp(1rem, 5vw, 2rem);
+  }
+
+  .p-responsive-xl {
+    padding: clamp(1.5rem, 6vw, 3rem);
+  }
+
+  /* Responsive margin utilities */
+  .m-responsive {
+    margin: clamp(0.75rem, 4vw, 1.5rem);
+  }
+
+  .m-responsive-sm {
+    margin: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .m-responsive-lg {
+    margin: clamp(1rem, 5vw, 2rem);
+  }
+
+  /* Touch-friendly button utilities */
+  .btn-touch {
+    min-height: clamp(44px, 10vw, 48px);
+    min-width: clamp(44px, 10vw, 48px);
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.25rem);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Form input responsive */
+  .input-responsive {
+    min-height: clamp(44px, 8vw, 48px);
+    padding: clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(1rem, 3vw, 1.125rem);
+    touch-action: manipulation;
+  }
+
+  /* Select input responsive */
+  .select-responsive {
+    min-height: clamp(44px, 8vw, 48px);
+    padding: clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(1rem, 3vw, 1.125rem);
+  }
+
+  /* Responsive overflow handling */
+  .overflow-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better table responsive */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0.5rem;
+  }
+
+  .table-responsive table {
+    min-width: 600px;
+    width: 100%;
+  }
+
+  /* Card responsive */
+  .card-responsive {
+    padding: clamp(1rem, 4vw, 1.5rem);
+    border-radius: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  /* Custom scrollbar for mobile */
+  .overflow-responsive::-webkit-scrollbar,
+  .table-responsive::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  .overflow-responsive::-webkit-scrollbar-track,
+  .table-responsive::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .overflow-responsive::-webkit-scrollbar-thumb,
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+
+  .overflow-responsive::-webkit-scrollbar-thumb:hover,
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+
+  /* Responsive image utilities */
+  .img-responsive {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+
+  /* Responsive video utilities */
+  .video-responsive {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+  }
+
+  /* Responsive flexbox utilities */
+  .flex-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  .flex-responsive-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  @media (min-width: 640px) {
+    .flex-responsive-row-sm {
+      flex-direction: row;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .flex-responsive-row-md {
+      flex-direction: row;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .flex-responsive-row-lg {
+      flex-direction: row;
+    }
+  }
+
+  /* Modal/Dialog responsive */
+  .dialog-responsive {
+    width: clamp(300px, 90vw, 500px);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Sidebar responsive breakpoints */
+  @media (max-width: 1023px) {
+    .sidebar-hide-mobile {
+      display: none;
+    }
+  }
+
+  /* Form field responsive utilities */
+  .form-field-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 2vw, 0.75rem);
+  }
+
+  @media (min-width: 768px) {
+    .form-field-responsive-row {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  /* Navigation responsive */
+  .nav-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  @media (min-width: 768px) {
+    .nav-responsive-row {
+      flex-direction: row;
+    }
+  }
+
+  /* Gap responsive utilities */
+  .gap-responsive {
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  .gap-responsive-sm {
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .gap-responsive-lg {
+    gap: clamp(1rem, 4vw, 2rem);
+  }
+
+  /* Mobile-first breakpoint utilities */
+  .mobile-hidden {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-hidden {
+      display: block;
+    }
+  }
+
+  .desktop-hidden {
+    display: block;
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-hidden {
+      display: none;
+    }
+  }
+
+  /* Responsive heights */
+  .h-responsive {
+    height: clamp(200px, 40vh, 400px);
+  }
+
+  .h-responsive-sm {
+    height: clamp(150px, 30vh, 300px);
+  }
+
+  .h-responsive-lg {
+    height: clamp(300px, 50vh, 600px);
+  }
+
+  /* Better mobile scrolling */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
