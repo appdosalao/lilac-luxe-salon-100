@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useAuditoriaSupabase } from './useAuditoriaSupabase';
 import { useAgendamentos } from './useAgendamentos';
 import { useServicos } from './useServicos';
 import { useLancamentos } from './useLancamentos';

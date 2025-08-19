@@ -329,6 +329,161 @@ export type Database = {
           },
         ]
       }
+      logs_sistema: {
+        Row: {
+          acao: string
+          categoria: string
+          created_at: string
+          descricao: string
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          ip_address: unknown | null
+          metadados: Json | null
+          nivel: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          acao: string
+          categoria: string
+          created_at?: string
+          descricao: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadados?: Json | null
+          nivel: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          acao?: string
+          categoria?: string
+          created_at?: string
+          descricao?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadados?: Json | null
+          nivel?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      problemas_auditoria: {
+        Row: {
+          campo: string | null
+          categoria: string
+          created_at: string
+          data_resolucao: string | null
+          descricao: string
+          entidade: string
+          entidade_id: string
+          id: string
+          relatorio_id: string
+          resolvido: boolean
+          sugestao: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor_atual: string | null
+          valor_esperado: string | null
+        }
+        Insert: {
+          campo?: string | null
+          categoria: string
+          created_at?: string
+          data_resolucao?: string | null
+          descricao: string
+          entidade: string
+          entidade_id: string
+          id?: string
+          relatorio_id: string
+          resolvido?: boolean
+          sugestao?: string | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+          valor_atual?: string | null
+          valor_esperado?: string | null
+        }
+        Update: {
+          campo?: string | null
+          categoria?: string
+          created_at?: string
+          data_resolucao?: string | null
+          descricao?: string
+          entidade?: string
+          entidade_id?: string
+          id?: string
+          relatorio_id?: string
+          resolvido?: boolean
+          sugestao?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor_atual?: string | null
+          valor_esperado?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "problemas_auditoria_relatorio_id_fkey"
+            columns: ["relatorio_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios_auditoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorios_auditoria: {
+        Row: {
+          created_at: string
+          data_execucao: string
+          estatisticas: Json
+          id: string
+          problemas_altos: number
+          problemas_baixos: number
+          problemas_criticos: number
+          problemas_medios: number
+          sugestoes_melhorias: string[] | null
+          total_problemas: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_execucao?: string
+          estatisticas?: Json
+          id?: string
+          problemas_altos?: number
+          problemas_baixos?: number
+          problemas_criticos?: number
+          problemas_medios?: number
+          sugestoes_melhorias?: string[] | null
+          total_problemas?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_execucao?: string
+          estatisticas?: Json
+          id?: string
+          problemas_altos?: number
+          problemas_baixos?: number
+          problemas_criticos?: number
+          problemas_medios?: number
+          sugestoes_melhorias?: string[] | null
+          total_problemas?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       retornos_novos: {
         Row: {
           created_at: string
