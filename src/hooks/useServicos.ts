@@ -243,6 +243,17 @@ export function useServicos() {
     setLoading(true);
     try {
       console.log('🗑️ Executando delete de serviço no Supabase...', id);
+      
+      // Primeiro, verificar se há agendamentos online usando este serviço
+      const { data: agendamentosOnline, error: checkError } = await supabase
+        .from('agendamentos_online')
+        .select('id, nome_completo')
+        .eq('servico_id', id);
+
+      if (checkError) {
+        console.error('❌ Erro ao verificar agendamentos online:', checkError);
+      }
+
       const { error } = await supabase
         .from('servicos')
         .delete()
@@ -257,6 +268,13 @@ export function useServicos() {
 
       console.log('✅ Serviço excluído com sucesso no banco');
       
+      // Informar sobre agendamentos online afetados
+      if (agendamentosOnline && agendamentosOnline.length > 0) {
+        toast.success(`Serviço excluído com sucesso! ${agendamentosOnline.length} agendamento(s) online foram atualizados.`);
+      } else {
+        toast.success('Serviço excluído com sucesso!');
+      }
+      
       // Atualizar lista local
       setServicos(prev => {
         const novaLista = prev.filter(s => s.id !== id);
@@ -264,7 +282,6 @@ export function useServicos() {
         return novaLista;
       });
       
-      toast.success('Serviço excluído com sucesso!');
       return true;
     } catch (error) {
       console.error('Erro ao excluir serviço:', error);
