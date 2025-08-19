@@ -224,6 +224,162 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes_backup: {
+        Row: {
+          backup_automatico: boolean
+          created_at: string
+          dia_backup: number | null
+          email_backup: string | null
+          frequencia_backup: string
+          hora_backup: string
+          id: string
+          incluir_agendamentos: boolean
+          incluir_clientes: boolean
+          incluir_cronogramas: boolean
+          incluir_financeiro: boolean
+          incluir_servicos: boolean
+          proximo_backup: string | null
+          ultimo_backup: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_automatico?: boolean
+          created_at?: string
+          dia_backup?: number | null
+          email_backup?: string | null
+          frequencia_backup?: string
+          hora_backup?: string
+          id?: string
+          incluir_agendamentos?: boolean
+          incluir_clientes?: boolean
+          incluir_cronogramas?: boolean
+          incluir_financeiro?: boolean
+          incluir_servicos?: boolean
+          proximo_backup?: string | null
+          ultimo_backup?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_automatico?: boolean
+          created_at?: string
+          dia_backup?: number | null
+          email_backup?: string | null
+          frequencia_backup?: string
+          hora_backup?: string
+          id?: string
+          incluir_agendamentos?: boolean
+          incluir_clientes?: boolean
+          incluir_cronogramas?: boolean
+          incluir_financeiro?: boolean
+          incluir_servicos?: boolean
+          proximo_backup?: string | null
+          ultimo_backup?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      configuracoes_horarios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          dia_semana: number
+          horario_abertura: string
+          horario_fechamento: string
+          id: string
+          intervalo_fim: string | null
+          intervalo_inicio: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          dia_semana: number
+          horario_abertura: string
+          horario_fechamento: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          dia_semana?: number
+          horario_abertura?: string
+          horario_fechamento?: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      configuracoes_notificacoes: {
+        Row: {
+          created_at: string
+          horario_fim_notificacoes: string
+          horario_inicio_notificacoes: string
+          id: string
+          lembrete_agendamento_minutos: number
+          lembrete_contas_fixas_dias: number
+          lembrete_vencimento_dias: number
+          notificacoes_email: boolean
+          notificacoes_push: boolean
+          notificacoes_som: boolean
+          notificar_cancelamentos: boolean
+          notificar_novos_agendamentos: boolean
+          notificar_pagamentos: boolean
+          notificar_reagendamentos: boolean
+          som_personalizado: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          horario_fim_notificacoes?: string
+          horario_inicio_notificacoes?: string
+          id?: string
+          lembrete_agendamento_minutos?: number
+          lembrete_contas_fixas_dias?: number
+          lembrete_vencimento_dias?: number
+          notificacoes_email?: boolean
+          notificacoes_push?: boolean
+          notificacoes_som?: boolean
+          notificar_cancelamentos?: boolean
+          notificar_novos_agendamentos?: boolean
+          notificar_pagamentos?: boolean
+          notificar_reagendamentos?: boolean
+          som_personalizado?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          horario_fim_notificacoes?: string
+          horario_inicio_notificacoes?: string
+          id?: string
+          lembrete_agendamento_minutos?: number
+          lembrete_contas_fixas_dias?: number
+          lembrete_vencimento_dias?: number
+          notificacoes_email?: boolean
+          notificacoes_push?: boolean
+          notificacoes_som?: boolean
+          notificar_cancelamentos?: boolean
+          notificar_novos_agendamentos?: boolean
+          notificar_pagamentos?: boolean
+          notificar_reagendamentos?: boolean
+          som_personalizado?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contas_fixas: {
         Row: {
           ativa: boolean
