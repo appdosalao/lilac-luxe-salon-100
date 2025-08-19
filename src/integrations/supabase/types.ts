@@ -150,13 +150,6 @@ export type Database = {
             referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "fk_servico"
-            columns: ["servico_id"]
-            isOneToOne: false
-            referencedRelation: "servicos"
-            referencedColumns: ["id"]
-          },
         ]
       }
       categorias_financeiras: {

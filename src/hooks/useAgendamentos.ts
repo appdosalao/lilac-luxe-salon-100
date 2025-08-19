@@ -4,8 +4,8 @@ import { useSupabaseClientes } from './useSupabaseClientes';
 
 export function useAgendamentos() {
   const agendamentosData = useSupabaseAgendamentos();
-  const { todosServicos: servicos, loading: servicosLoading } = useServicos();
-  const { clientes, loading: clientesLoading } = useSupabaseClientes();
+  const { todosServicos: servicos } = useServicos();
+  const { clientes } = useSupabaseClientes();
 
   // Verificar conflito de horário
   const verificarConflito = (agendamento: any, excluirId?: string) => {
@@ -32,25 +32,9 @@ export function useAgendamentos() {
   };
 
   const criarAgendamento = async (novoAgendamento: any) => {
-    // Verificar se clientes e serviços estão carregados
-    if (servicosLoading || clientesLoading) {
-      console.log('Aguardando carregamento de dados...');
-      return false;
-    }
-
-    // Verificar se o serviço existe
     const servico = servicos.find(s => s.id === novoAgendamento.servicoId);
     if (!servico) {
-      console.error('Serviço não encontrado:', novoAgendamento.servicoId);
-      console.log('Serviços disponíveis:', servicos.map(s => ({ id: s.id, nome: s.nome })));
-      return false;
-    }
-
-    // Verificar se o cliente existe
-    const cliente = clientes.find(c => c.id === novoAgendamento.clienteId);
-    if (!cliente) {
-      console.error('Cliente não encontrado:', novoAgendamento.clienteId);
-      console.log('Clientes disponíveis:', clientes.map(c => ({ id: c.id, nome: c.nomeCompleto })));
+      console.error('Serviço não encontrado');
       return false;
     }
 
@@ -67,7 +51,6 @@ export function useAgendamentos() {
       confirmado: novoAgendamento.confirmado ?? false,
     };
 
-    console.log('Criando agendamento:', agendamentoCompleto);
     return await agendamentosData.criarAgendamento(agendamentoCompleto);
   };
 
@@ -83,6 +66,5 @@ export function useAgendamentos() {
     verificarConflito,
     criarAgendamento,
     adicionarAgendamentosCronograma,
-    loading: agendamentosData.loading || servicosLoading || clientesLoading,
   };
 }
