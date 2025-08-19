@@ -1,7 +1,7 @@
 import { FC } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { SafeTooltipProvider } from "@/components/ui/safe-tooltip-provider";
+// import { Toaster } from "@/components/ui/toaster";
+// import { Toaster as Sonner } from "@/components/ui/sonner";
+// import { SafeTooltipProvider } from "@/components/ui/safe-tooltip-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
@@ -30,12 +30,12 @@ const App: FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SupabaseAuthProvider>
-          <SafeTooltipProvider>
-            <div id="app-container">
+          <div id="app-container">
             <NotificationProviderAvancado>
               <PWAProvider>
-                <Toaster />
-                <Sonner />
+                {/* Temporariamente removidos os Toasters que estão causando problemas */}
+                {/* <Toaster />
+                <Sonner /> */}
                 <Routes>
                   {/* Rotas públicas */}
                   <Route path="/login" element={<Login />} />
@@ -108,7 +108,6 @@ const App: FC = () => {
               </PWAProvider>
             </NotificationProviderAvancado>
             </div>
-          </SafeTooltipProvider>
         </SupabaseAuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
