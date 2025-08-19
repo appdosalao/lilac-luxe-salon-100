@@ -15,6 +15,11 @@ export function useSupabaseClientes() {
     
     setLoading(true);
     try {
+      // Primeiro, associar clientes de agendamentos online ao usuário
+      await supabase.rpc('associar_clientes_agendamento_online', {
+        p_user_id: user.id
+      });
+
       const { data, error } = await supabase
         .from('clientes')
         .select('*')

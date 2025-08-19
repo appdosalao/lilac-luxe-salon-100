@@ -946,6 +946,10 @@ export type Database = {
       }
     }
     Functions: {
+      associar_clientes_agendamento_online: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
