@@ -1,8 +1,8 @@
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, X } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';
-import { useState } from 'react';
 
 interface UpdatePromptProps {
   variant?: 'banner' | 'card' | 'floating';

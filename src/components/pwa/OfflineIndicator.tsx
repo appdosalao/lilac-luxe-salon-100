@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { WifiOff, Wifi } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';
 import { useEffect, useState } from 'react';
+import React from 'react';
 
 interface OfflineIndicatorProps {
   position?: 'top' | 'bottom';
