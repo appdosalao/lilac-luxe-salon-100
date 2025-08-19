@@ -242,6 +242,7 @@ export function useServicos() {
 
     setLoading(true);
     try {
+      console.log('🗑️ Executando delete de serviço no Supabase...', id);
       const { error } = await supabase
         .from('servicos')
         .delete()
@@ -249,13 +250,20 @@ export function useServicos() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao excluir serviço:', error);
-        toast.error('Erro ao excluir serviço');
+        console.error('❌ Erro do Supabase ao excluir serviço:', error);
+        toast.error('Erro ao excluir serviço: ' + error.message);
         return false;
       }
 
+      console.log('✅ Serviço excluído com sucesso no banco');
+      
       // Atualizar lista local
-      setServicos(prev => prev.filter(s => s.id !== id));
+      setServicos(prev => {
+        const novaLista = prev.filter(s => s.id !== id);
+        console.log('📝 Lista de serviços atualizada:', novaLista.length, 'serviços');
+        return novaLista;
+      });
+      
       toast.success('Serviço excluído com sucesso!');
       return true;
     } catch (error) {

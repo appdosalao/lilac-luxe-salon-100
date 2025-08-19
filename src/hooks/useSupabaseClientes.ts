@@ -204,13 +204,19 @@ export function useSupabaseClientes() {
   };
 
   const excluirCliente = async (id: string) => {
+    console.log('🔄 Iniciando exclusão do cliente:', id);
+    
     if (!user) {
+      console.error('❌ Usuário não autenticado');
       toast.error('Usuário não autenticado');
       return false;
     }
 
+    console.log('✅ Usuário autenticado:', user.id);
+
     setLoading(true);
     try {
+      console.log('🗑️ Executando delete no Supabase...');
       const { error } = await supabase
         .from('clientes')
         .delete()
@@ -218,13 +224,20 @@ export function useSupabaseClientes() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao excluir cliente:', error);
-        toast.error('Erro ao excluir cliente');
+        console.error('❌ Erro do Supabase ao excluir cliente:', error);
+        toast.error('Erro ao excluir cliente: ' + error.message);
         return false;
       }
 
+      console.log('✅ Cliente excluído com sucesso no banco');
+      
       // Atualizar lista local
-      setClientes(prev => prev.filter((c: any) => c.id !== id));
+      setClientes(prev => {
+        const novaLista = prev.filter((c: any) => c.id !== id);
+        console.log('📝 Lista atualizada:', novaLista.length, 'clientes');
+        return novaLista;
+      });
+      
       toast.success('Cliente excluído com sucesso!');
       return true;
     } catch (error) {

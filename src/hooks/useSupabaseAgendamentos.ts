@@ -464,6 +464,7 @@ export function useSupabaseAgendamentos() {
 
     setLoading(true);
     try {
+      console.log('🗑️ Executando delete de agendamento no Supabase...', id);
       const { error } = await supabase
         .from('agendamentos')
         .delete()
@@ -471,16 +472,17 @@ export function useSupabaseAgendamentos() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao excluir agendamento:', error);
-        toast.error('Erro ao excluir agendamento');
+        console.error('❌ Erro do Supabase ao excluir agendamento:', error);
+        toast.error('Erro ao excluir agendamento: ' + error.message);
         return false;
       }
 
+      console.log('✅ Agendamento excluído com sucesso no banco');
       await carregarAgendamentos();
       toast.success('Agendamento excluído com sucesso!');
       return true;
     } catch (error) {
-      console.error('Erro ao excluir agendamento:', error);
+      console.error('❌ Erro ao excluir agendamento:', error);
       toast.error('Erro ao excluir agendamento');
       return false;
     } finally {
