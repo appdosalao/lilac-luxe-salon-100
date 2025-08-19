@@ -64,11 +64,11 @@ export const usePWA = (): PWAState & PWAActions => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Service Worker - registrar e verificar atualizações
+    // Service Worker - verificar atualizações (sem re-registrar)
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.ready
         .then((registration) => {
-          console.log('Service Worker registrado com sucesso:', registration.scope);
+          console.log('Service Worker verificado no usePWA:', registration.scope);
           
           // Verificar atualizações
           registration.addEventListener('updatefound', () => {
@@ -83,7 +83,7 @@ export const usePWA = (): PWAState & PWAActions => {
           });
         })
         .catch((error) => {
-          console.log('Falha ao registrar Service Worker:', error);
+          console.log('Erro ao acessar Service Worker:', error);
         });
 
       // Listener para mensagens do Service Worker
