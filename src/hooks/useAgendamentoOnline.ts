@@ -178,7 +178,7 @@ export function useAgendamentoOnline() {
           historicoServicos: []
         };
         
-        cliente = await createCliente(novoCliente);
+        cliente = await createCliente();
         if (!cliente) {
           toast({
             title: "Erro ao criar cliente",
@@ -208,7 +208,7 @@ export function useAgendamentoOnline() {
         duracao: servico.duracao,
       };
 
-      const agendamentoCriado = await createAgendamento(agendamentoData);
+      const agendamentoCriado = await createAgendamento();
       
       if (!agendamentoCriado) {
         toast({

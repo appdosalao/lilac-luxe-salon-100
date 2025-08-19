@@ -136,7 +136,7 @@ export default function Financeiro() {
       {/* Avisos de Vencimento */}
       <AvisosVencimento 
         contasFixas={contasFixas} 
-        onPagarConta={pagarContaFixa}
+        onPagarConta={(contaId: string) => pagarContaFixa(contaId, 0)}
       />
 
       {/* Resumo Financeiro */}
