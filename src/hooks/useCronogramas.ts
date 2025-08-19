@@ -1,8 +1,8 @@
-import { useDatabase } from '@/hooks/useDatabase';
+import { useSupabaseCronogramas } from '@/hooks/useSupabaseCronogramas';
 import { Cronograma, Retorno } from '@/types/cronograma';
 
 export const useCronogramas = () => {
-  const { cronogramas, retornos, createCronograma, updateCronograma, deleteCronograma, loading } = useDatabase();
+  const { cronogramas, createCronograma, updateCronograma, deleteCronograma, loading } = useSupabaseCronogramas();
 
   const createCronogramaLocal = async (cronograma: Omit<Cronograma, 'id_cronograma' | 'created_at' | 'updated_at'>) => {
     return await createCronograma(cronograma);
@@ -27,19 +27,7 @@ export const useCronogramas = () => {
 };
 
 export const useRetornos = () => {
-  const { retornos, loading } = useDatabase();
-
-  const createRetorno = async (retorno: Omit<Retorno, 'id_retorno' | 'created_at' | 'updated_at'>) => {
-    // TODO: Implementar createRetorno no useDatabase
-    console.warn('Criação de retornos não implementada');
-    return null;
-  };
-
-  const updateRetorno = async (id: string, updates: Partial<Retorno>) => {
-    // TODO: Implementar updateRetorno no useDatabase
-    console.warn('Atualização de retornos não implementada');
-    return null;
-  };
+  const { retornos, createRetorno, updateRetorno, loading } = useSupabaseCronogramas();
 
   const marcarRetornoRealizado = async (id: string, idAgendamento?: string) => {
     await updateRetorno(id, { 
