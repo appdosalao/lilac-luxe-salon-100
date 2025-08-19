@@ -10,7 +10,6 @@ import { PWAProvider } from "./components/pwa/PWAProvider";
 // import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
-import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
 import Clientes from "./pages/Clientes";
@@ -39,9 +38,6 @@ const App: FC = () => {
                 {/* <Toaster />
                 <Sonner /> */}
                 <Routes>
-                  {/* Rota inicial pública */}
-                  <Route path="/" element={<Index />} />
-                  
                   {/* Rotas públicas */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/cadastro" element={<Cadastro />} />
@@ -51,7 +47,7 @@ const App: FC = () => {
                   <Route path="/agendar" element={<AgendamentoOnline />} />
                   
                   {/* Rotas protegidas com Layout */}
-                  <Route path="/dashboard" element={
+                  <Route path="/" element={
                     <ProtectedRoute>
                       <Layout>
                         <Dashboard />
