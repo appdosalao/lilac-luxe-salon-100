@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import { InstallPrompt } from './InstallPrompt';
 import { UpdatePrompt } from './UpdatePrompt';
@@ -14,10 +14,10 @@ interface PWAContextType {
   dismissInstall: () => void;
 }
 
-const PWAContext = React.createContext<PWAContextType | undefined>(undefined);
+const PWAContext = createContext<PWAContextType | undefined>(undefined);
 
 export const usePWAContext = () => {
-  const context = React.useContext(PWAContext);
+  const context = useContext(PWAContext);
   if (context === undefined) {
     throw new Error('usePWAContext deve ser usado dentro de PWAProvider');
   }
@@ -25,7 +25,7 @@ export const usePWAContext = () => {
 };
 
 interface PWAProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
   showInstallPrompt?: boolean;
   showUpdatePrompt?: boolean;
   showOfflineIndicator?: boolean;
