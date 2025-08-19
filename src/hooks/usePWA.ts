@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -23,13 +23,13 @@ interface PWAActions {
 }
 
 export const usePWA = (): PWAState & PWAActions => {
-  const [installPrompt, setInstallPrompt] = React.useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = React.useState(false);
-  const [isInstalled, setIsInstalled] = React.useState(false);
-  const [isOffline, setIsOffline] = React.useState(!navigator.onLine);
-  const [hasUpdate, setHasUpdate] = React.useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [hasUpdate, setHasUpdate] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Verificar se já está instalado
     const checkIfInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
