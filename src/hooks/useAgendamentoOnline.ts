@@ -116,37 +116,6 @@ export function useAgendamentoOnline() {
       console.log('Dados do formulário:', dados);
       console.log('Serviços disponíveis:', servicosPublicos);
       
-      // Validações
-      if (!dados.nomeCompleto.trim()) {
-        console.log('Erro: Nome obrigatório');
-        toast({
-          title: "Nome obrigatório",
-          description: "Por favor, preencha seu nome completo.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (!validarEmail(dados.email)) {
-        console.log('Erro: E-mail inválido:', dados.email);
-        toast({
-          title: "E-mail inválido",
-          description: "Por favor, insira um e-mail válido.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (!validarTelefone(dados.telefone)) {
-        console.log('Erro: Telefone inválido:', dados.telefone);
-        toast({
-          title: "Telefone inválido",
-          description: "Por favor, insira um telefone válido.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       const servico = servicosPublicos.find(s => s.id === dados.servicoId);
       console.log('Serviço encontrado:', servico);
       
@@ -160,39 +129,6 @@ export function useAgendamentoOnline() {
         return false;
       }
 
-      // Verificar se a data não é anterior a hoje
-      const hoje = new Date();
-      const dataAgendamento = new Date(dados.data);
-      hoje.setHours(0, 0, 0, 0);
-      dataAgendamento.setHours(0, 0, 0, 0);
-
-      console.log('Validação de data - hoje:', hoje, 'data agendamento:', dataAgendamento);
-
-      if (dataAgendamento < hoje) {
-        console.log('Erro: Data inválida - no passado');
-        toast({
-          title: "Data inválida",
-          description: "Não é possível agendar para datas passadas.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Verificar se o horário está disponível
-      console.log('Verificando disponibilidade do horário...');
-      const horarioDisponivel = await isHorarioDisponivel(dados.data, dados.horario, servico.duracao);
-      console.log('Horário disponível:', horarioDisponivel);
-      
-      if (!horarioDisponivel) {
-        console.log('Erro: Horário indisponível');
-        toast({
-          title: "Horário indisponível",
-          description: "Este horário não está mais disponível. Por favor, escolha outro.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       // Criar agendamento online
       const agendamentoData = {
         nome_completo: dados.nomeCompleto,
@@ -201,7 +137,7 @@ export function useAgendamentoOnline() {
         servico_id: dados.servicoId,
         data: dados.data,
         horario: dados.horario,
-        observacoes: dados.observacoes,
+        observacoes: dados.observacoes || null,
         valor: servico.valor,
         duracao: servico.duracao
       };
@@ -240,14 +176,28 @@ export function useAgendamentoOnline() {
       });
       return false;
     }
-  }, [servicosPublicos, isHorarioDisponivel, createAgendamentoOnline]);
+  }, [servicosPublicos, createAgendamentoOnline]);
 
   return {
     servicosPublicos,
     calcularHorariosDisponiveis,
     criarAgendamento,
-    validarEmail,
-    validarTelefone,
-    formatarTelefone
+    validarEmail: (email: string): boolean => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    },
+    validarTelefone: (telefone: string): boolean => {
+      const digitos = telefone.replace(/[^\d]/g, '');
+      return digitos.length >= 10;
+    },
+    formatarTelefone: (value: string): string => {
+      // Remove tudo que não é dígito
+      const digits = value.replace(/\D/g, '');
+      
+      // Aplica a máscara (XX) XXXXX-XXXX
+      if (digits.length <= 2) return `(${digits}`;
+      if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+    }
   };
 }

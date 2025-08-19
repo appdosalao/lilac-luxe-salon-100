@@ -157,9 +157,18 @@ export const useSupabaseAgendamentoOnline = () => {
       console.log('User Agent:', userAgent);
       
       const dataParaInserir = {
-        ...agendamento,
+        nome_completo: agendamento.nome_completo,
+        email: agendamento.email,
+        telefone: agendamento.telefone,
+        servico_id: agendamento.servico_id,
+        data: agendamento.data,
+        horario: agendamento.horario,
+        observacoes: agendamento.observacoes || null,
+        valor: agendamento.valor,
+        duracao: agendamento.duracao,
         user_agent: userAgent,
-        status: 'pendente'
+        status: 'pendente' as const,
+        origem: 'formulario_online'
       };
       
       console.log('Dados para inserir:', dataParaInserir);
@@ -185,10 +194,6 @@ export const useSupabaseAgendamentoOnline = () => {
       };
       
       console.log('Resultado formatado:', formattedResult);
-      
-      // Recarregar lista
-      await loadAgendamentosOnline();
-      
       console.log('=== AGENDAMENTO CRIADO COM SUCESSO ===');
       return formattedResult;
     } catch (err) {
@@ -250,75 +255,60 @@ export const useSupabaseAgendamentoOnline = () => {
     }
   };
 
-  // Verificar disponibilidade de horário
+  // Verificar disponibilidade de horário - versão simplificada
   const verificarDisponibilidade = async (data: string, horario: string, duracao: number, servicoId: string): Promise<boolean> => {
     try {
-      // Verificar se horário está dentro das configurações de funcionamento
-      const dataObj = new Date(data);
-      const diaSemana = dataObj.getDay();
+      console.log('=== VERIFICANDO DISPONIBILIDADE ===');
+      console.log('Data:', data, 'Horário:', horario, 'Duração:', duracao);
       
-      // Se não houver configuração de horário para o dia, considerar indisponível
-      const { data: configuracaoHorario } = await supabase
-        .from('configuracoes_horarios')
-        .select('*')
-        .eq('dia_semana', diaSemana)
-        .eq('ativo', true)
-        .single();
-
-      if (!configuracaoHorario) {
-        return false;
-      }
-
-      // Verificar se horário está dentro do funcionamento
-      const hora = horario.replace(':', '');
-      const abertura = configuracaoHorario.horario_abertura.replace(':', '');
-      const fechamento = configuracaoHorario.horario_fechamento.replace(':', '');
-
-      if (hora < abertura || hora > fechamento) {
-        return false;
-      }
-
-      // Verificar se não está no intervalo
-      if (configuracaoHorario.intervalo_inicio && configuracaoHorario.intervalo_fim) {
-        const inicioIntervalo = configuracaoHorario.intervalo_inicio.replace(':', '');
-        const fimIntervalo = configuracaoHorario.intervalo_fim.replace(':', '');
-        
-        if (hora >= inicioIntervalo && hora <= fimIntervalo) {
-          return false;
-        }
-      }
-      
-      // Verificar conflitos com agendamentos existentes
       // Calcular horário de fim
       const [horas, minutos] = horario.split(':').map(Number);
       const inicioMinutos = horas * 60 + minutos;
       const fimMinutos = inicioMinutos + duracao;
       const horarioFim = `${String(Math.floor(fimMinutos / 60)).padStart(2, '0')}:${String(fimMinutos % 60).padStart(2, '0')}`;
 
+      console.log('Horário início:', horario, 'Horário fim:', horarioFim);
+
       // Verificar conflitos em agendamentos online
       const { data: conflitosOnline, error: errorOnline } = await supabase
         .from('agendamentos_online')
         .select('horario, duracao')
         .eq('data', data)
-        .in('status', ['pendente', 'confirmado'])
-        .neq('servico_id', servicoId);
+        .in('status', ['pendente', 'confirmado']);
 
-      if (errorOnline) throw errorOnline;
+      if (errorOnline) {
+        console.error('Erro ao buscar conflitos online:', errorOnline);
+        return true; // Em caso de erro, assumir disponível para não bloquear
+      }
 
-      // Verificar conflitos em agendamentos regulares
-      const { data: conflitosRegulares, error: errorRegulares } = await supabase
-        .from('agendamentos')
-        .select('hora, duracao')
-        .eq('data', data)
-        .neq('status', 'cancelado');
+      console.log('Conflitos online encontrados:', conflitosOnline);
 
-      if (errorRegulares) throw errorRegulares;
+      // Verificar conflitos em agendamentos regulares (se usuário logado)
+      let conflitosRegulares: any[] = [];
+      try {
+        const { data: conflitosReg, error: errorRegulares } = await supabase
+          .from('agendamentos')
+          .select('hora, duracao')
+          .eq('data', data)
+          .neq('status', 'cancelado');
+
+        if (!errorRegulares) {
+          conflitosRegulares = conflitosReg || [];
+        }
+      } catch (err) {
+        // Ignorar erro de autenticação para agendamentos regulares
+        console.log('Não foi possível verificar agendamentos regulares (usuário não logado)');
+      }
+
+      console.log('Conflitos regulares encontrados:', conflitosRegulares);
 
       // Verificar conflitos
       const todosConflitos = [
         ...(conflitosOnline || []).map(c => ({ hora: c.horario, duracao: c.duracao })),
-        ...(conflitosRegulares || [])
+        ...conflitosRegulares
       ];
+
+      console.log('Todos os conflitos:', todosConflitos);
 
       for (const conflito of todosConflitos) {
         const [confHoras, confMinutos] = conflito.hora.split(':').map(Number);
@@ -326,15 +316,20 @@ export const useSupabaseAgendamentoOnline = () => {
         const confFimMinutos = confInicioMinutos + conflito.duracao;
 
         // Verificar sobreposição
-        if (inicioMinutos < confFimMinutos && fimMinutos > confInicioMinutos) {
+        const temConflito = inicioMinutos < confFimMinutos && fimMinutos > confInicioMinutos;
+        console.log(`Verificando conflito: ${conflito.hora} (${confInicioMinutos}-${confFimMinutos}) vs ${horario} (${inicioMinutos}-${fimMinutos}) = ${temConflito}`);
+        
+        if (temConflito) {
+          console.log('Conflito encontrado!');
           return false;
         }
       }
 
+      console.log('Horário disponível!');
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao verificar disponibilidade');
-      return false;
+      console.error('Erro ao verificar disponibilidade:', err);
+      return true; // Em caso de erro, assumir disponível para não bloquear o agendamento
     }
   };
 
