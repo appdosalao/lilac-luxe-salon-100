@@ -249,6 +249,12 @@ export default function AgendamentosList({
                           {statusConfig[agendamento.status].label}
                         </Badge>
                         
+                        {agendamento.origem === 'online' && (
+                          <Badge className="bg-purple-500 text-white text-xs">
+                            📱 Online
+                          </Badge>
+                        )}
+                        
                         <Badge 
                           className={`${
                             agendamento.statusPagamento === 'pago' ? 'bg-green-500' :

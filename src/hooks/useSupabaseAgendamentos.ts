@@ -5,10 +5,27 @@ import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
 import { toast } from 'sonner';
 import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
 
+interface AgendamentoOnlineData {
+  id: string;
+  nome_completo: string;
+  email: string;
+  telefone: string;
+  servico_id: string;
+  data: string;
+  horario: string;
+  observacoes?: string;
+  status: 'pendente' | 'confirmado' | 'cancelado' | 'convertido';
+  valor: number;
+  duracao: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export function useSupabaseAgendamentos() {
   const { user } = useSupabaseAuth();
   const supabaseConfig = useSupabaseConfiguracoes();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [agendamentosOnline, setAgendamentosOnline] = useState<AgendamentoOnlineData[]>([]);
   const [loading, setLoading] = useState(false);
   const [filtros, setFiltros] = useState<AgendamentoFiltros>({});
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -21,11 +38,10 @@ export function useSupabaseAgendamentos() {
     return supabaseConfig.verificarDisponibilidade(diaSemana, hora);
   };
 
-  // Carregar agendamentos do Supabase
-  const carregarAgendamentos = async () => {
-    if (!user) return;
+  // Carregar agendamentos regulares do Supabase
+  const carregarAgendamentosRegulares = async (): Promise<Agendamento[]> => {
+    if (!user) return [];
     
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('agendamentos')
@@ -35,36 +51,110 @@ export function useSupabaseAgendamentos() {
         .order('hora');
 
       if (error) {
-        console.error('Erro ao carregar agendamentos:', error);
-        toast.error('Erro ao carregar agendamentos');
-        return;
+        console.error('Erro ao carregar agendamentos regulares:', error);
+        return [];
       }
 
-      // Para agora, usar dados básicos sem joins
-      const agendamentosFormatados: any[] = (data || []).map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         clienteId: item.cliente_id,
-        clienteNome: 'Cliente', // Será carregado posteriormente
+        clienteNome: 'Cliente', // Será resolvido depois
         servicoId: item.servico_id,
-        servicoNome: 'Serviço', // Será carregado posteriormente
+        servicoNome: 'Serviço', // Será resolvido depois
         data: item.data,
         hora: item.hora,
         duracao: item.duracao,
         valor: parseFloat(item.valor?.toString() || '0'),
         valorPago: parseFloat(item.valor_pago?.toString() || '0'),
         valorDevido: parseFloat(item.valor_devido?.toString() || '0'),
-        formaPagamento: item.forma_pagamento,
-        statusPagamento: item.status_pagamento,
-        status: item.status,
-        origem: item.origem,
-        origem_cronograma: false, // Adicionado campo obrigatório
+        formaPagamento: (item.forma_pagamento as 'dinheiro' | 'cartao' | 'pix' | 'fiado') || 'fiado',
+        statusPagamento: (item.status_pagamento as 'pago' | 'parcial' | 'em_aberto') || 'em_aberto',
+        status: (item.status as 'agendado' | 'concluido' | 'cancelado') || 'agendado',
+        origem: (item.origem as 'manual' | 'cronograma' | 'online') || 'manual',
+        origem_cronograma: false,
         confirmado: item.confirmado,
         observacoes: item.observacoes || undefined,
         createdAt: item.created_at,
         updatedAt: item.updated_at
       }));
+    } catch (error) {
+      console.error('Erro ao carregar agendamentos regulares:', error);
+      return [];
+    }
+  };
 
-      setAgendamentos(agendamentosFormatados);
+  // Carregar agendamentos online
+  const carregarAgendamentosOnline = async (): Promise<AgendamentoOnlineData[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('agendamentos_online')
+        .select('*')
+        .in('status', ['pendente', 'confirmado'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar agendamentos online:', error);
+        return [];
+      }
+
+      return (data || []).map(item => ({
+        id: item.id,
+        nome_completo: item.nome_completo,
+        email: item.email,
+        telefone: item.telefone,
+        servico_id: item.servico_id,
+        data: item.data,
+        horario: item.horario,
+        observacoes: item.observacoes,
+        status: item.status as 'pendente' | 'confirmado' | 'cancelado' | 'convertido',
+        valor: parseFloat(item.valor?.toString() || '0'),
+        duracao: item.duracao,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar agendamentos online:', error);
+      return [];
+    }
+  };
+
+  // Converter agendamento online para o formato de agendamento regular
+  const converterAgendamentoOnline = (agendamentoOnline: AgendamentoOnlineData): Agendamento => {
+    return {
+      id: `online_${agendamentoOnline.id}`,
+      clienteId: '', // Não há cliente cadastrado
+      clienteNome: agendamentoOnline.nome_completo,
+      servicoId: agendamentoOnline.servico_id,
+      servicoNome: 'Serviço Online', // Será resolvido depois
+      data: agendamentoOnline.data,
+      hora: agendamentoOnline.horario,
+      duracao: agendamentoOnline.duracao,
+      valor: agendamentoOnline.valor,
+      valorPago: 0,
+      valorDevido: agendamentoOnline.valor,
+      formaPagamento: 'fiado' as const,
+      statusPagamento: 'em_aberto' as const,
+      status: agendamentoOnline.status === 'confirmado' ? 'agendado' as const : 'agendado' as const,
+      origem: 'online' as const,
+      origem_cronograma: false,
+      confirmado: agendamentoOnline.status === 'confirmado',
+      observacoes: agendamentoOnline.observacoes,
+      createdAt: agendamentoOnline.created_at,
+      updatedAt: agendamentoOnline.updated_at
+    };
+  };
+
+  // Carregar todos os agendamentos
+  const carregarAgendamentos = async () => {
+    setLoading(true);
+    try {
+      const [agendamentosReg, agendamentosOnl] = await Promise.all([
+        carregarAgendamentosRegulares(),
+        carregarAgendamentosOnline()
+      ]);
+
+      setAgendamentos(agendamentosReg);
+      setAgendamentosOnline(agendamentosOnl);
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
       toast.error('Erro ao carregar agendamentos');
@@ -73,13 +163,57 @@ export function useSupabaseAgendamentos() {
     }
   };
 
+  // Combinar agendamentos regulares e online
+  const agendamentosCombinados = useMemo(() => {
+    const agendamentosOnlineConvertidos = agendamentosOnline.map(converterAgendamentoOnline);
+    return [...agendamentos, ...agendamentosOnlineConvertidos];
+  }, [agendamentos, agendamentosOnline]);
+
   useEffect(() => {
     carregarAgendamentos();
+
+    // Setup real-time subscriptions para agendamentos online
+    const channelOnline = supabase
+      .channel('agendamentos-online-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agendamentos_online'
+        },
+        () => {
+          carregarAgendamentos();
+        }
+      )
+      .subscribe();
+
+    // Setup real-time subscriptions para agendamentos regulares
+    const channelRegular = supabase
+      .channel('agendamentos-regular-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agendamentos',
+          filter: user ? `user_id=eq.${user.id}` : undefined
+        },
+        () => {
+          carregarAgendamentos();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channelOnline);
+      supabase.removeChannel(channelRegular);
+    };
   }, [user]);
 
-  // Filtrar agendamentos
+  // Filtrar agendamentos combinados
   const agendamentosFiltrados = useMemo(() => {
-    let resultado = [...agendamentos];
+    let resultado = [...agendamentosCombinados];
 
     if (filtros.data) {
       resultado = resultado.filter(ag => ag.data === filtros.data);
@@ -117,7 +251,7 @@ export function useSupabaseAgendamentos() {
     });
 
     return resultado;
-  }, [agendamentos, filtros]);
+  }, [agendamentosCombinados, filtros]);
 
   // Paginação
   const totalPaginas = Math.ceil(agendamentosFiltrados.length / itensPorPagina);
@@ -126,6 +260,65 @@ export function useSupabaseAgendamentos() {
     const fim = inicio + itensPorPagina;
     return agendamentosFiltrados.slice(inicio, fim);
   }, [agendamentosFiltrados, paginaAtual, itensPorPagina]);
+
+  // Converter agendamento online para agendamento regular
+  const converterAgendamentoOnlineParaRegular = async (agendamentoOnlineId: string) => {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('converter_agendamento_online', {
+        agendamento_online_id: agendamentoOnlineId,
+        user_id: user.id
+      });
+
+      if (error) {
+        console.error('Erro ao converter agendamento:', error);
+        toast.error('Erro ao converter agendamento');
+        return false;
+      }
+
+      await carregarAgendamentos();
+      toast.success('Agendamento convertido com sucesso!');
+      return true;
+    } catch (error) {
+      console.error('Erro ao converter agendamento:', error);
+      toast.error('Erro ao converter agendamento');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirmar agendamento online
+  const confirmarAgendamentoOnline = async (agendamentoOnlineId: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('agendamentos_online')
+        .update({ status: 'confirmado' })
+        .eq('id', agendamentoOnlineId);
+
+      if (error) {
+        console.error('Erro ao confirmar agendamento:', error);
+        toast.error('Erro ao confirmar agendamento');
+        return false;
+      }
+
+      await carregarAgendamentos();
+      toast.success('Agendamento confirmado!');
+      return true;
+    } catch (error) {
+      console.error('Erro ao confirmar agendamento:', error);
+      toast.error('Erro ao confirmar agendamento');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const criarAgendamento = async (novoAgendamento: any) => {
     if (!user) {
@@ -169,7 +362,6 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Recarregar lista
       await carregarAgendamentos();
       toast.success('Agendamento criado com sucesso!');
       return true;
@@ -186,6 +378,12 @@ export function useSupabaseAgendamentos() {
     if (!user) {
       toast.error('Usuário não autenticado');
       return false;
+    }
+
+    // Verificar se é um agendamento online
+    if (id.startsWith('online_')) {
+      const agendamentoOnlineId = id.replace('online_', '');
+      return await confirmarAgendamentoOnline(agendamentoOnlineId);
     }
 
     setLoading(true);
@@ -218,7 +416,6 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Recarregar lista
       await carregarAgendamentos();
       toast.success('Agendamento atualizado com sucesso!');
       return true;
@@ -237,6 +434,34 @@ export function useSupabaseAgendamentos() {
       return false;
     }
 
+    // Verificar se é um agendamento online
+    if (id.startsWith('online_')) {
+      const agendamentoOnlineId = id.replace('online_', '');
+      setLoading(true);
+      try {
+        const { error } = await supabase
+          .from('agendamentos_online')
+          .update({ status: 'cancelado' })
+          .eq('id', agendamentoOnlineId);
+
+        if (error) {
+          console.error('Erro ao cancelar agendamento online:', error);
+          toast.error('Erro ao cancelar agendamento');
+          return false;
+        }
+
+        await carregarAgendamentos();
+        toast.success('Agendamento cancelado com sucesso!');
+        return true;
+      } catch (error) {
+        console.error('Erro ao cancelar agendamento online:', error);
+        toast.error('Erro ao cancelar agendamento');
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -251,7 +476,6 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Recarregar lista
       await carregarAgendamentos();
       toast.success('Agendamento excluído com sucesso!');
       return true;
@@ -265,6 +489,9 @@ export function useSupabaseAgendamentos() {
   };
 
   const cancelarAgendamento = async (id: string) => {
+    if (id.startsWith('online_')) {
+      return await excluirAgendamento(id);
+    }
     return await atualizarAgendamento(id, { status: 'cancelado' });
   };
 
@@ -272,7 +499,7 @@ export function useSupabaseAgendamentos() {
     loading,
     agendamentos: agendamentosPaginados,
     agendamentosFiltrados,
-    todosAgendamentos: agendamentos,
+    todosAgendamentos: agendamentosCombinados,
     filtros,
     setFiltros,
     paginaAtual,
@@ -283,5 +510,7 @@ export function useSupabaseAgendamentos() {
     excluirAgendamento,
     cancelarAgendamento,
     recarregar: carregarAgendamentos,
+    converterAgendamentoOnlineParaRegular,
+    confirmarAgendamentoOnline
   };
 }
