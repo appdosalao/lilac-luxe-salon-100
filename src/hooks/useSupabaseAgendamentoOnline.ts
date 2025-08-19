@@ -149,20 +149,34 @@ export const useSupabaseAgendamentoOnline = () => {
   // Criar agendamento online (público - sem autenticação)
   const createAgendamentoOnline = async (agendamento: NovoAgendamentoOnline): Promise<AgendamentoOnline | null> => {
     try {
+      console.log('=== INICIANDO CRIAÇÃO DE AGENDAMENTO ONLINE ===');
+      console.log('Dados recebidos:', agendamento);
+      
       // Capturar informações do browser
       const userAgent = navigator.userAgent;
+      console.log('User Agent:', userAgent);
+      
+      const dataParaInserir = {
+        ...agendamento,
+        user_agent: userAgent,
+        status: 'pendente'
+      };
+      
+      console.log('Dados para inserir:', dataParaInserir);
       
       const { data, error } = await supabase
         .from('agendamentos_online')
-        .insert({
-          ...agendamento,
-          user_agent: userAgent,
-          status: 'pendente'
-        })
+        .insert(dataParaInserir)
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('Resposta do Supabase - data:', data);
+      console.log('Resposta do Supabase - error:', error);
+
+      if (error) {
+        console.error('Erro detalhado do Supabase:', error);
+        throw error;
+      }
       
       const formattedResult: AgendamentoOnline = {
         ...data,
@@ -170,12 +184,19 @@ export const useSupabaseAgendamentoOnline = () => {
         ip_address: data.ip_address as string
       };
       
+      console.log('Resultado formatado:', formattedResult);
+      
       // Recarregar lista
       await loadAgendamentosOnline();
       
+      console.log('=== AGENDAMENTO CRIADO COM SUCESSO ===');
       return formattedResult;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar agendamento online');
+      console.error('=== ERRO AO CRIAR AGENDAMENTO ===');
+      console.error('Erro completo:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar agendamento online';
+      console.error('Mensagem de erro:', errorMessage);
+      setError(errorMessage);
       throw err;
     }
   };
@@ -320,14 +341,23 @@ export const useSupabaseAgendamentoOnline = () => {
   // Obter serviços públicos (sem user_id)
   const getServicosPublicos = async () => {
     try {
+      console.log('=== CARREGANDO SERVIÇOS PÚBLICOS ===');
       const { data, error } = await supabase
         .from('servicos')
         .select('id, nome, valor, duracao, descricao')
         .order('nome');
 
-      if (error) throw error;
+      console.log('Resposta serviços - data:', data);
+      console.log('Resposta serviços - error:', error);
+
+      if (error) {
+        console.error('Erro ao carregar serviços:', error);
+        throw error;
+      }
+      console.log('Serviços carregados com sucesso:', data?.length, 'serviços');
       return data || [];
     } catch (err) {
+      console.error('Erro completo ao carregar serviços:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar serviços');
       return [];
     }
