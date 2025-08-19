@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Edit, Trash2, Play, Pause, CheckCircle } from "lucide-react";
 import { useCronogramas } from "@/hooks/useCronogramas";
 import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
-import { useDatabase } from "@/hooks/useDatabase";
+import { useServicos } from "@/hooks/useServicos";
 import { toast } from "sonner";
 import CronogramaForm from "./CronogramaForm";
 
@@ -17,7 +17,7 @@ export default function CronogramasList() {
 
   const { cronogramas, loading, deleteCronograma, createMultipleAgendamentos } = useCronogramas();
   const { clientes } = useSupabaseClientes();
-  const { servicos } = useDatabase();
+  const { todosServicos: servicos } = useServicos();
 
   const handleDelete = async (id: string) => {
     try {

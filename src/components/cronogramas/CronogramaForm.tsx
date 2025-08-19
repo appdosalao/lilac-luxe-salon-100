@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cronograma } from "@/types/cronograma";
 import { useCronogramas } from "@/hooks/useCronogramas";
 import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
-import { useDatabase } from "@/hooks/useDatabase";
+import { useServicos } from "@/hooks/useServicos";
 import { toast } from "sonner";
 
 interface CronogramaFormProps {
@@ -35,7 +35,7 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
 
   const { createCronograma, updateCronograma, loading } = useCronogramas();
   const { clientes } = useSupabaseClientes();
-  const { servicos } = useDatabase();
+  const { todosServicos: servicos } = useServicos();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
