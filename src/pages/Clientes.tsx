@@ -40,12 +40,30 @@ export default function Clientes() {
   const clientesAtivas = clientes.length;
   const novasEsteMes = clientes.filter(cliente => {
     if (!cliente.ultimaVisita) return false;
-    const agora = new Date();
-    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
-    const ultimaVisita = typeof cliente.ultimaVisita === 'string' 
-      ? new Date(cliente.ultimaVisita) 
-      : cliente.ultimaVisita;
-    return ultimaVisita >= inicioMes;
+    
+    try {
+      const agora = new Date();
+      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+      
+      let ultimaVisita: Date;
+      if (typeof cliente.ultimaVisita === 'string') {
+        ultimaVisita = new Date(cliente.ultimaVisita);
+      } else if (cliente.ultimaVisita instanceof Date) {
+        ultimaVisita = cliente.ultimaVisita;
+      } else {
+        return false;
+      }
+      
+      // Verificar se a data é válida
+      if (isNaN(ultimaVisita.getTime())) {
+        return false;
+      }
+      
+      return ultimaVisita >= inicioMes;
+    } catch (error) {
+      console.error('Erro ao processar data da última visita:', error);
+      return false;
+    }
   }).length;
 
   const totalServicos = clientes.reduce((total, cliente) => 

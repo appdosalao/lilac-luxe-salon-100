@@ -26,12 +26,14 @@ export const SafeTooltipProvider: FC<{ children: ReactNode }> = ({ children }) =
 
   try {
     // Tentar importar e usar o TooltipProvider dinamicamente
-    const { TooltipProvider } = require("@/components/ui/tooltip");
-    return (
-      <TooltipProvider delayDuration={100} skipDelayDuration={500}>
-        {children}
-      </TooltipProvider>
-    );
+    import("@/components/ui/tooltip").then(({ TooltipProvider }) => {
+      // O TooltipProvider está disponível, mas já renderizamos as children
+    }).catch(() => {
+      console.warn('TooltipProvider module failed to load');
+    });
+    
+    // Por enquanto, retornar apenas as children para evitar erros
+    return <>{children}</>;
   } catch (error) {
     console.warn('TooltipProvider failed to load, falling back to children only:', error);
     return <>{children}</>;

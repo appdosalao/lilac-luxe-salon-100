@@ -171,9 +171,16 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                            {cliente.servicoFrequente || 'Não definido'}
                          </Badge>
                       </TableCell>
-                       <TableCell className="text-responsive-xs">
-                         {cliente.ultimaVisita ? format(new Date(cliente.ultimaVisita), "dd/MM/yyyy", { locale: ptBR }) : 'Não definido'}
-                       </TableCell>
+                        <TableCell className="text-responsive-xs">
+                          {cliente.ultimaVisita ? (() => {
+                            try {
+                              const data = new Date(cliente.ultimaVisita);
+                              return isNaN(data.getTime()) ? 'Data inválida' : format(data, "dd/MM/yyyy", { locale: ptBR });
+                            } catch (error) {
+                              return 'Data inválida';
+                            }
+                          })() : 'Não definido'}
+                        </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
                           <Button
@@ -287,7 +294,14 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                            {cliente.servicoFrequente || 'Não definido'}
                          </Badge>
                          <span className="text-responsive-xs text-muted-foreground">
-                           {cliente.ultimaVisita ? format(new Date(cliente.ultimaVisita), "dd/MM/yyyy", { locale: ptBR }) : 'Não definido'}
+                            {cliente.ultimaVisita ? (() => {
+                              try {
+                                const data = new Date(cliente.ultimaVisita);
+                                return isNaN(data.getTime()) ? 'Data inválida' : format(data, "dd/MM/yyyy", { locale: ptBR });
+                              } catch (error) {
+                                return 'Data inválida';
+                              }
+                            })() : 'Não definido'}
                          </span>
                       </div>
 

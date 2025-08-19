@@ -96,7 +96,14 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
                 <Calendar className="h-4 w-4 text-lilac-primary" />
                 <span>Última visita: </span>
                 <Badge variant="secondary">
-                  {format(cliente.ultimaVisita, "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  {cliente.ultimaVisita ? (() => {
+                    try {
+                      const data = typeof cliente.ultimaVisita === 'string' ? new Date(cliente.ultimaVisita) : cliente.ultimaVisita;
+                      return isNaN(data.getTime()) ? 'Data inválida' : format(data, "dd 'de' MMMM, yyyy", { locale: ptBR });
+                    } catch (error) {
+                      return 'Data inválida';
+                    }
+                  })() : 'Não informado'}
                 </Badge>
               </div>
 
