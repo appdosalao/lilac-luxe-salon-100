@@ -8,34 +8,18 @@ export const useSupabaseCronogramas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar cronogramas
+  // Carregar cronogramas com dados relacionados
   const loadCronogramas = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('cronogramas_novos')
+        .from('cronogramas_completos')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedCronogramas: Cronograma[] = (data || []).map(item => ({
-        id_cronograma: item.id_cronograma,
-        cliente_id: item.cliente_id,
-        cliente_nome: item.cliente_nome,
-        servico_id: item.servico_id,
-        tipo_servico: item.tipo_servico,
-        data_inicio: item.data_inicio,
-        hora_inicio: item.hora_inicio,
-        duracao_minutos: item.duracao_minutos,
-        recorrencia: item.recorrencia as 'Semanal' | 'Quinzenal' | 'Mensal' | 'Personalizada',
-        intervalo_dias: item.intervalo_dias,
-        observacoes: item.observacoes,
-        status: item.status as 'ativo' | 'cancelado' | 'concluido',
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-      }));
-
+      const formattedCronogramas: any[] = data || [];
       setCronogramas(formattedCronogramas);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar cronogramas');
@@ -44,27 +28,17 @@ export const useSupabaseCronogramas = () => {
     }
   };
 
-  // Carregar retornos
+  // Carregar retornos com dados relacionados
   const loadRetornos = async () => {
     try {
       const { data, error } = await supabase
-        .from('retornos_novos')
+        .from('retornos_completos')
         .select('*')
         .order('data_retorno', { ascending: true });
 
       if (error) throw error;
 
-      const formattedRetornos: Retorno[] = (data || []).map(item => ({
-        id_retorno: item.id_retorno,
-        id_cliente: item.id_cliente,
-        id_cronograma: item.id_cronograma,
-        data_retorno: item.data_retorno,
-        status: item.status as 'Pendente' | 'Realizado' | 'Cancelado',
-        id_agendamento_retorno: item.id_agendamento_retorno,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-      }));
-
+      const formattedRetornos: any[] = data || [];
       setRetornos(formattedRetornos);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar retornos');
@@ -181,9 +155,80 @@ export const useSupabaseCronogramas = () => {
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadCronogramas();
     loadRetornos();
+
+    // Configurar real-time updates para cronogramas
+    const cronogramasChannel = supabase
+      .channel('cronogramas-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cronogramas_novos'
+        },
+        () => {
+          loadCronogramas();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clientes'
+        },
+        () => {
+          loadCronogramas();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'servicos'
+        },
+        () => {
+          loadCronogramas();
+        }
+      )
+      .subscribe();
+
+    // Configurar real-time updates para retornos
+    const retornosChannel = supabase
+      .channel('retornos-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'retornos_novos'
+        },
+        () => {
+          loadRetornos();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agendamentos'
+        },
+        () => {
+          loadRetornos();
+        }
+      )
+      .subscribe();
+
+    // Cleanup nas subscriptions
+    return () => {
+      supabase.removeChannel(cronogramasChannel);
+      supabase.removeChannel(retornosChannel);
+    };
   }, []);
 
   return {
