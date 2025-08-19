@@ -1,4 +1,9 @@
-import { useState, useEffect, ReactNode } from "react"
+import * as React from "react"
+
+const { useState, useEffect } = React || {
+  useState: () => [null, () => {}],
+  useEffect: () => {}
+};
 
 import type {
   ToastActionElement,
@@ -10,8 +15,8 @@ const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
-  title?: ReactNode
-  description?: ReactNode
+  title?: React.ReactNode
+  description?: React.ReactNode
   action?: ToastActionElement
 }
 
@@ -90,8 +95,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -169,9 +172,21 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
+  // Verificação de segurança para useState
+  if (typeof useState !== 'function') {
+    console.warn('useState não está disponível no useToast');
+    return {
+      toasts: [],
+      toast: () => ({ id: '', dismiss: () => {}, update: () => {} }),
+      dismiss: () => {}
+    };
+  }
+  
   const [state, setState] = useState<State>(memoryState)
 
   useEffect(() => {
+    if (typeof useEffect !== 'function') return;
+    
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)
