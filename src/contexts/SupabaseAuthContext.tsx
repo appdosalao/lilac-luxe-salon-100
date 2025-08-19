@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as React from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
@@ -16,15 +16,15 @@ interface SupabaseAuthContextType {
   updateProfile: (updates: Partial<Usuario>) => Promise<{ error: any }>;
 }
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
+const SupabaseAuthContext = React.createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
+  const [usuario, setUsuario] = React.useState<Usuario | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -211,7 +211,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export const useSupabaseAuth = () => {
-  const context = useContext(SupabaseAuthContext);
+  const context = React.useContext(SupabaseAuthContext);
   if (context === undefined) {
     throw new Error('useSupabaseAuth deve ser usado dentro de SupabaseAuthProvider');
   }
