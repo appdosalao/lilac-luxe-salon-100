@@ -963,6 +963,10 @@ export type Database = {
         }
         Returns: string
       }
+      test_delete_permissions: {
+        Args: { record_id: string; table_name: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

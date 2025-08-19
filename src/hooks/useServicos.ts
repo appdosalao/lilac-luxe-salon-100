@@ -242,9 +242,37 @@ export function useServicos() {
 
     setLoading(true);
     try {
-      console.log('🗑️ Executando delete de serviço no Supabase...', id);
+      console.log('🗑️ Iniciando exclusão de serviço:', id, 'Usuário:', user.id);
       
-      // Primeiro, verificar se há agendamentos online usando este serviço
+      // Primeiro, verificar permissões usando nossa função de diagnóstico
+      const { data: permissionCheck, error: permError } = await supabase
+        .rpc('test_delete_permissions', { 
+          table_name: 'servicos', 
+          record_id: id 
+        });
+
+      if (permError) {
+        console.error('❌ Erro ao verificar permissões:', permError);
+      } else {
+        console.log('🔍 Verificação de permissões:', permissionCheck);
+        
+        // Garantir que temos uma resposta válida e fazer o cast para o tipo esperado
+        const checkResult = permissionCheck as any;
+        if (checkResult && typeof checkResult === 'object') {
+          if (!checkResult.can_delete) {
+            if (!checkResult.record_exists) {
+              toast.error('Serviço não encontrado');
+              return false;
+            }
+            if (!checkResult.user_owns_record) {
+              toast.error('Você não tem permissão para excluir este serviço');
+              return false;
+            }
+          }
+        }
+      }
+      
+      // Verificar se há agendamentos online usando este serviço
       const { data: agendamentosOnline, error: checkError } = await supabase
         .from('agendamentos_online')
         .select('id, nome_completo')
@@ -254,6 +282,7 @@ export function useServicos() {
         console.error('❌ Erro ao verificar agendamentos online:', checkError);
       }
 
+      // Executar a exclusão
       const { error } = await supabase
         .from('servicos')
         .delete()
