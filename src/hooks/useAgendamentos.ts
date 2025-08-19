@@ -1,84 +1,42 @@
-import { useState, useMemo } from 'react';
-import { AgendamentoFiltros } from '@/types/agendamento';
-import { useDatabase } from '@/hooks/useDatabase';
+import { useSupabaseAgendamentos } from './useSupabaseAgendamentos';
+import { useServicos } from './useServicos';
+import { useSupabaseClientes } from './useSupabaseClientes';
 
 export function useAgendamentos() {
-  const [filtros, setFiltros] = useState<AgendamentoFiltros>({});
-  const [paginaAtual, setPaginaAtual] = useState(1);
-  const [itensPorPagina] = useState(10);
-  
-  const {
-    agendamentos: todosAgendamentos,
-    clientes,
-    servicos,
-    createAgendamento,
-    updateAgendamento,
-    isHorarioDisponivel,
-    loading
-  } = useDatabase();
+  const agendamentosData = useSupabaseAgendamentos();
+  const { todosServicos: servicos } = useServicos();
+  const { clientes } = useSupabaseClientes();
 
-  // Filtrar agendamentos
-  const agendamentosFiltrados = useMemo(() => {
-    let resultado = [...todosAgendamentos];
-
-    if (filtros.data) {
-      resultado = resultado.filter(ag => ag.data === filtros.data);
-    }
-
-    if (filtros.status) {
-      resultado = resultado.filter(ag => ag.status === filtros.status);
-    }
-
-    if (filtros.statusPagamento) {
-      resultado = resultado.filter(ag => ag.statusPagamento === filtros.statusPagamento);
-    }
-
-    if (filtros.clienteId) {
-      resultado = resultado.filter(ag => ag.clienteId === filtros.clienteId);
-    }
-
-    if (filtros.origem) {
-      resultado = resultado.filter(ag => ag.origem === filtros.origem);
-    }
-
-    if (filtros.busca) {
-      const busca = filtros.busca.toLowerCase();
-      resultado = resultado.filter(ag => 
-        ag.clienteNome.toLowerCase().includes(busca) ||
-        ag.servicoNome.toLowerCase().includes(busca)
-      );
-    }
-
-    // Ordenar por data e hora
-    resultado.sort((a, b) => {
-      const dataHoraA = new Date(`${a.data}T${a.hora}`);
-      const dataHoraB = new Date(`${b.data}T${b.hora}`);
-      return dataHoraA.getTime() - dataHoraB.getTime();
-    });
-
-    return resultado;
-  }, [todosAgendamentos, filtros]);
-
-  // Paginação
-  const totalPaginas = Math.ceil(agendamentosFiltrados.length / itensPorPagina);
-  const agendamentosPaginados = useMemo(() => {
-    const inicio = (paginaAtual - 1) * itensPorPagina;
-    const fim = inicio + itensPorPagina;
-    return agendamentosFiltrados.slice(inicio, fim);
-  }, [agendamentosFiltrados, paginaAtual, itensPorPagina]);
-
-  // Verificar conflito de horário usando o método do banco
+  // Verificar conflito de horário
   const verificarConflito = (agendamento: any, excluirId?: string) => {
     if (!agendamento.data || !agendamento.hora || !agendamento.duracao) {
       return false;
     }
-    return !isHorarioDisponivel(agendamento.data, agendamento.hora, agendamento.duracao, excluirId);
+
+    const dataHora = new Date(`${agendamento.data}T${agendamento.hora}`);
+    const fimAgendamento = new Date(dataHora.getTime() + agendamento.duracao * 60000);
+
+    return agendamentosData.todosAgendamentos.some(ag => {
+      if (ag.id === excluirId) return false;
+      if (ag.data !== agendamento.data) return false;
+
+      const dataHoraExistente = new Date(`${ag.data}T${ag.hora}`);
+      const fimExistente = new Date(dataHoraExistente.getTime() + ag.duracao * 60000);
+
+      return (
+        (dataHora >= dataHoraExistente && dataHora < fimExistente) ||
+        (fimAgendamento > dataHoraExistente && fimAgendamento <= fimExistente) ||
+        (dataHora <= dataHoraExistente && fimAgendamento >= fimExistente)
+      );
+    });
   };
 
-  // CRUD operations delegadas para o useDatabase
   const criarAgendamento = async (novoAgendamento: any) => {
     const servico = servicos.find(s => s.id === novoAgendamento.servicoId);
-    if (!servico) return false;
+    if (!servico) {
+      console.error('Serviço não encontrado');
+      return false;
+    }
 
     const agendamentoCompleto = {
       ...novoAgendamento,
@@ -93,46 +51,20 @@ export function useAgendamentos() {
       confirmado: novoAgendamento.confirmado ?? false,
     };
 
-    const resultado = await createAgendamento(agendamentoCompleto);
-    return !!resultado;
-  };
-
-  const atualizarAgendamento = async (id: string, dadosAtualizados: any) => {
-    const resultado = await updateAgendamento(id, dadosAtualizados);
-    return !!resultado;
-  };
-
-  const excluirAgendamento = async (id: string) => {
-    // Implementar delete no useDatabase se necessário
-    return true;
-  };
-
-  const cancelarAgendamento = async (id: string) => {
-    return await atualizarAgendamento(id, { status: 'cancelado' });
+    return await agendamentosData.criarAgendamento(agendamentoCompleto);
   };
 
   const adicionarAgendamentosCronograma = () => {
-    // Esta funcionalidade agora é gerenciada automaticamente pelo useDatabase
+    // Esta funcionalidade agora é gerenciada automaticamente pelo Supabase
     console.log('Agendamentos de cronograma são criados automaticamente');
   };
 
   return {
-    loading,
-    agendamentos: agendamentosPaginados,
-    agendamentosFiltrados,
-    filtros,
-    setFiltros,
-    paginaAtual,
-    setPaginaAtual,
-    totalPaginas,
+    ...agendamentosData,
     clientes,
     servicos,
-    criarAgendamento,
-    atualizarAgendamento,
-    excluirAgendamento,
-    cancelarAgendamento,
     verificarConflito,
+    criarAgendamento,
     adicionarAgendamentosCronograma,
-    todosAgendamentos,
   };
 }
