@@ -32,7 +32,7 @@ export function useSupabaseAgendamentos() {
       }
 
       // Para agora, usar dados básicos sem joins
-      const agendamentosFormatados = (data || []).map(item => ({
+      const agendamentosFormatados: any[] = (data || []).map(item => ({
         id: item.id,
         clienteId: item.cliente_id,
         clienteNome: 'Cliente', // Será carregado posteriormente
@@ -48,6 +48,7 @@ export function useSupabaseAgendamentos() {
         statusPagamento: item.status_pagamento,
         status: item.status,
         origem: item.origem,
+        origem_cronograma: false, // Adicionado campo obrigatório
         confirmado: item.confirmado,
         observacoes: item.observacoes || undefined,
         createdAt: item.created_at,

@@ -28,15 +28,18 @@ export function useSupabaseClientes() {
       }
 
       // Mapear dados do Supabase para o formato da aplicação
-      const clientesFormatados = (data || []).map(item => ({
+      const clientesFormatados: any[] = (data || []).map(item => ({
         id: item.id,
         nome: item.nome,
+        nomeCompleto: item.nome, // Usando nome como nomeCompleto
         telefone: item.telefone,
         email: item.email || undefined,
         endereco: item.endereco || undefined,
         dataNascimento: item.data_nascimento || undefined,
         observacoes: item.observacoes || undefined,
-        historicoServicos: item.historico_servicos || [],
+        historicoServicos: Array.isArray(item.historico_servicos) ? item.historico_servicos : [],
+        servicoFrequente: undefined,
+        ultimaVisita: undefined,
         createdAt: item.created_at,
         updatedAt: item.updated_at
       }));
@@ -54,26 +57,27 @@ export function useSupabaseClientes() {
     carregarClientes();
   }, [user]);
 
-  const criarCliente = async (clienteData: ClienteFormData) => {
+  const criarCliente = async (clienteData: any) => {
     if (!user) {
       toast.error('Usuário não autenticado');
       return false;
     }
 
-    // Validações
-    if (!clienteData.nome.trim()) {
+    // Validações básicas
+    const nome = clienteData.nome || clienteData.nomeCompleto;
+    if (!nome?.trim()) {
       toast.error('Nome do cliente é obrigatório');
       return false;
     }
 
-    if (!clienteData.telefone.trim()) {
+    if (!clienteData.telefone?.trim()) {
       toast.error('Telefone do cliente é obrigatório');
       return false;
     }
 
     // Verificar se já existe cliente com o mesmo nome
-    const clienteExistente = clientes.find(c => 
-      c.nome.toLowerCase() === clienteData.nome.toLowerCase()
+    const clienteExistente = clientes.find((c: any) => 
+      c.nome?.toLowerCase() === nome.toLowerCase()
     );
 
     if (clienteExistente) {
@@ -87,7 +91,7 @@ export function useSupabaseClientes() {
         .from('clientes')
         .insert({
           user_id: user.id,
-          nome: clienteData.nome,
+          nome: nome,
           telefone: clienteData.telefone,
           email: clienteData.email || null,
           endereco: clienteData.endereco || null,
@@ -105,15 +109,18 @@ export function useSupabaseClientes() {
       }
 
       // Atualizar lista local
-      const novoCliente = {
+      const novoCliente: any = {
         id: data.id,
         nome: data.nome,
+        nomeCompleto: data.nome,
         telefone: data.telefone,
         email: data.email || undefined,
         endereco: data.endereco || undefined,
         dataNascimento: data.data_nascimento || undefined,
         observacoes: data.observacoes || undefined,
         historicoServicos: data.historico_servicos || [],
+        servicoFrequente: undefined,
+        ultimaVisita: undefined,
         createdAt: data.created_at,
         updatedAt: data.updated_at
       };
@@ -130,7 +137,7 @@ export function useSupabaseClientes() {
     }
   };
 
-  const atualizarCliente = async (id: string, updates: Partial<Cliente>) => {
+  const atualizarCliente = async (id: string, updates: any) => {
     if (!user) {
       toast.error('Usuário não autenticado');
       return false;
@@ -140,6 +147,7 @@ export function useSupabaseClientes() {
     try {
       const updateData: any = {};
       if (updates.nome !== undefined) updateData.nome = updates.nome;
+      if (updates.nomeCompleto !== undefined) updateData.nome = updates.nomeCompleto;
       if (updates.telefone !== undefined) updateData.telefone = updates.telefone;
       if (updates.email !== undefined) updateData.email = updates.email || null;
       if (updates.endereco !== undefined) updateData.endereco = updates.endereco || null;
@@ -162,20 +170,23 @@ export function useSupabaseClientes() {
       }
 
       // Atualizar lista local
-      const clienteAtualizado = {
+      const clienteAtualizado: any = {
         id: data.id,
         nome: data.nome,
+        nomeCompleto: data.nome,
         telefone: data.telefone,
         email: data.email || undefined,
         endereco: data.endereco || undefined,
         dataNascimento: data.data_nascimento || undefined,
         observacoes: data.observacoes || undefined,
         historicoServicos: data.historico_servicos || [],
+        servicoFrequente: undefined,
+        ultimaVisita: undefined,
         createdAt: data.created_at,
         updatedAt: data.updated_at
       };
 
-      setClientes(prev => prev.map(c => c.id === id ? clienteAtualizado : c));
+      setClientes(prev => prev.map((c: any) => c.id === id ? clienteAtualizado : c));
       toast.success('Cliente atualizado com sucesso!');
       return true;
     } catch (error) {
@@ -208,7 +219,7 @@ export function useSupabaseClientes() {
       }
 
       // Atualizar lista local
-      setClientes(prev => prev.filter(c => c.id !== id));
+      setClientes(prev => prev.filter((c: any) => c.id !== id));
       toast.success('Cliente excluído com sucesso!');
       return true;
     } catch (error) {
@@ -221,7 +232,7 @@ export function useSupabaseClientes() {
   };
 
   const obterClienteComEstatisticas = (id: string) => {
-    return clientes.find(c => c.id === id);
+    return clientes.find((c: any) => c.id === id);
   };
 
   return {
