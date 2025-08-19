@@ -1,4 +1,4 @@
-import * as React from "react";
+import { FC } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { SafeTooltipProvider } from "@/components/ui/safe-tooltip-provider";
@@ -25,7 +25,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App: React.FC = () => {
+const App: FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
