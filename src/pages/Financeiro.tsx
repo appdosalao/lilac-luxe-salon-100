@@ -101,7 +101,7 @@ export default function Financeiro() {
         <div className="space-y-6">
           <LancamentoForm
             lancamento={lancamentoEditando}
-            categorias={categorias}
+            categorias={categorias.map(c => c.nome)}
             onSubmit={handleSubmitLancamento}
             onCancel={handleCancelarForm}
           />
@@ -136,7 +136,7 @@ export default function Financeiro() {
       {/* Avisos de Vencimento */}
       <AvisosVencimento 
         contasFixas={contasFixas} 
-        onPagarConta={(contaId: string) => pagarContaFixa(contaId, 0)}
+        onPagarConta={(contaId: string) => pagarContaFixa(contaId)}
       />
 
       {/* Resumo Financeiro */}
@@ -183,7 +183,7 @@ export default function Financeiro() {
           <LancamentosList
             lancamentos={lancamentos}
             filtros={filtros}
-            categorias={categorias}
+            categorias={categorias.map(c => c.nome)}
             onFiltrosChange={setFiltros}
             onEdit={handleEditarLancamento}
             onDelete={removerLancamento}
