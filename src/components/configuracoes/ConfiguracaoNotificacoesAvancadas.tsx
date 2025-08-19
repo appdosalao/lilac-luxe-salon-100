@@ -7,500 +7,473 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import { Slider } from '@/components/ui/slider';
+import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { Bell, Smartphone, Volume2, Clock, DollarSign, CheckCircle, Settings } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { 
+  Bell, 
+  Smartphone, 
+  Volume2, 
+  Clock, 
+  DollarSign, 
+  CheckCircle, 
+  Settings, 
+  Save,
+  Mail,
+  AlertTriangle
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 export function ConfiguracaoNotificacoesAvancadas() {
-  const { configuracoes, updateConfiguracoes } = useConfiguracoes();
+  const { configuracaoNotificacoes, loading, salvarNotificacoes } = useSupabaseConfiguracoes();
   const { 
     isSupported, 
     isSubscribed, 
     subscribe, 
     unsubscribe, 
     sendTestNotification,
-    isLoading 
+    isLoading: pushLoading 
   } = usePushNotifications();
 
-  const [localConfig, setLocalConfig] = useState(configuracoes?.notificacoes);
+  const [localConfig, setLocalConfig] = useState({
+    notificacoes_push: true,
+    notificacoes_email: true,
+    notificacoes_som: true,
+    som_personalizado: 'notification.mp3',
+    lembrete_agendamento_minutos: 30,
+    lembrete_vencimento_dias: 3,
+    lembrete_contas_fixas_dias: 5,
+    notificar_cancelamentos: true,
+    notificar_reagendamentos: true,
+    notificar_pagamentos: true,
+    notificar_novos_agendamentos: true,
+    horario_inicio_notificacoes: '08:00',
+    horario_fim_notificacoes: '20:00',
+  });
 
   useEffect(() => {
-    if (configuracoes?.notificacoes) {
-      setLocalConfig(configuracoes.notificacoes);
+    if (configuracaoNotificacoes) {
+      setLocalConfig({
+        notificacoes_push: configuracaoNotificacoes.notificacoes_push,
+        notificacoes_email: configuracaoNotificacoes.notificacoes_email,
+        notificacoes_som: configuracaoNotificacoes.notificacoes_som,
+        som_personalizado: configuracaoNotificacoes.som_personalizado || 'notification.mp3',
+        lembrete_agendamento_minutos: configuracaoNotificacoes.lembrete_agendamento_minutos,
+        lembrete_vencimento_dias: configuracaoNotificacoes.lembrete_vencimento_dias,
+        lembrete_contas_fixas_dias: configuracaoNotificacoes.lembrete_contas_fixas_dias,
+        notificar_cancelamentos: configuracaoNotificacoes.notificar_cancelamentos,
+        notificar_reagendamentos: configuracaoNotificacoes.notificar_reagendamentos,
+        notificar_pagamentos: configuracaoNotificacoes.notificar_pagamentos,
+        notificar_novos_agendamentos: configuracaoNotificacoes.notificar_novos_agendamentos,
+        horario_inicio_notificacoes: configuracaoNotificacoes.horario_inicio_notificacoes,
+        horario_fim_notificacoes: configuracaoNotificacoes.horario_fim_notificacoes,
+      });
     }
-  }, [configuracoes]);
+  }, [configuracaoNotificacoes]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">Carregando configurações de notificações...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleSave = async () => {
-    if (!configuracoes || !localConfig) return;
-
     try {
-      await updateConfiguracoes({
-        ...configuracoes,
-        notificacoes: localConfig
-      });
-      
-      toast({
-        title: "Configurações salvas",
-        description: "As configurações de notificação foram atualizadas com sucesso.",
-      });
+      await salvarNotificacoes(localConfig);
     } catch (error) {
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error('Erro ao salvar configurações:', error);
     }
   };
 
   const handlePushToggle = async () => {
-    if (!localConfig) return;
-
     if (isSubscribed) {
       await unsubscribe();
-      setLocalConfig({
-        ...localConfig,
-        push: { ...localConfig.push, ativo: false }
-      });
+      setLocalConfig(prev => ({ ...prev, notificacoes_push: false }));
     } else {
       const success = await subscribe();
       if (success) {
-        setLocalConfig({
-          ...localConfig,
-          push: { ...localConfig.push, ativo: true }
-        });
+        setLocalConfig(prev => ({ ...prev, notificacoes_push: true }));
       }
     }
   };
 
-  if (!localConfig) {
-    return <div>Carregando configurações...</div>;
-  }
+  const playTestSound = () => {
+    try {
+      const audio = new Audio(`/sounds/${localConfig.som_personalizado}`);
+      audio.play().catch(error => {
+        console.log('Erro ao reproduzir som:', error);
+        toast.error('Não foi possível reproduzir o som selecionado');
+      });
+    } catch (error) {
+      console.log('Erro ao criar áudio:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Push Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            Notificações Push (Mobile)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!isSupported && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                Seu navegador não suporta notificações push ou você está usando HTTP. 
-                Para ativar notificações push, use HTTPS.
-              </p>
-            </div>
-          )}
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base font-medium">Ativar Notificações Push</Label>
-              <p className="text-sm text-muted-foreground">
-                Receba notificações no seu celular mesmo quando o app não estiver aberto
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {isSubscribed && <Badge variant="outline">Ativado</Badge>}
-              <Switch
-                checked={isSubscribed}
-                onCheckedChange={handlePushToggle}
-                disabled={!isSupported || isLoading}
-              />
-            </div>
-          </div>
-
-          {isSubscribed && (
-            <Button 
-              variant="outline" 
-              onClick={sendTestNotification}
-              className="w-full"
-            >
-              Enviar Notificação de Teste
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Novos Agendamentos */}
+      {/* Status Geral das Notificações */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            Novos Agendamentos
+            Status das Notificações
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="novos-visual">Visual</Label>
-              <Switch
-                id="novos-visual"
-                checked={localConfig.novosAgendamentos.visual}
-                onCheckedChange={(checked) =>
-                  setLocalConfig({
-                    ...localConfig,
-                    novosAgendamentos: { ...localConfig.novosAgendamentos, visual: checked }
-                  })
-                }
-              />
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={localConfig.notificacoes_push ? "default" : "secondary"}>
+                Push {localConfig.notificacoes_push ? "Ativo" : "Inativo"}
+              </Badge>
             </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="novos-sonoro">Sonoro</Label>
-              <Switch
-                id="novos-sonoro"
-                checked={localConfig.novosAgendamentos.sonoro}
-                onCheckedChange={(checked) =>
-                  setLocalConfig({
-                    ...localConfig,
-                    novosAgendamentos: { ...localConfig.novosAgendamentos, sonoro: checked }
-                  })
-                }
-              />
+            <div className="flex items-center gap-2">
+              <Badge variant={localConfig.notificacoes_email ? "default" : "secondary"}>
+                Email {localConfig.notificacoes_email ? "Ativo" : "Inativo"}
+              </Badge>
             </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="novos-push">Push</Label>
-              <Switch
-                id="novos-push"
-                checked={localConfig.novosAgendamentos.push}
-                onCheckedChange={(checked) =>
-                  setLocalConfig({
-                    ...localConfig,
-                    novosAgendamentos: { ...localConfig.novosAgendamentos, push: checked }
-                  })
-                }
-                disabled={!isSubscribed}
-              />
+            <div className="flex items-center gap-2">
+              <Badge variant={localConfig.notificacoes_som ? "default" : "secondary"}>
+                Som {localConfig.notificacoes_som ? "Ativo" : "Inativo"}
+              </Badge>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="som-notificacao">Som da Notificação</Label>
-            <Select
-              value={localConfig.novosAgendamentos.som}
-              onValueChange={(value: 'notification1' | 'notification2' | 'notification3') =>
-                setLocalConfig({
-                  ...localConfig,
-                  novosAgendamentos: { ...localConfig.novosAgendamentos, som: value }
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="notification1">Som 1 (Padrão)</SelectItem>
-                <SelectItem value="notification2">Som 2 (Suave)</SelectItem>
-                <SelectItem value="notification3">Som 3 (Alerta)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          
+          <Button onClick={handleSave} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            Salvar Todas as Configurações
+          </Button>
         </CardContent>
       </Card>
 
-      {/* Lembretes de Agendamento */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Lembretes de Agendamento
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base font-medium">Ativar Lembretes</Label>
-              <p className="text-sm text-muted-foreground">
-                Receba notificações antes dos agendamentos
-              </p>
-            </div>
-            <Switch
-              checked={localConfig.lembretesAgendamento.ativo}
-              onCheckedChange={(checked) =>
-                setLocalConfig({
-                  ...localConfig,
-                  lembretesAgendamento: { ...localConfig.lembretesAgendamento, ativo: checked }
-                })
-              }
-            />
-          </div>
-
-          {localConfig.lembretesAgendamento.ativo && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="antecedencia-agendamento">Antecedência (minutos)</Label>
-                <Input
-                  id="antecedencia-agendamento"
-                  type="number"
-                  min="5"
-                  max="1440"
-                  value={localConfig.lembretesAgendamento.antecedencia}
-                  onChange={(e) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      lembretesAgendamento: { 
-                        ...localConfig.lembretesAgendamento, 
-                        antecedencia: parseInt(e.target.value) || 60 
-                      }
-                    })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="lembrete-push">Push</Label>
-                  <Switch
-                    id="lembrete-push"
-                    checked={localConfig.lembretesAgendamento.push}
-                    onCheckedChange={(checked) =>
-                      setLocalConfig({
-                        ...localConfig,
-                        lembretesAgendamento: { ...localConfig.lembretesAgendamento, push: checked }
-                      })
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="lembrete-sonoro">Sonoro</Label>
-                  <Switch
-                    id="lembrete-sonoro"
-                    checked={localConfig.lembretesAgendamento.sonoro}
-                    onCheckedChange={(checked) =>
-                      setLocalConfig({
-                        ...localConfig,
-                        lembretesAgendamento: { ...localConfig.lembretesAgendamento, sonoro: checked }
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Retorno de Cronograma */}
+      {/* Configurações Principais */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Retorno de Cronograma
+            Configurações Principais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base font-medium">Ativar Notificações</Label>
-              <p className="text-sm text-muted-foreground">
-                Notificar quando um cliente precisa retornar
-              </p>
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Smartphone className="h-5 w-5" />
+              <div>
+                <Label className="text-base font-medium">Notificações Push</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receba notificações no celular mesmo com o app fechado
+                </p>
+                {!isSupported && (
+                  <p className="text-xs text-orange-600">
+                    Não suportado neste navegador
+                  </p>
+                )}
+              </div>
             </div>
             <Switch
-              checked={localConfig.retornoCronograma.ativo}
-              onCheckedChange={(checked) =>
-                setLocalConfig({
-                  ...localConfig,
-                  retornoCronograma: { ...localConfig.retornoCronograma, ativo: checked }
-                })
+              checked={isSubscribed && localConfig.notificacoes_push}
+              onCheckedChange={handlePushToggle}
+              disabled={!isSupported || pushLoading}
+            />
+          </div>
+
+          {/* Email Notifications */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5" />
+              <div>
+                <Label className="text-base font-medium">Notificações por Email</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receba resumos e alertas importantes por email
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={localConfig.notificacoes_email}
+              onCheckedChange={(checked) => 
+                setLocalConfig(prev => ({ ...prev, notificacoes_email: checked }))
               }
             />
           </div>
 
-          {localConfig.retornoCronograma.ativo && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="retorno-push">Push</Label>
-                <Switch
-                  id="retorno-push"
-                  checked={localConfig.retornoCronograma.push}
-                  onCheckedChange={(checked) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      retornoCronograma: { ...localConfig.retornoCronograma, push: checked }
-                    })
-                  }
-                  disabled={!isSubscribed}
-                />
+          {/* Sound Notifications */}
+          <div className="space-y-3 p-4 border rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Volume2 className="h-5 w-5" />
+                <div>
+                  <Label className="text-base font-medium">Notificações Sonoras</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Reproduzir som ao receber notificações
+                  </p>
+                </div>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="retorno-sonoro">Sonoro</Label>
-                <Switch
-                  id="retorno-sonoro"
-                  checked={localConfig.retornoCronograma.sonoro}
-                  onCheckedChange={(checked) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      retornoCronograma: { ...localConfig.retornoCronograma, sonoro: checked }
-                    })
-                  }
-                />
-              </div>
+              <Switch
+                checked={localConfig.notificacoes_som}
+                onCheckedChange={(checked) => 
+                  setLocalConfig(prev => ({ ...prev, notificacoes_som: checked }))
+                }
+              />
             </div>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Despesas Fixas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Despesas Fixas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base font-medium">Ativar Lembretes</Label>
-              <p className="text-sm text-muted-foreground">
-                Notificar sobre vencimento de despesas fixas
-              </p>
-            </div>
-            <Switch
-              checked={localConfig.despesasFixas.ativo}
-              onCheckedChange={(checked) =>
-                setLocalConfig({
-                  ...localConfig,
-                  despesasFixas: { ...localConfig.despesasFixas, ativo: checked }
-                })
-              }
-            />
-          </div>
-
-          {localConfig.despesasFixas.ativo && (
-            <>
+            {localConfig.notificacoes_som && (
               <div className="space-y-2">
-                <Label htmlFor="antecedencia-despesa">Antecedência (dias)</Label>
-                <Input
-                  id="antecedencia-despesa"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={localConfig.despesasFixas.antecedencia}
-                  onChange={(e) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      despesasFixas: { 
-                        ...localConfig.despesasFixas, 
-                        antecedencia: parseInt(e.target.value) || 7 
-                      }
-                    })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="despesa-push">Push</Label>
-                  <Switch
-                    id="despesa-push"
-                    checked={localConfig.despesasFixas.push}
-                    onCheckedChange={(checked) =>
-                      setLocalConfig({
-                        ...localConfig,
-                        despesasFixas: { ...localConfig.despesasFixas, push: checked }
-                      })
+                <Label htmlFor="som-select">Som das Notificações</Label>
+                <div className="flex gap-2">
+                  <Select
+                    value={localConfig.som_personalizado}
+                    onValueChange={(value) => 
+                      setLocalConfig(prev => ({ ...prev, som_personalizado: value }))
                     }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="despesa-sonoro">Sonoro</Label>
-                  <Switch
-                    id="despesa-sonoro"
-                    checked={localConfig.despesasFixas.sonoro}
-                    onCheckedChange={(checked) =>
-                      setLocalConfig({
-                        ...localConfig,
-                        despesasFixas: { ...localConfig.despesasFixas, sonoro: checked }
-                      })
-                    }
-                  />
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="notification.mp3">Som Padrão</SelectItem>
+                      <SelectItem value="notification2.mp3">Som Campainha</SelectItem>
+                      <SelectItem value="notification3.mp3">Som Suave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" onClick={playTestSound}>
+                    <Volume2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Serviço Finalizado */}
+      {/* Horários de Notificação */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Serviço Finalizado
+            <Clock className="h-5 w-5" />
+            Horários de Notificação
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-base font-medium">Ativar Notificações</Label>
-              <p className="text-sm text-muted-foreground">
-                Notificar quando um serviço for finalizado
-              </p>
+              <Label htmlFor="inicio-notif">Horário de Início</Label>
+              <Input
+                id="inicio-notif"
+                type="time"
+                value={localConfig.horario_inicio_notificacoes}
+                onChange={(e) => 
+                  setLocalConfig(prev => ({ ...prev, horario_inicio_notificacoes: e.target.value }))
+                }
+              />
             </div>
-            <Switch
-              checked={localConfig.servicoFinalizado.ativo}
-              onCheckedChange={(checked) =>
-                setLocalConfig({
-                  ...localConfig,
-                  servicoFinalizado: { ...localConfig.servicoFinalizado, ativo: checked }
-                })
-              }
-            />
+            <div>
+              <Label htmlFor="fim-notif">Horário de Fim</Label>
+              <Input
+                id="fim-notif"
+                type="time"
+                value={localConfig.horario_fim_notificacoes}
+                onChange={(e) => 
+                  setLocalConfig(prev => ({ ...prev, horario_fim_notificacoes: e.target.value }))
+                }
+              />
+            </div>
           </div>
-
-          {localConfig.servicoFinalizado.ativo && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="finalizado-push">Push</Label>
-                <Switch
-                  id="finalizado-push"
-                  checked={localConfig.servicoFinalizado.push}
-                  onCheckedChange={(checked) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      servicoFinalizado: { ...localConfig.servicoFinalizado, push: checked }
-                    })
-                  }
-                  disabled={!isSubscribed}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="finalizado-sonoro">Sonoro</Label>
-                <Switch
-                  id="finalizado-sonoro"
-                  checked={localConfig.servicoFinalizado.sonoro}
-                  onCheckedChange={(checked) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      servicoFinalizado: { ...localConfig.servicoFinalizado, sonoro: checked }
-                    })
-                  }
-                />
-              </div>
-            </div>
-          )}
+          <div className="bg-muted/50 p-3 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              <strong>Período ativo:</strong> {localConfig.horario_inicio_notificacoes} às {localConfig.horario_fim_notificacoes}
+              <br />
+              <span className="text-xs">Notificações fora deste horário serão silenciadas</span>
+            </p>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} className="min-w-[120px]">
-          Salvar Configurações
-        </Button>
-      </div>
+      {/* Tipos de Notificação */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Tipos de Notificação
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="novos-agend">Novos Agendamentos</Label>
+              <Switch
+                id="novos-agend"
+                checked={localConfig.notificar_novos_agendamentos}
+                onCheckedChange={(checked) => 
+                  setLocalConfig(prev => ({ ...prev, notificar_novos_agendamentos: checked }))
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="cancelamentos">Cancelamentos</Label>
+              <Switch
+                id="cancelamentos"
+                checked={localConfig.notificar_cancelamentos}
+                onCheckedChange={(checked) => 
+                  setLocalConfig(prev => ({ ...prev, notificar_cancelamentos: checked }))
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="reagendamentos">Reagendamentos</Label>
+              <Switch
+                id="reagendamentos"
+                checked={localConfig.notificar_reagendamentos}
+                onCheckedChange={(checked) => 
+                  setLocalConfig(prev => ({ ...prev, notificar_reagendamentos: checked }))
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="pagamentos">Pagamentos</Label>
+              <Switch
+                id="pagamentos"
+                checked={localConfig.notificar_pagamentos}
+                onCheckedChange={(checked) => 
+                  setLocalConfig(prev => ({ ...prev, notificar_pagamentos: checked }))
+                }
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lembretes e Alertas */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Lembretes e Alertas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Lembrete de Agendamentos */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Lembrete de Agendamentos</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Antecedência: {localConfig.lembrete_agendamento_minutos} minutos</Label>
+              <Slider
+                value={[localConfig.lembrete_agendamento_minutos]}
+                onValueChange={([value]) => 
+                  setLocalConfig(prev => ({ ...prev, lembrete_agendamento_minutos: value }))
+                }
+                max={480}
+                min={5}
+                step={5}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>5 min</span>
+                <span>8 horas</span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Lembrete de Vencimentos */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Lembrete de Vencimentos</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Antecedência: {localConfig.lembrete_vencimento_dias} dias</Label>
+              <Slider
+                value={[localConfig.lembrete_vencimento_dias]}
+                onValueChange={([value]) => 
+                  setLocalConfig(prev => ({ ...prev, lembrete_vencimento_dias: value }))
+                }
+                max={30}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1 dia</span>
+                <span>30 dias</span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Lembrete de Contas Fixas */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Lembrete de Contas Fixas</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Antecedência: {localConfig.lembrete_contas_fixas_dias} dias</Label>
+              <Slider
+                value={[localConfig.lembrete_contas_fixas_dias]}
+                onValueChange={([value]) => 
+                  setLocalConfig(prev => ({ ...prev, lembrete_contas_fixas_dias: value }))
+                }
+                max={30}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1 dia</span>
+                <span>30 dias</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Teste de Notificações */}
+      {isSubscribed && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Teste de Notificações</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              variant="outline" 
+              onClick={sendTestNotification}
+              className="w-full"
+              disabled={pushLoading}
+            >
+              <Bell className="h-4 w-4 mr-2" />
+              Enviar Notificação de Teste
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={playTestSound}
+              className="w-full"
+              disabled={!localConfig.notificacoes_som}
+            >
+              <Volume2 className="h-4 w-4 mr-2" />
+              Testar Som da Notificação
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Informações de Ajuda */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
+        <CardContent className="p-4">
+          <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            💡 Sobre as Notificações
+          </h3>
+          <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+            <li>• Notificações push funcionam apenas em HTTPS ou localhost</li>
+            <li>• Configure horários para evitar notificações em períodos de descanso</li>
+            <li>• Lembretes ajudam a não esquecer de agendamentos e vencimentos importantes</li>
+            <li>• Todas as configurações são salvas automaticamente</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }
