@@ -7,7 +7,7 @@ export const useAgendamentoOnlineService = () => {
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
 
-  // Carregar serviços disponíveis
+  // Carregar serviços disponíveis (apenas ativos)
   const carregarServicos = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -16,7 +16,21 @@ export const useAgendamentoOnlineService = () => {
         .order('nome');
 
       if (error) throw error;
-      setServicos(data || []);
+      
+      // Filtrar apenas serviços válidos
+      const servicosValidos = (data || []).filter(servico => 
+        servico.id && servico.nome && servico.valor > 0 && servico.duracao > 0
+      );
+      
+      setServicos(servicosValidos);
+      
+      if (servicosValidos.length === 0) {
+        toast({
+          title: "Nenhum serviço disponível",
+          description: "Não há serviços disponíveis para agendamento no momento.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
       toast({
@@ -137,30 +151,38 @@ export const useAgendamentoOnlineService = () => {
   const criarAgendamento = useCallback(async (dados: AgendamentoOnlineData): Promise<boolean> => {
     setLoading(true);
     try {
+      // Validar serviço antes de criar agendamento
       const servico = servicos.find(s => s.id === dados.servico_id);
       if (!servico) {
-        throw new Error('Serviço não encontrado');
+        throw new Error('Serviço selecionado não está mais disponível');
+      }
+
+      // Verificar disponibilidade do horário novamente antes de confirmar
+      const disponivel = await verificarDisponibilidade(dados.data, dados.horario, servico.duracao);
+      if (!disponivel) {
+        throw new Error('Este horário não está mais disponível. Por favor, escolha outro horário.');
       }
 
       // Criar ou encontrar cliente
       const clienteId = await criarClienteSeNaoExistir(dados);
 
-      // Criar agendamento online
+      // Criar agendamento online com validação extra
       const { error } = await supabase
         .from('agendamentos_online')
         .insert({
-          nome_completo: dados.nome_completo,
-          email: dados.email,
-          telefone: dados.telefone,
+          nome_completo: dados.nome_completo.trim(),
+          email: dados.email.toLowerCase().trim(),
+          telefone: dados.telefone.trim(),
           servico_id: dados.servico_id,
           data: dados.data,
           horario: dados.horario,
-          observacoes: dados.observacoes,
+          observacoes: dados.observacoes?.trim() || null,
           valor: servico.valor,
           duracao: servico.duracao,
           status: 'pendente',
           origem: 'formulario_online',
-          user_agent: navigator.userAgent
+          user_agent: navigator.userAgent,
+          ip_address: null // Supabase pode preencher automaticamente se necessário
         });
 
       if (error) throw error;
@@ -173,16 +195,18 @@ export const useAgendamentoOnlineService = () => {
       return true;
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível confirmar seu agendamento. Tente novamente.";
+      
       toast({
         title: "Erro ao agendar",
-        description: "Não foi possível confirmar seu agendamento. Tente novamente.",
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     } finally {
       setLoading(false);
     }
-  }, [servicos, criarClienteSeNaoExistir]);
+  }, [servicos, criarClienteSeNaoExistir, verificarDisponibilidade]);
 
   return {
     loading,
