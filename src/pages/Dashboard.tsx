@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,14 +29,14 @@ export default function Dashboard() {
   const dataHoje = hoje.toISOString().split('T')[0];
 
   // Agendamentos hoje
-  const agendamentosHoje = useMemo(() => {
+  const agendamentosHoje = React.useMemo(() => {
     return agendamentosFiltrados.filter(ag => 
       ag.data === dataHoje && ag.status !== 'cancelado'
     );
   }, [agendamentosFiltrados, dataHoje]);
 
   // Total recebido hoje
-  const totalRecebidoHoje = useMemo(() => {
+  const totalRecebidoHoje = React.useMemo(() => {
     const agendamentosConcluidos = agendamentosFiltrados.filter(ag => 
       ag.data === dataHoje && ag.status === 'concluido'
     );
@@ -44,7 +44,7 @@ export default function Dashboard() {
   }, [agendamentosFiltrados, dataHoje]);
 
   // Próximo cliente a ser atendido hoje
-  const proximoCliente = useMemo(() => {
+  const proximoCliente = React.useMemo(() => {
     const agora = new Date();
     const horaAtual = agora.toTimeString().slice(0, 5);
     
@@ -56,7 +56,7 @@ export default function Dashboard() {
   }, [agendamentosHoje]);
 
   // Agendamentos do próximo dia
-  const agendamentosProximoDia = useMemo(() => {
+  const agendamentosProximoDia = React.useMemo(() => {
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 1);
     const dataAmanha = amanha.toISOString().split('T')[0];
@@ -67,7 +67,7 @@ export default function Dashboard() {
   }, [agendamentosFiltrados]);
 
   // Dados para gráfico semanal
-  const dadosSemanais = useMemo(() => {
+  const dadosSemanais = React.useMemo(() => {
     const ultimosSete = [];
     for (let i = 6; i >= 0; i--) {
       const data = new Date();

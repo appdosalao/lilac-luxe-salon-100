@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useAgendamentoOnline } from '@/hooks/useAgendamentoOnline';
 import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { useShare } from '@/hooks/useShare';
@@ -26,7 +26,7 @@ export function AgendamentoOnlineForm() {
   const { configuracaoHorarios } = useSupabaseConfiguracoes();
   const { canShare, isSharing, shareContent, copyToClipboard } = useShare();
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = React.useState<FormData>({
     nomeCompleto: '',
     email: '',
     telefone: '',
@@ -36,14 +36,14 @@ export function AgendamentoOnlineForm() {
     observacoes: ''
   });
 
-  const [horariosDisponiveis, setHorariosDisponiveis] = useState<HorarioDisponivel[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [agendamentoDetalhes, setAgendamentoDetalhes] = useState<any>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [horariosDisponiveis, setHorariosDisponiveis] = React.useState<HorarioDisponivel[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [agendamentoDetalhes, setAgendamentoDetalhes] = React.useState<any>(null);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [aceitouTermos, setAceitouTermos] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const calcularHorarios = async () => {
       if (formData.servicoId && formData.data) {
         if (configuracaoHorarios?.length > 0) {
