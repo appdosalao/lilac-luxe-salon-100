@@ -6,7 +6,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Edit, Trash2, Play, Pause, CheckCircle } from "lucide-react";
 import { useCronogramas } from "@/hooks/useCronogramas";
-import { useDatabase } from "@/hooks/useDatabase";
+import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
+import { useServicos } from "@/hooks/useServicos";
+import { useSupabaseAgendamentos } from "@/hooks/useSupabaseAgendamentos";
 import { useToast } from "@/hooks/use-toast";
 import CronogramaForm from "./CronogramaForm";
 import CronogramaComAgendamentos from "./CronogramaComAgendamentos";
@@ -18,7 +20,9 @@ export default function CronogramasList() {
   const [showActivationDialog, setShowActivationDialog] = useState(false);
 
   const { cronogramas, loading, deleteCronograma } = useCronogramas();
-  const { clientes, servicos, agendamentos, createMultipleAgendamentos } = useDatabase();
+  const { clientes } = useSupabaseClientes();
+  const { servicos } = useServicos();
+  const { agendamentos, criarAgendamento } = useSupabaseAgendamentos();
   const { toast } = useToast();
 
   const handleDelete = async (id: string) => {
@@ -54,9 +58,18 @@ export default function CronogramasList() {
 
   const handleGerarAgendamentos = async (agendamentos: any[]) => {
     try {
-      await createMultipleAgendamentos(agendamentos);
+      // Criar múltiplos agendamentos usando o hook do Supabase
+      for (const agendamentoData of agendamentos) {
+        await criarAgendamento(agendamentoData);
+      }
+      
       setShowActivationDialog(false);
       setActivatingCronograma(null);
+      
+      toast({
+        title: "Cronograma ativado",
+        description: `${agendamentos.length} agendamentos foram criados com sucesso.`,
+      });
     } catch (error) {
       toast({
         title: "Erro",
@@ -159,7 +172,7 @@ export default function CronogramasList() {
           {activatingCronograma && (
             <CronogramaComAgendamentos
               cronograma={activatingCronograma}
-              clientes={clientes.map(c => ({ id: c.id, nome: c.nomeCompleto }))}
+              clientes={clientes.map(c => ({ id: c.id, nome: c.nome }))}
               servicos={servicos}
               agendamentosExistentes={agendamentos}
               onGerarAgendamentos={handleGerarAgendamentos}
