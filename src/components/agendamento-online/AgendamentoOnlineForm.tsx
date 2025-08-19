@@ -367,7 +367,7 @@ export function AgendamentoOnlineForm() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-horarios" disabled>
                           {!formData.data || !isDataDisponivel(formData.data) 
                             ? "Selecione uma data válida" 
                             : "Nenhum horário disponível para esta data"

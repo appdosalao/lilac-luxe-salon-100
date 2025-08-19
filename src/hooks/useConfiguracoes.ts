@@ -48,7 +48,7 @@ export const useConfiguracoes = () => {
           visual: true,
           sonoro: supabaseConfig.configuracaoNotificacoes.notificacoes_som,
           push: supabaseConfig.configuracaoNotificacoes.notificacoes_push,
-          som: 'notification1' as const,
+          som: 'notification' as const,
         },
         lembretesAgendamento: {
           ativo: true,

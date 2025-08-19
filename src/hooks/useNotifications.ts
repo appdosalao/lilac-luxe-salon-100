@@ -7,7 +7,7 @@ interface NotificationSettings {
   visualEnabled: boolean;
   autoHide: boolean;
   hideDelay: number;
-  soundType: 'notification1' | 'notification2' | 'notification3';
+  soundType: 'notification' | 'notification2' | 'notification3';
 }
 
 interface AgendamentoNotification {
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   visualEnabled: true,
   autoHide: true,
   hideDelay: 10000, // 10 segundos
-  soundType: 'notification1',
+  soundType: 'notification',
 };
 
 export const useNotifications = () => {
@@ -53,9 +53,9 @@ export const useNotifications = () => {
   useEffect(() => {
     if (settings.soundEnabled) {
       // Garantir que soundType existe e tem um valor válido
-      const soundType = settings.soundType || 'notification1';
-      const soundNumber = soundType.replace('notification', '') || '1';
-      audioRef.current = new Audio(`/sounds/notification${soundNumber}.mp3`);
+      const soundType = settings.soundType || 'notification';
+      const soundFile = soundType === 'notification' ? 'notification' : soundType;
+      audioRef.current = new Audio(`/sounds/${soundFile}.mp3`);
       audioRef.current.volume = 0.5;
       audioRef.current.preload = 'auto';
     }

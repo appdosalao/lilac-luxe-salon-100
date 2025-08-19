@@ -17,11 +17,11 @@ export const useEnhancedNotifications = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Função personalizada para tocar som baseado na configuração
-  const playCustomSound = useCallback(async (soundType?: 'notification1' | 'notification2' | 'notification3') => {
+  const playCustomSound = useCallback(async (soundType?: 'notification' | 'notification2' | 'notification3') => {
     if (!soundType) return;
 
     try {
-      const soundFile = `notification${soundType.replace('notification', '')}`;
+      const soundFile = soundType === 'notification' ? 'notification' : soundType;
       if (!audioRef.current || audioRef.current.src !== `/sounds/${soundFile}.mp3`) {
         audioRef.current = new Audio(`/sounds/${soundFile}.mp3`);
         audioRef.current.volume = 0.7;

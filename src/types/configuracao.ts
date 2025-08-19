@@ -35,7 +35,7 @@ export interface ConfiguracaoNotificacoes {
     visual: boolean;
     sonoro: boolean;
     push: boolean;
-    som: 'notification1' | 'notification2' | 'notification3';
+    som: 'notification' | 'notification2' | 'notification3';
   };
   lembretesAgendamento: {
     ativo: boolean;
@@ -110,7 +110,7 @@ export const CONFIG_DEFAULT: Omit<Configuracoes, 'id' | 'userId' | 'createdAt' |
       visual: true,
       sonoro: true,
       push: true,
-      som: 'notification1',
+      som: 'notification',
     },
     lembretesAgendamento: {
       ativo: true,

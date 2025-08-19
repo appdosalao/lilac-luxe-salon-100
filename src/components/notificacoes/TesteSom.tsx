@@ -8,7 +8,7 @@ export const TesteSom = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const { handleNewAppointment, handleServiceCompleted, handleExpenseReminder } = useEnhancedNotifications();
 
-  const playTestSound = async (soundType: 'notification1' | 'notification2' | 'notification3') => {
+  const playTestSound = async (soundType: 'notification' | 'notification2' | 'notification3') => {
     if (isPlaying) return;
     
     setIsPlaying(true);
@@ -67,12 +67,12 @@ export const TesteSom = () => {
         <div className="grid grid-cols-1 gap-2">
           <Button
             variant="outline"
-            onClick={() => playTestSound('notification1')}
+            onClick={() => playTestSound('notification')}
             disabled={isPlaying}
             className="justify-start"
           >
             {isPlaying ? <VolumeX className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
-            Som Padrão (Notification 1)
+            Som Padrão (Notification)
           </Button>
           
           <Button
