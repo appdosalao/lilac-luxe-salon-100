@@ -36,26 +36,23 @@ const App: React.FC = () => {
               <PWAProvider>
                 <Toaster />
                 <Sonner />
-                  <Routes>
-                    {/* Rota inicial pública - Formulário de agendamento */}
-                    <Route path="/" element={<AgendamentoOnline />} />
-                    
-                    {/* Rotas públicas */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/cadastro" element={<Cadastro />} />
-                    <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-                    <Route path="/agendamento-online" element={<AgendamentoOnline />} />
-                    <Route path="/agendamento-publico" element={<AgendamentoOnline />} />
-                    <Route path="/agendar" element={<AgendamentoOnline />} />
-                    
-                    {/* Rotas protegidas com Layout */}
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Dashboard />
-                        </Layout>
-                      </ProtectedRoute>
-                    } />
+                <Routes>
+                  {/* Rotas públicas */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/cadastro" element={<Cadastro />} />
+                  <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+                  <Route path="/agendamento-online" element={<AgendamentoOnline />} />
+                  <Route path="/agendamento-publico" element={<AgendamentoOnline />} />
+                  <Route path="/agendar" element={<AgendamentoOnline />} />
+                  
+                  {/* Rotas protegidas com Layout */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Dashboard />
+                      </Layout>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/agendamentos" element={
                     <ProtectedRoute>
                       <Layout>

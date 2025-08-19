@@ -45,28 +45,103 @@ export function AgendamentoOnlineForm() {
 
   React.useEffect(() => {
     const calcularHorarios = async () => {
-      console.log('🔄 Calculando horários:', { servicoId: formData.servicoId, data: formData.data });
+      console.log('=== CALCULANDO HORÁRIOS DISPONÍVEIS ===');
+      console.log('servicoId:', formData.servicoId);
+      console.log('data:', formData.data);
+      console.log('configuracaoHorarios:', configuracaoHorarios);
+      console.log('servicosPublicos:', servicosPublicos);
       
       if (formData.servicoId && formData.data) {
-        console.log('📋 Configurações disponíveis:', configuracaoHorarios);
-        
-        try {
-          // Sempre usar o hook original para cálculo de disponibilidade
-          const horariosCalculados = await calcularHorariosDisponiveis(formData.servicoId, formData.data);
-          console.log('⏰ Horários calculados:', horariosCalculados);
-          setHorariosDisponiveis(horariosCalculados);
-        } catch (error) {
-          console.error('❌ Erro ao calcular horários:', error);
-          setHorariosDisponiveis([]);
+        if (configuracaoHorarios?.length > 0) {
+          // Usar as configurações de horários do Supabase
+          const dataObj = new Date(formData.data + 'T12:00:00');
+          const diaSemana = dataObj.getDay();
+          const servico = servicosPublicos.find(s => s.id === formData.servicoId);
+          const duracaoServico = servico?.duracao || 60;
+          
+          console.log('Dia da semana:', diaSemana);
+          console.log('Duração do serviço:', duracaoServico);
+          
+          // Buscar configuração para o dia da semana
+          const configDia = configuracaoHorarios.find(h => h.dia_semana === diaSemana && h.ativo);
+          
+          console.log('Configuração encontrada para o dia:', configDia);
+          
+          if (configDia) {
+            // Gerar horários baseados na configuração
+            const horarios: HorarioDisponivel[] = [];
+            
+            // Converter horários para minutos para facilitar o cálculo
+            const [horaAbertura, minutoAbertura] = configDia.horario_abertura.split(':').map(Number);
+            const [horaFechamento, minutoFechamento] = configDia.horario_fechamento.split(':').map(Number);
+            
+            const minutoInicioServico = horaAbertura * 60 + minutoAbertura;
+            const minutoFimServico = horaFechamento * 60 + minutoFechamento;
+            
+            // Intervalo de almoço (se existir)
+            let minutoInicioIntervalo = null;
+            let minutoFimIntervalo = null;
+            
+            if (configDia.intervalo_inicio && configDia.intervalo_fim) {
+              const [horaInicioInt, minutoInicioInt] = configDia.intervalo_inicio.split(':').map(Number);
+              const [horaFimInt, minutoFimInt] = configDia.intervalo_fim.split(':').map(Number);
+              minutoInicioIntervalo = horaInicioInt * 60 + minutoInicioInt;
+              minutoFimIntervalo = horaFimInt * 60 + minutoFimInt;
+            }
+            
+            console.log('Minutos - início:', minutoInicioServico, 'fim:', minutoFimServico);
+            console.log('Intervalo - início:', minutoInicioIntervalo, 'fim:', minutoFimIntervalo);
+            
+            // Gerar horários de 30 em 30 minutos
+            for (let minuto = minutoInicioServico; minuto + duracaoServico <= minutoFimServico; minuto += 30) {
+              // Verificar se o horário não conflita com o intervalo
+              const fimHorario = minuto + duracaoServico;
+              
+              let dentroIntervalo = false;
+              if (minutoInicioIntervalo !== null && minutoFimIntervalo !== null) {
+                // Verificar se há sobreposição com o intervalo
+                dentroIntervalo = (minuto < minutoFimIntervalo) && (fimHorario > minutoInicioIntervalo);
+              }
+              
+              if (!dentroIntervalo) {
+                const hora = Math.floor(minuto / 60);
+                const min = minuto % 60;
+                const horarioStr = `${hora.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+                
+                horarios.push({
+                  horario: horarioStr,
+                  disponivel: true
+                });
+              }
+            }
+            
+            console.log('Horários gerados:', horarios);
+            setHorariosDisponiveis(horarios);
+          } else {
+            // Dia não configurado
+            console.log('Dia não configurado ou inativo');
+            setHorariosDisponiveis([]);
+          }
+        } else {
+          // Fallback para horários calculados pelo hook original
+          console.log('Usando fallback - configurações não disponíveis');
+          try {
+            const horariosCalculados = await calcularHorariosDisponiveis(formData.servicoId, formData.data);
+            console.log('Horários calculados via fallback:', horariosCalculados);
+            setHorariosDisponiveis(horariosCalculados);
+          } catch (error) {
+            console.error('Erro ao calcular horários:', error);
+            setHorariosDisponiveis([]);
+          }
         }
       } else {
-        console.log('⚠️ Dados insuficientes para calcular horários');
+        console.log('Serviço ou data não selecionados');
         setHorariosDisponiveis([]);
       }
     };
 
     calcularHorarios();
-  }, [formData.servicoId, formData.data, calcularHorariosDisponiveis]);
+  }, [formData.servicoId, formData.data, configuracaoHorarios, servicosPublicos, calcularHorariosDisponiveis]);
 
   const dataMinima = new Date().toISOString().split('T')[0];
 

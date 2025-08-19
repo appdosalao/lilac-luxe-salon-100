@@ -112,8 +112,13 @@ export function useAgendamentoOnline() {
   // Criar agendamento
   const criarAgendamento = useCallback(async (dados: AgendamentoOnlineForm): Promise<boolean> => {
     try {
+      console.log('=== INICIANDO PROCESSO DE CRIAÇÃO DE AGENDAMENTO ===');
+      console.log('Dados do formulário:', dados);
+      console.log('Serviços disponíveis:', servicosPublicos);
+      
       // Validações
       if (!dados.nomeCompleto.trim()) {
+        console.log('Erro: Nome obrigatório');
         toast({
           title: "Nome obrigatório",
           description: "Por favor, preencha seu nome completo.",
@@ -123,6 +128,7 @@ export function useAgendamentoOnline() {
       }
 
       if (!validarEmail(dados.email)) {
+        console.log('Erro: E-mail inválido:', dados.email);
         toast({
           title: "E-mail inválido",
           description: "Por favor, insira um e-mail válido.",
@@ -132,6 +138,7 @@ export function useAgendamentoOnline() {
       }
 
       if (!validarTelefone(dados.telefone)) {
+        console.log('Erro: Telefone inválido:', dados.telefone);
         toast({
           title: "Telefone inválido",
           description: "Por favor, insira um telefone válido.",
@@ -141,7 +148,10 @@ export function useAgendamentoOnline() {
       }
 
       const servico = servicosPublicos.find(s => s.id === dados.servicoId);
+      console.log('Serviço encontrado:', servico);
+      
       if (!servico) {
+        console.log('Erro: Serviço não encontrado. ID buscado:', dados.servicoId);
         toast({
           title: "Serviço não encontrado",
           description: "Por favor, selecione um serviço válido.",
@@ -156,7 +166,10 @@ export function useAgendamentoOnline() {
       hoje.setHours(0, 0, 0, 0);
       dataAgendamento.setHours(0, 0, 0, 0);
 
+      console.log('Validação de data - hoje:', hoje, 'data agendamento:', dataAgendamento);
+
       if (dataAgendamento < hoje) {
+        console.log('Erro: Data inválida - no passado');
         toast({
           title: "Data inválida",
           description: "Não é possível agendar para datas passadas.",
@@ -166,8 +179,12 @@ export function useAgendamentoOnline() {
       }
 
       // Verificar se o horário está disponível
+      console.log('Verificando disponibilidade do horário...');
       const horarioDisponivel = await isHorarioDisponivel(dados.data, dados.horario, servico.duracao);
+      console.log('Horário disponível:', horarioDisponivel);
+      
       if (!horarioDisponivel) {
+        console.log('Erro: Horário indisponível');
         toast({
           title: "Horário indisponível",
           description: "Este horário não está mais disponível. Por favor, escolha outro.",
@@ -189,9 +206,15 @@ export function useAgendamentoOnline() {
         duracao: servico.duracao
       };
 
+      console.log('Dados finais para criação:', agendamentoData);
+      console.log('Chamando createAgendamentoOnline...');
+      
       const agendamentoCriado = await createAgendamentoOnline(agendamentoData);
       
+      console.log('Resultado da criação:', agendamentoCriado);
+      
       if (!agendamentoCriado) {
+        console.log('Erro: Agendamento não foi criado');
         toast({
           title: "Erro ao agendar",
           description: "Erro ao criar agendamento. Tente novamente.",
@@ -200,6 +223,7 @@ export function useAgendamentoOnline() {
         return false;
       }
 
+      console.log('=== AGENDAMENTO CRIADO COM SUCESSO ===');
       toast({
         title: "Agendamento confirmado! ✨",
         description: `Seu agendamento para ${servico.nome} foi confirmado para ${new Date(dados.data).toLocaleDateString('pt-BR')} às ${dados.horario}.`,
@@ -207,6 +231,7 @@ export function useAgendamentoOnline() {
 
       return true;
     } catch (error) {
+      console.error('=== ERRO COMPLETO NO PROCESSO ===');
       console.error('Erro ao criar agendamento:', error);
       toast({
         title: "Erro ao agendar",
