@@ -51,12 +51,12 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
   const itemsPerPage = 10;
 
   const filteredClientes = clientes.filter(cliente =>
-    cliente.nomeCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (cliente.nomeCompleto || cliente.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.telefone.includes(searchTerm)
   );
 
   const sortedClientes = filteredClientes.sort((a, b) => 
-    a.nomeCompleto.localeCompare(b.nomeCompleto)
+    (a.nomeCompleto || a.nome || '').localeCompare(b.nomeCompleto || b.nome || '')
   );
 
   const totalPages = Math.ceil(sortedClientes.length / itemsPerPage);
@@ -136,7 +136,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                       className="border-border/50 hover:bg-accent/50 cursor-pointer transition-colors"
                       onClick={() => onViewDetails(cliente)}
                     >
-                      <TableCell className="font-medium text-responsive-sm">{cliente.nomeCompleto}</TableCell>
+                      <TableCell className="font-medium text-responsive-sm">{cliente.nomeCompleto || cliente.nome}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="text-responsive-xs">{formatarTelefone(cliente.telefone)}</span>
@@ -157,7 +157,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                abrirWhatsApp(cliente.telefone, cliente.nomeCompleto);
+                                abrirWhatsApp(cliente.telefone, cliente.nomeCompleto || cliente.nome || '');
                               }}
                               className="btn-touch hover:bg-green-100"
                             >
@@ -167,13 +167,13 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-accent/50 text-responsive-xs">
-                          {cliente.servicoFrequente}
-                        </Badge>
+                         <Badge variant="outline" className="bg-accent/50 text-responsive-xs">
+                           {cliente.servicoFrequente || 'Não definido'}
+                         </Badge>
                       </TableCell>
-                      <TableCell className="text-responsive-xs">
-                        {format(cliente.ultimaVisita, "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
+                       <TableCell className="text-responsive-xs">
+                         {cliente.ultimaVisita ? format(new Date(cliente.ultimaVisita), "dd/MM/yyyy", { locale: ptBR }) : 'Não definido'}
+                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
                           <Button
@@ -216,14 +216,14 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-responsive-lg">Confirmar exclusão</AlertDialogTitle>
                                 <AlertDialogDescription className="text-responsive-sm">
-                                  Tem certeza que deseja excluir <strong>{cliente.nomeCompleto}</strong>? 
+                                   Tem certeza que deseja excluir <strong>{cliente.nomeCompleto || cliente.nome}</strong>?
                                   Esta ação não pode ser desfeita.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="btn-touch text-responsive-sm">Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(cliente.id, cliente.nomeCompleto)}
+                                   onClick={() => handleDelete(cliente.id, cliente.nomeCompleto || cliente.nome || '')}
                                   className="bg-destructive hover:bg-destructive/90 btn-touch text-responsive-sm"
                                 >
                                   Excluir
@@ -251,7 +251,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                     <div className="space-responsive">
                       <div className="flex justify-between items-start gap-3">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-responsive-lg truncate">{cliente.nomeCompleto}</h3>
+                          <h3 className="font-semibold text-responsive-lg truncate">{cliente.nomeCompleto || cliente.nome}</h3>
                           <p className="text-responsive-sm text-muted-foreground">
                             {formatarTelefone(cliente.telefone)}
                           </p>
@@ -273,7 +273,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                             variant="ghost"
                             onClick={(e) => {
                               e.stopPropagation();
-                              abrirWhatsApp(cliente.telefone, cliente.nomeCompleto);
+                              abrirWhatsApp(cliente.telefone, cliente.nomeCompleto || cliente.nome || '');
                             }}
                             className="btn-touch"
                           >
@@ -283,12 +283,12 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                       </div>
                       
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                        <Badge variant="outline" className="bg-accent/50 text-responsive-xs w-fit">
-                          {cliente.servicoFrequente}
-                        </Badge>
-                        <span className="text-responsive-xs text-muted-foreground">
-                          {format(cliente.ultimaVisita, "dd/MM/yyyy", { locale: ptBR })}
-                        </span>
+                         <Badge variant="outline" className="bg-accent/50 text-responsive-xs w-fit">
+                           {cliente.servicoFrequente || 'Não definido'}
+                         </Badge>
+                         <span className="text-responsive-xs text-muted-foreground">
+                           {cliente.ultimaVisita ? format(new Date(cliente.ultimaVisita), "dd/MM/yyyy", { locale: ptBR }) : 'Não definido'}
+                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 pt-2">
@@ -323,14 +323,14 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                             <AlertDialogHeader>
                               <AlertDialogTitle className="text-responsive-lg">Confirmar exclusão</AlertDialogTitle>
                               <AlertDialogDescription className="text-responsive-sm">
-                                Tem certeza que deseja excluir <strong>{cliente.nomeCompleto}</strong>? 
+                                Tem certeza que deseja excluir <strong>{cliente.nomeCompleto || cliente.nome}</strong>? 
                                 Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel className="btn-touch text-responsive-sm">Cancelar</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(cliente.id, cliente.nomeCompleto)}
+                                onClick={() => handleDelete(cliente.id, cliente.nomeCompleto || cliente.nome || '')}
                                 className="bg-destructive hover:bg-destructive/90 btn-touch text-responsive-sm"
                               >
                                 Excluir

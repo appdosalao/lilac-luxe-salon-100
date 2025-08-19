@@ -16,16 +16,28 @@ import { cn } from "@/lib/utils";
 import { Cliente, ClienteFormData } from "@/types/cliente";
 import { toast } from "@/hooks/use-toast";
 
+// Criar tipo local para o formulário que coincida com ClienteFormData
+type FormData = {
+  nomeCompleto: string;
+  email?: string;
+  telefone: string;
+  endereco?: string;
+  dataNascimento?: string;
+  servicoFrequente?: string;
+  ultimaVisita?: Date;
+  observacoes?: string;
+};
+
 const clienteSchema = z.object({
   nomeCompleto: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("E-mail inválido"),
+  email: z.string().email("E-mail inválido").optional(),
   telefone: z.string()
     .min(10, "Telefone deve ter pelo menos 10 dígitos")
     .regex(/^[\d\s\-\+\(\)]+$/, "Telefone deve conter apenas números e símbolos padrões"),
-  servicoFrequente: z.string().min(2, "Serviço frequente é obrigatório"),
-  ultimaVisita: z.date({
-    message: "Data da última visita é obrigatória",
-  }),
+  endereco: z.string().optional(),
+  dataNascimento: z.string().optional(),
+  servicoFrequente: z.string().optional(),
+  ultimaVisita: z.date().optional(),
   observacoes: z.string().optional(),
 });
 
@@ -38,19 +50,21 @@ interface ClienteFormProps {
 export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormProps) {
   const [open, setOpen] = useState(false);
   
-  const form = useForm<ClienteFormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      nomeCompleto: cliente?.nomeCompleto || "",
+      nomeCompleto: cliente?.nomeCompleto || cliente?.nome || "",
       email: cliente?.email || "",
       telefone: cliente?.telefone || "",
+      endereco: cliente?.endereco || "",
+      dataNascimento: cliente?.dataNascimento || "",
       servicoFrequente: cliente?.servicoFrequente || "",
-      ultimaVisita: cliente?.ultimaVisita || new Date(),
+      ultimaVisita: cliente?.ultimaVisita ? new Date(cliente.ultimaVisita) : undefined,
       observacoes: cliente?.observacoes || "",
     },
   });
 
-  const handleSubmit = (data: ClienteFormData) => {
+  const handleSubmit = (data: FormData) => {
     onSubmit(data);
     form.reset();
     setOpen(false);
@@ -106,7 +120,7 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground font-medium">E-mail</FormLabel>
+                  <FormLabel className="text-foreground font-medium">E-mail (opcional)</FormLabel>
                   <FormControl>
                     <Input 
                       type="email"
@@ -143,7 +157,7 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
               name="servicoFrequente"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground font-medium">Serviço Frequente</FormLabel>
+                  <FormLabel className="text-foreground font-medium">Serviço Frequente (opcional)</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Ex: Corte e Escova"
@@ -161,7 +175,7 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
               name="ultimaVisita"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="text-foreground font-medium">Última Visita</FormLabel>
+                  <FormLabel className="text-foreground font-medium">Última Visita (opcional)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>

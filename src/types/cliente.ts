@@ -1,12 +1,17 @@
 export interface Cliente {
   id: string;
-  nomeCompleto: string;
-  email: string;
+  nome: string; // Campo principal do Supabase
+  nomeCompleto?: string; // Compatibilidade com código antigo
+  email?: string;
   telefone: string;
-  servicoFrequente: string;
-  ultimaVisita: Date;
+  endereco?: string;
+  dataNascimento?: string;
+  servicoFrequente?: string;
+  ultimaVisita?: Date | string;
   observacoes?: string;
   historicoServicos: HistoricoServico[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface HistoricoServico {
@@ -18,9 +23,11 @@ export interface HistoricoServico {
 
 export interface ClienteFormData {
   nomeCompleto: string;
-  email: string;
+  email?: string;
   telefone: string;
-  servicoFrequente: string;
-  ultimaVisita: Date;
+  endereco?: string;
+  dataNascimento?: string;
+  servicoFrequente?: string;
+  ultimaVisita?: Date;
   observacoes?: string;
 }

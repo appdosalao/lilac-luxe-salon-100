@@ -39,6 +39,7 @@ export default function Clientes() {
 
   const clientesAtivas = clientes.length;
   const novasEsteMes = clientes.filter(cliente => {
+    if (!cliente.ultimaVisita) return false;
     const agora = new Date();
     const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
     const ultimaVisita = typeof cliente.ultimaVisita === 'string' 

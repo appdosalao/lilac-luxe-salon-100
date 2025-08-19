@@ -31,15 +31,15 @@ export function useSupabaseClientes() {
       const clientesFormatados: any[] = (data || []).map(item => ({
         id: item.id,
         nome: item.nome,
-        nomeCompleto: item.nome, // Usando nome como nomeCompleto
+        nomeCompleto: item.nome, // Usar nome como nomeCompleto para compatibilidade
         telefone: item.telefone,
         email: item.email || undefined,
         endereco: item.endereco || undefined,
         dataNascimento: item.data_nascimento || undefined,
         observacoes: item.observacoes || undefined,
         historicoServicos: Array.isArray(item.historico_servicos) ? item.historico_servicos : [],
-        servicoFrequente: undefined,
-        ultimaVisita: undefined,
+        servicoFrequente: undefined, // Campo será calculado baseado no histórico
+        ultimaVisita: undefined, // Campo será calculado baseado no histórico
         createdAt: item.created_at,
         updatedAt: item.updated_at
       }));
