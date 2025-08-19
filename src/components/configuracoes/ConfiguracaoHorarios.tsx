@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -6,315 +6,284 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, Plus, Trash2 } from 'lucide-react';
-import { useConfiguracoes } from '@/hooks/useConfiguracoes';
-import type { IntervaloTrabalho } from '@/types/configuracao';
-import { toast } from '@/hooks/use-toast';
+import { Clock, Calendar, Plus, Trash2, Save } from 'lucide-react';
+import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
+// import { DIAS_SEMANA } from '@/types/configuracao';
+import { toast } from 'sonner';
+
+const DIAS_SEMANA = [
+  { id: 0, nome: 'Domingo', abrev: 'DOM' },
+  { id: 1, nome: 'Segunda-feira', abrev: 'SEG' },
+  { id: 2, nome: 'Terça-feira', abrev: 'TER' },
+  { id: 3, nome: 'Quarta-feira', abrev: 'QUA' },
+  { id: 4, nome: 'Quinta-feira', abrev: 'QUI' },
+  { id: 5, nome: 'Sexta-feira', abrev: 'SEX' },
+  { id: 6, nome: 'Sábado', abrev: 'SAB' },
+];
+
+interface HorarioFormData {
+  dia_semana: number;
+  ativo: boolean;
+  horario_abertura: string;
+  horario_fechamento: string;
+  intervalo_inicio?: string;
+  intervalo_fim?: string;
+}
 
 export function ConfiguracaoHorarios() {
-  const { configuracoes, updateConfiguracoes, loading } = useConfiguracoes();
-  const [novoIntervalo, setNovoIntervalo] = useState<IntervaloTrabalho>({
-    inicio: '',
-    termino: '',
-    descricao: '',
-  });
+  const { configuracaoHorarios, loading, salvarHorario, deletarHorario } = useSupabaseConfiguracoes();
+  const [horariosForm, setHorariosForm] = useState<HorarioFormData[]>([]);
 
-  if (loading || !configuracoes) {
-    return <div>Carregando configurações...</div>;
+  // Inicializar formulário com dados existentes ou padrões
+  useEffect(() => {
+    if (configuracaoHorarios.length > 0) {
+      setHorariosForm(configuracaoHorarios.map(h => ({
+        dia_semana: h.dia_semana,
+        ativo: h.ativo,
+        horario_abertura: h.horario_abertura,
+        horario_fechamento: h.horario_fechamento,
+        intervalo_inicio: h.intervalo_inicio,
+        intervalo_fim: h.intervalo_fim,
+      })));
+    } else {
+      // Criar configurações padrão para todos os dias
+      const horariosDefault = DIAS_SEMANA.map(dia => ({
+        dia_semana: dia.id,
+        ativo: dia.id >= 1 && dia.id <= 5, // Segunda a sexta ativo por padrão
+        horario_abertura: '08:00',
+        horario_fechamento: '18:00',
+        intervalo_inicio: '12:00',
+        intervalo_fim: '13:00',
+      }));
+      setHorariosForm(horariosDefault);
+    }
+  }, [configuracaoHorarios]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">Carregando configurações...</div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  const diasSemana = [
-    { key: 'domingo', label: 'Domingo' },
-    { key: 'segunda', label: 'Segunda' },
-    { key: 'terca', label: 'Terça' },
-    { key: 'quarta', label: 'Quarta' },
-    { key: 'quinta', label: 'Quinta' },
-    { key: 'sexta', label: 'Sexta' },
-    { key: 'sabado', label: 'Sábado' },
-  ];
-
-  const handleDiaToggle = (dia: string, ativo: boolean) => {
-    updateConfiguracoes({
-      horarios: {
-        ...configuracoes.horarios,
-        diasAtivos: {
-          ...configuracoes.horarios.diasAtivos,
-          [dia]: ativo,
-        },
-      },
-    });
+  const handleDiaToggle = (diaSemana: number, ativo: boolean) => {
+    setHorariosForm(prev => 
+      prev.map(h => 
+        h.dia_semana === diaSemana ? { ...h, ativo } : h
+      )
+    );
   };
 
-  const handleHorarioExpedienteChange = (campo: 'inicio' | 'termino', valor: string) => {
-    updateConfiguracoes({
-      horarios: {
-        ...configuracoes.horarios,
-        horarioExpediente: {
-          ...configuracoes.horarios.horarioExpediente,
-          [campo]: valor,
-        },
-      },
-    });
+  const handleHorarioChange = (diaSemana: number, campo: string, valor: string) => {
+    setHorariosForm(prev => 
+      prev.map(h => 
+        h.dia_semana === diaSemana ? { ...h, [campo]: valor } : h
+      )
+    );
   };
 
-  const handleIntervaloAlmocoChange = (campo: 'inicio' | 'termino', valor: string) => {
-    updateConfiguracoes({
-      horarios: {
-        ...configuracoes.horarios,
-        intervaloAlmoco: {
-          ...configuracoes.horarios.intervaloAlmoco,
-          [campo]: valor,
-        },
-      },
-    });
-  };
+  const salvarConfiguracao = async (diaSemana: number) => {
+    const horario = horariosForm.find(h => h.dia_semana === diaSemana);
+    if (!horario) return;
 
-  const adicionarIntervaloPersonalizado = () => {
-    if (!novoIntervalo.inicio || !novoIntervalo.termino) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Informe o horário de início e término do intervalo.",
-        variant: "destructive",
-      });
-      return;
+    try {
+      if (horario.ativo && horario.horario_abertura >= horario.horario_fechamento) {
+        toast.error('Horário de abertura deve ser menor que o de fechamento');
+        return;
+      }
+
+      if (horario.intervalo_inicio && horario.intervalo_fim && 
+          horario.intervalo_inicio >= horario.intervalo_fim) {
+        toast.error('Horário de início do intervalo deve ser menor que o de fim');
+        return;
+      }
+
+      await salvarHorario(horario);
+    } catch (error) {
+      console.error('Erro ao salvar horário:', error);
     }
-
-    if (novoIntervalo.inicio >= novoIntervalo.termino) {
-      toast({
-        title: "Horário inválido",
-        description: "O horário de início deve ser anterior ao de término.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const novosIntervalos = [...configuracoes.horarios.intervalosPersonalizados, novoIntervalo];
-    
-    updateConfiguracoes({
-      horarios: {
-        ...configuracoes.horarios,
-        intervalosPersonalizados: novosIntervalos,
-      },
-    });
-
-    setNovoIntervalo({ inicio: '', termino: '', descricao: '' });
-    toast({
-      title: "Intervalo adicionado",
-      description: "Novo intervalo personalizado criado com sucesso.",
-    });
   };
 
-  const removerIntervaloPersonalizado = (index: number) => {
-    const novosIntervalos = configuracoes.horarios.intervalosPersonalizados.filter((_, i) => i !== index);
-    
-    updateConfiguracoes({
-      horarios: {
-        ...configuracoes.horarios,
-        intervalosPersonalizados: novosIntervalos,
-      },
-    });
+  const salvarTodasConfiguracoes = async () => {
+    try {
+      for (const horario of horariosForm) {
+        if (horario.ativo) {
+          await salvarHorario(horario);
+        }
+      }
+      toast.success('Todas as configurações foram salvas!');
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      toast.error('Erro ao salvar algumas configurações');
+    }
+  };
 
-    toast({
-      title: "Intervalo removido",
-      description: "Intervalo personalizado removido com sucesso.",
-    });
+  const getHorarioAtual = (diaSemana: number) => {
+    return horariosForm.find(h => h.dia_semana === diaSemana);
   };
 
   return (
     <div className="space-y-6">
-      {/* Dias da Semana */}
+      {/* Resumo dos Dias Ativos */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Dias de Atendimento
+            Resumo dos Dias de Atendimento
           </CardTitle>
           <CardDescription>
-            Selecione os dias da semana em que você atenderá clientes
+            Visão geral dos dias em que você atenderá clientes
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {diasSemana.map((dia) => (
-              <div key={dia.key} className="flex items-center space-x-2">
-                <Switch
-                  id={dia.key}
-                  checked={configuracoes.horarios.diasAtivos[dia.key as keyof typeof configuracoes.horarios.diasAtivos]}
-                  onCheckedChange={(checked) => handleDiaToggle(dia.key, checked)}
-                />
-                <Label htmlFor={dia.key} className="text-sm">
-                  {dia.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-4 flex flex-wrap gap-2">
-            {diasSemana.map((dia) => {
-              const isAtivo = configuracoes.horarios.diasAtivos[dia.key as keyof typeof configuracoes.horarios.diasAtivos];
+          <div className="flex flex-wrap gap-2 mb-4">
+            {DIAS_SEMANA.map((dia) => {
+              const horario = getHorarioAtual(dia.id);
+              const isAtivo = horario?.ativo || false;
               return (
-                <Badge key={dia.key} variant={isAtivo ? "default" : "secondary"}>
-                  {dia.label}
+                <Badge key={dia.id} variant={isAtivo ? "default" : "secondary"}>
+                  {dia.abrev}
+                  {isAtivo && horario && (
+                    <span className="ml-1 text-xs opacity-75">
+                      {horario.horario_abertura}-{horario.horario_fechamento}
+                    </span>
+                  )}
                 </Badge>
               );
             })}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Horário de Expediente */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Horário de Expediente
-          </CardTitle>
-          <CardDescription>
-            Configure o horário de funcionamento do seu salão
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="inicio-expediente">Horário de Início</Label>
-              <Input
-                id="inicio-expediente"
-                type="time"
-                value={configuracoes.horarios.horarioExpediente.inicio}
-                onChange={(e) => handleHorarioExpedienteChange('inicio', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="termino-expediente">Horário de Término</Label>
-              <Input
-                id="termino-expediente"
-                type="time"
-                value={configuracoes.horarios.horarioExpediente.termino}
-                onChange={(e) => handleHorarioExpedienteChange('termino', e.target.value)}
-              />
-            </div>
-          </div>
           
-          <div className="bg-muted/50 p-3 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Expediente:</strong> {configuracoes.horarios.horarioExpediente.inicio} às {configuracoes.horarios.horarioExpediente.termino}
-            </p>
-          </div>
+          <Button onClick={salvarTodasConfiguracoes} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            Salvar Todas as Configurações
+          </Button>
         </CardContent>
       </Card>
 
-      {/* Intervalo de Almoço */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Intervalo de Almoço</CardTitle>
-          <CardDescription>
-            Configure o horário de intervalo para almoço
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="inicio-almoco">Início do Almoço</Label>
-              <Input
-                id="inicio-almoco"
-                type="time"
-                value={configuracoes.horarios.intervaloAlmoco.inicio}
-                onChange={(e) => handleIntervaloAlmocoChange('inicio', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="termino-almoco">Término do Almoço</Label>
-              <Input
-                id="termino-almoco"
-                type="time"
-                value={configuracoes.horarios.intervaloAlmoco.termino}
-                onChange={(e) => handleIntervaloAlmocoChange('termino', e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <div className="bg-muted/50 p-3 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Almoço:</strong> {configuracoes.horarios.intervaloAlmoco.inicio} às {configuracoes.horarios.intervaloAlmoco.termino}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Configuração Detalhada por Dia */}
+      {DIAS_SEMANA.map((dia) => {
+        const horario = getHorarioAtual(dia.id);
+        if (!horario) return null;
 
-      {/* Intervalos Personalizados */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Intervalos Personalizados</CardTitle>
-          <CardDescription>
-            Adicione outros horários de descanso ou bloqueios específicos
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Lista de intervalos existentes */}
-          {configuracoes.horarios.intervalosPersonalizados.length > 0 && (
-            <div className="space-y-2">
-              {configuracoes.horarios.intervalosPersonalizados.map((intervalo, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">
-                      {intervalo.inicio} - {intervalo.termino}
-                    </p>
-                    {intervalo.descricao && (
-                      <p className="text-sm text-muted-foreground">{intervalo.descricao}</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removerIntervaloPersonalizado(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+        return (
+          <Card key={dia.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  {dia.nome}
                 </div>
-              ))}
-              <Separator />
-            </div>
-          )}
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={horario.ativo}
+                    onCheckedChange={(checked) => handleDiaToggle(dia.id, checked)}
+                  />
+                  <Label className="text-sm">Ativo</Label>
+                </div>
+              </CardTitle>
+              {horario.ativo && (
+                <CardDescription>
+                  Configure os horários de funcionamento para {dia.nome.toLowerCase()}
+                </CardDescription>
+              )}
+            </CardHeader>
+            
+            {horario.ativo && (
+              <CardContent className="space-y-4">
+                {/* Horário de Funcionamento */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Horário de Funcionamento</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor={`abertura-${dia.id}`} className="text-xs">Abertura</Label>
+                      <Input
+                        id={`abertura-${dia.id}`}
+                        type="time"
+                        value={horario.horario_abertura}
+                        onChange={(e) => handleHorarioChange(dia.id, 'horario_abertura', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`fechamento-${dia.id}`} className="text-xs">Fechamento</Label>
+                      <Input
+                        id={`fechamento-${dia.id}`}
+                        type="time"
+                        value={horario.horario_fechamento}
+                        onChange={(e) => handleHorarioChange(dia.id, 'horario_fechamento', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-          {/* Adicionar novo intervalo */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Adicionar Novo Intervalo</Label>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <Label htmlFor="novo-inicio" className="text-xs">Início</Label>
-                <Input
-                  id="novo-inicio"
-                  type="time"
-                  value={novoIntervalo.inicio}
-                  onChange={(e) => setNovoIntervalo(prev => ({ ...prev, inicio: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="novo-termino" className="text-xs">Término</Label>
-                <Input
-                  id="novo-termino"
-                  type="time"
-                  value={novoIntervalo.termino}
-                  onChange={(e) => setNovoIntervalo(prev => ({ ...prev, termino: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="nova-descricao" className="text-xs">Descrição (opcional)</Label>
-                <Input
-                  id="nova-descricao"
-                  placeholder="Ex: Lanche da tarde"
-                  value={novoIntervalo.descricao}
-                  onChange={(e) => setNovoIntervalo(prev => ({ ...prev, descricao: e.target.value }))}
-                />
-              </div>
-            </div>
-            
-            <Button onClick={adicionarIntervaloPersonalizado} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Intervalo
-            </Button>
-          </div>
+                <Separator />
+
+                {/* Intervalo (Opcional) */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Intervalo (Opcional)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor={`intervalo-inicio-${dia.id}`} className="text-xs">Início do Intervalo</Label>
+                      <Input
+                        id={`intervalo-inicio-${dia.id}`}
+                        type="time"
+                        value={horario.intervalo_inicio || ''}
+                        onChange={(e) => handleHorarioChange(dia.id, 'intervalo_inicio', e.target.value)}
+                        placeholder="Ex: 12:00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`intervalo-fim-${dia.id}`} className="text-xs">Fim do Intervalo</Label>
+                      <Input
+                        id={`intervalo-fim-${dia.id}`}
+                        type="time"
+                        value={horario.intervalo_fim || ''}
+                        onChange={(e) => handleHorarioChange(dia.id, 'intervalo_fim', e.target.value)}
+                        placeholder="Ex: 13:00"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resumo do Horário */}
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Funcionamento:</strong> {horario.horario_abertura} às {horario.horario_fechamento}
+                    {horario.intervalo_inicio && horario.intervalo_fim && (
+                      <span> (Intervalo: {horario.intervalo_inicio} às {horario.intervalo_fim})</span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Botão Salvar Individual */}
+                <Button 
+                  onClick={() => salvarConfiguracao(dia.id)}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar {dia.nome}
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
+
+      {/* Informações de Ajuda */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
+        <CardContent className="p-4">
+          <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            💡 Dicas de Configuração
+          </h3>
+          <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+            <li>• Os horários configurados serão respeitados nos formulários de agendamento</li>
+            <li>• Intervalos bloqueiam automaticamente os horários para novos agendamentos</li>
+            <li>• Você pode configurar horários diferentes para cada dia da semana</li>
+            <li>• Dias inativos não aparecerão como opção para agendamentos</li>
+          </ul>
         </CardContent>
       </Card>
     </div>
