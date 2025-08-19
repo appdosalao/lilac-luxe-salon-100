@@ -49,6 +49,7 @@ export default function Financeiro() {
     removerContaFixa, 
     pagarContaFixa,
     toggleAtiva,
+    criarCategoria,
     estatisticas: estatisticasContasFixas 
   } = useContasFixas();
 
@@ -115,6 +116,9 @@ export default function Financeiro() {
             categorias={categoriasContasFixas}
             onSubmit={handleSubmitContaFixa}
             onCancel={handleCancelarForm}
+            onCreateCategoria={async (nome: string, cor?: string) => {
+              await criarCategoria({ nome, tipo: 'despesa', cor });
+            }}
           />
         </div>
       );

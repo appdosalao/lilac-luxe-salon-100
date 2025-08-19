@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Save, Repeat, Calendar } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, Save, Repeat, Calendar, Plus } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { ContaFixa, NovaContaFixa, CategoriaFinanceira } from '@/types/contaFixa';
 
 const contaFixaSchema = z.object({
@@ -23,20 +25,29 @@ const contaFixaSchema = z.object({
   ativa: z.boolean().optional(),
 });
 
+const novaCategoriaSchema = z.object({
+  nome: z.string().min(1, 'Nome da categoria é obrigatório'),
+  cor: z.string().optional(),
+});
+
 interface ContaFixaFormProps {
   conta?: ContaFixa;
   categorias: CategoriaFinanceira[];
   onSubmit: (data: NovaContaFixa) => void;
   onCancel: () => void;
+  onCreateCategoria?: (nome: string, cor?: string) => Promise<void>;
 }
 
 export default function ContaFixaForm({ 
   conta, 
   categorias, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  onCreateCategoria 
 }: ContaFixaFormProps) {
   const [loading, setLoading] = useState(false);
+  const [showCategoriaDialog, setShowCategoriaDialog] = useState(false);
+  const [loadingCategoria, setLoadingCategoria] = useState(false);
 
   const form = useForm<NovaContaFixa>({
     resolver: zodResolver(contaFixaSchema),
@@ -52,12 +63,47 @@ export default function ContaFixaForm({
     },
   });
 
+  const categoriaForm = useForm({
+    resolver: zodResolver(novaCategoriaSchema),
+    defaultValues: {
+      nome: '',
+      cor: '#3b82f6',
+    },
+  });
+
   const handleSubmit = async (data: NovaContaFixa) => {
     setLoading(true);
     try {
       await onSubmit(data);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateCategoria = async (data: { nome: string; cor?: string }) => {
+    if (!onCreateCategoria) return;
+    
+    setLoadingCategoria(true);
+    try {
+      await onCreateCategoria(data.nome, data.cor);
+      categoriaForm.reset();
+      setShowCategoriaDialog(false);
+      
+      // Seleciona automaticamente a nova categoria
+      form.setValue('categoria', data.nome);
+      
+      toast({
+        title: "Categoria criada",
+        description: `A categoria "${data.nome}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao criar categoria",
+        description: "Não foi possível criar a categoria. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingCategoria(false);
     }
   };
 
@@ -157,26 +203,110 @@ export default function ContaFixaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Categoria</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma categoria" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categoriasDespesa.map((categoria) => (
-                            <SelectItem key={categoria.id} value={categoria.nome}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: categoria.cor }}
-                                />
-                                {categoria.nome}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categoriasDespesa.map((categoria) => (
+                              <SelectItem key={categoria.id} value={categoria.nome}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full" 
+                                    style={{ backgroundColor: categoria.cor }}
+                                  />
+                                  {categoria.nome}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {onCreateCategoria && (
+                          <Dialog open={showCategoriaDialog} onOpenChange={setShowCategoriaDialog}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                type="button"
+                                variant="outline" 
+                                size="icon"
+                                className="flex-shrink-0"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Nova Categoria</DialogTitle>
+                              </DialogHeader>
+                              <Form {...categoriaForm}>
+                                <form onSubmit={categoriaForm.handleSubmit(handleCreateCategoria)} className="space-y-4">
+                                  <FormField
+                                    control={categoriaForm.control}
+                                    name="nome"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Nome da Categoria</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            placeholder="Ex: Aluguel, Energia, Internet..."
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <FormField
+                                    control={categoriaForm.control}
+                                    name="cor"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Cor</FormLabel>
+                                        <FormControl>
+                                          <div className="flex gap-2">
+                                            <Input
+                                              type="color"
+                                              className="w-16 h-10 p-1 border rounded"
+                                              {...field}
+                                            />
+                                            <Input
+                                              placeholder="#3b82f6"
+                                              {...field}
+                                              className="flex-1"
+                                            />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <div className="flex gap-2 pt-4">
+                                    <Button 
+                                      type="submit" 
+                                      disabled={loadingCategoria}
+                                      className="bg-gradient-to-r from-primary to-lilac-primary"
+                                    >
+                                      {loadingCategoria ? 'Criando...' : 'Criar Categoria'}
+                                    </Button>
+                                    <Button 
+                                      type="button" 
+                                      variant="outline"
+                                      onClick={() => setShowCategoriaDialog(false)}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </form>
+                              </Form>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
