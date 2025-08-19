@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          cliente_id: string
+          confirmado: boolean | null
+          created_at: string
+          data: string
+          duracao: number
+          forma_pagamento: string | null
+          hora: string
+          id: string
+          observacoes: string | null
+          origem: string | null
+          servico_id: string
+          status: string | null
+          status_pagamento: string | null
+          updated_at: string
+          user_id: string
+          valor: number
+          valor_devido: number
+          valor_pago: number | null
+        }
+        Insert: {
+          cliente_id: string
+          confirmado?: boolean | null
+          created_at?: string
+          data: string
+          duracao: number
+          forma_pagamento?: string | null
+          hora: string
+          id?: string
+          observacoes?: string | null
+          origem?: string | null
+          servico_id: string
+          status?: string | null
+          status_pagamento?: string | null
+          updated_at?: string
+          user_id: string
+          valor: number
+          valor_devido: number
+          valor_pago?: number | null
+        }
+        Update: {
+          cliente_id?: string
+          confirmado?: boolean | null
+          created_at?: string
+          data?: string
+          duracao?: number
+          forma_pagamento?: string | null
+          hora?: string
+          id?: string
+          observacoes?: string | null
+          origem?: string | null
+          servico_id?: string
+          status?: string | null
+          status_pagamento?: string | null
+          updated_at?: string
+          user_id?: string
+          valor?: number
+          valor_devido?: number
+          valor_pago?: number | null
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          created_at: string
+          data_nascimento: string | null
+          email: string | null
+          endereco: string | null
+          historico_servicos: Json | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          historico_servicos?: Json | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          historico_servicos?: Json | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       servicos: {
         Row: {
           created_at: string

@@ -20,11 +20,7 @@ export function useSupabaseAgendamentos() {
     try {
       const { data, error } = await supabase
         .from('agendamentos')
-        .select(`
-          *,
-          clientes:cliente_id(nome),
-          servicos:servico_id(nome)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('data')
         .order('hora');
@@ -35,13 +31,13 @@ export function useSupabaseAgendamentos() {
         return;
       }
 
-      // Mapear dados do Supabase para o formato da aplicação
+      // Para agora, usar dados básicos sem joins
       const agendamentosFormatados = (data || []).map(item => ({
         id: item.id,
         clienteId: item.cliente_id,
-        clienteNome: item.clientes?.nome || 'Cliente não encontrado',
+        clienteNome: 'Cliente', // Será carregado posteriormente
         servicoId: item.servico_id,
-        servicoNome: item.servicos?.nome || 'Serviço não encontrado',
+        servicoNome: 'Serviço', // Será carregado posteriormente
         data: item.data,
         hora: item.hora,
         duracao: item.duracao,
@@ -148,11 +144,7 @@ export function useSupabaseAgendamentos() {
           confirmado: novoAgendamento.confirmado ?? false,
           observacoes: novoAgendamento.observacoes || null
         })
-        .select(`
-          *,
-          clientes:cliente_id(nome),
-          servicos:servico_id(nome)
-        `)
+        .select()
         .single();
 
       if (error) {
@@ -161,30 +153,8 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Atualizar lista local
-      const novoAgendamentoFormatado = {
-        id: data.id,
-        clienteId: data.cliente_id,
-        clienteNome: data.clientes?.nome || 'Cliente não encontrado',
-        servicoId: data.servico_id,
-        servicoNome: data.servicos?.nome || 'Serviço não encontrado',
-        data: data.data,
-        hora: data.hora,
-        duracao: data.duracao,
-        valor: parseFloat(data.valor?.toString() || '0'),
-        valorPago: parseFloat(data.valor_pago?.toString() || '0'),
-        valorDevido: parseFloat(data.valor_devido?.toString() || '0'),
-        formaPagamento: data.forma_pagamento,
-        statusPagamento: data.status_pagamento,
-        status: data.status,
-        origem: data.origem,
-        confirmado: data.confirmado,
-        observacoes: data.observacoes || undefined,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      };
-
-      setAgendamentos(prev => [...prev, novoAgendamentoFormatado]);
+      // Recarregar lista
+      await carregarAgendamentos();
       toast.success('Agendamento criado com sucesso!');
       return true;
     } catch (error) {
@@ -220,17 +190,11 @@ export function useSupabaseAgendamentos() {
       if (dadosAtualizados.confirmado !== undefined) updates.confirmado = dadosAtualizados.confirmado;
       if (dadosAtualizados.observacoes !== undefined) updates.observacoes = dadosAtualizados.observacoes || null;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('agendamentos')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', user.id)
-        .select(`
-          *,
-          clientes:cliente_id(nome),
-          servicos:servico_id(nome)
-        `)
-        .single();
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Erro ao atualizar agendamento:', error);
@@ -238,30 +202,8 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Atualizar lista local
-      const agendamentoAtualizado = {
-        id: data.id,
-        clienteId: data.cliente_id,
-        clienteNome: data.clientes?.nome || 'Cliente não encontrado',
-        servicoId: data.servico_id,
-        servicoNome: data.servicos?.nome || 'Serviço não encontrado',
-        data: data.data,
-        hora: data.hora,
-        duracao: data.duracao,
-        valor: parseFloat(data.valor?.toString() || '0'),
-        valorPago: parseFloat(data.valor_pago?.toString() || '0'),
-        valorDevido: parseFloat(data.valor_devido?.toString() || '0'),
-        formaPagamento: data.forma_pagamento,
-        statusPagamento: data.status_pagamento,
-        status: data.status,
-        origem: data.origem,
-        confirmado: data.confirmado,
-        observacoes: data.observacoes || undefined,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      };
-
-      setAgendamentos(prev => prev.map(a => a.id === id ? agendamentoAtualizado : a));
+      // Recarregar lista
+      await carregarAgendamentos();
       toast.success('Agendamento atualizado com sucesso!');
       return true;
     } catch (error) {
@@ -293,8 +235,8 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      // Atualizar lista local
-      setAgendamentos(prev => prev.filter(a => a.id !== id));
+      // Recarregar lista
+      await carregarAgendamentos();
       toast.success('Agendamento excluído com sucesso!');
       return true;
     } catch (error) {
