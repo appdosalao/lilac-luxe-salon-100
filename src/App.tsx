@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,7 +29,8 @@ const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <SupabaseAuthProvider>
-        <TooltipProvider>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <TooltipProvider delayDuration={100}>
           <NotificationProviderAvancado>
             <PWAProvider>
               <Toaster />
@@ -106,6 +107,7 @@ const App: React.FC = () => (
             </PWAProvider>
           </NotificationProviderAvancado>
         </TooltipProvider>
+        </React.Suspense>
       </SupabaseAuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
