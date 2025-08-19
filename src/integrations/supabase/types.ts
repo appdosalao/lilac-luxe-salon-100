@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      servicos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          duracao: number
+          id: string
+          nome: string
+          observacoes: string | null
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          duracao: number
+          id?: string
+          nome: string
+          observacoes?: string | null
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          duracao?: number
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       usuarios: {
         Row: {
           created_at: string
