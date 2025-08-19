@@ -114,6 +114,41 @@ export const useAgendamentoOnlineService = () => {
     return horariosDisponiveis;
   }, [servicos, verificarDisponibilidade]);
 
+  // Criar cliente se não existir
+  const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
+    try {
+      // Verificar se já existe cliente com o mesmo email
+      const { data: clienteExistente } = await supabase
+        .from('clientes')
+        .select('id')
+        .eq('email', dados.email)
+        .maybeSingle();
+
+      if (clienteExistente) {
+        return clienteExistente.id;
+      }
+
+      // Criar novo cliente
+      const { data: novoCliente, error } = await supabase
+        .from('clientes')
+        .insert({
+          nome: dados.nome_completo,
+          telefone: dados.telefone,
+          email: dados.email,
+          observacoes: 'Cliente criado via agendamento online',
+          historico_servicos: []
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return novoCliente.id;
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      throw error;
+    }
+  }, []);
+
   // Criar agendamento online
   const criarAgendamento = useCallback(async (dados: AgendamentoOnlineData): Promise<boolean> => {
     setLoading(true);
@@ -123,6 +158,10 @@ export const useAgendamentoOnlineService = () => {
         throw new Error('Serviço não encontrado');
       }
 
+      // Criar ou encontrar cliente
+      const clienteId = await criarClienteSeNaoExistir(dados);
+
+      // Criar agendamento online
       const { error } = await supabase
         .from('agendamentos_online')
         .insert({
@@ -144,7 +183,7 @@ export const useAgendamentoOnlineService = () => {
 
       toast({
         title: "Agendamento confirmado! ✨",
-        description: `Seu agendamento para ${servico.nome} foi confirmado para ${new Date(dados.data).toLocaleDateString('pt-BR')} às ${dados.horario}.`,
+        description: `Seu agendamento para ${servico.nome} foi confirmado para ${new Date(dados.data).toLocaleDateString('pt-BR')} às ${dados.horario}. Você foi cadastrado como cliente.`,
       });
 
       return true;
@@ -159,7 +198,7 @@ export const useAgendamentoOnlineService = () => {
     } finally {
       setLoading(false);
     }
-  }, [servicos]);
+  }, [servicos, criarClienteSeNaoExistir]);
 
   return {
     loading,
