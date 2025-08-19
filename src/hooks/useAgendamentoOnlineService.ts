@@ -117,32 +117,16 @@ export const useAgendamentoOnlineService = () => {
   // Criar cliente se não existir
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
     try {
-      // Verificar se já existe cliente com o mesmo email
-      const { data: clienteExistente } = await supabase
-        .from('clientes')
-        .select('id')
-        .eq('email', dados.email)
-        .maybeSingle();
-
-      if (clienteExistente) {
-        return clienteExistente.id;
-      }
-
-      // Criar novo cliente
-      const { data: novoCliente, error } = await supabase
-        .from('clientes')
-        .insert({
-          nome: dados.nome_completo,
-          telefone: dados.telefone,
-          email: dados.email,
-          observacoes: 'Cliente criado via agendamento online',
-          historico_servicos: []
-        })
-        .select('id')
-        .single();
+      // Usar função do Supabase para criar cliente
+      const { data, error } = await supabase.rpc('criar_cliente_agendamento_online', {
+        p_nome: dados.nome_completo,
+        p_telefone: dados.telefone,
+        p_email: dados.email,
+        p_observacoes: 'Cliente criado via agendamento online'
+      });
 
       if (error) throw error;
-      return novoCliente.id;
+      return data;
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
       throw error;

@@ -950,6 +950,15 @@ export type Database = {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
       }
+      criar_cliente_agendamento_online: {
+        Args: {
+          p_email: string
+          p_nome: string
+          p_observacoes?: string
+          p_telefone: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
