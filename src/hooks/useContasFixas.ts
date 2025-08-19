@@ -1,86 +1,75 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { ContaFixa, NovaContaFixa, CategoriaFinanceira, NovaCategoriaFinanceira } from '@/types/contaFixa';
+import { useSupabaseContasFixas } from './useSupabaseContasFixas';
+import { useMemo } from 'react';
 
 export function useContasFixas() {
-  const { usuario } = useSupabaseAuth();
-  const [loading, setLoading] = useState(false);
-  const [contasFixas, setContasFixas] = useState<ContaFixa[]>([]);
-  const [categorias, setCategorias] = useState<CategoriaFinanceira[]>([]);
-
-  // Placeholder functions - funcionalidade será implementada futuramente
-  const loadContasFixas = useCallback(async () => {
-    // TODO: Implementar carregamento das contas fixas via Supabase
-    console.log('loadContasFixas - placeholder');
-  }, [usuario]);
-
-  const loadCategorias = useCallback(async () => {
-    // TODO: Implementar carregamento das categorias via Supabase  
-    console.log('loadCategorias - placeholder');
-  }, [usuario]);
-
-  const createContaFixa = useCallback(async (novaContaData: NovaContaFixa) => {
-    // TODO: Implementar criação de conta fixa via Supabase
-    console.log('createContaFixa - placeholder', novaContaData);
-    return false;
-  }, [usuario]);
-
-  const updateContaFixa = useCallback(async (contaId: string, updates: Partial<NovaContaFixa>) => {
-    // TODO: Implementar atualização de conta fixa via Supabase
-    console.log('updateContaFixa - placeholder', contaId, updates);
-    return false;
-  }, [usuario]);
-
-  const deleteContaFixa = useCallback(async (contaId: string) => {
-    // TODO: Implementar exclusão de conta fixa via Supabase
-    console.log('deleteContaFixa - placeholder', contaId);
-    return false;
-  }, []);
-
-  const pagarContaFixa = useCallback(async (contaId: string, valorPago: number, observacoes?: string) => {
-    // TODO: Implementar pagamento de conta fixa via Supabase
-    console.log('pagarContaFixa - placeholder', contaId, valorPago, observacoes);
-    return false;
-  }, []);
-
-  const createCategoriaFinanceira = useCallback(async (categoriaData: NovaCategoriaFinanceira) => {
-    // TODO: Implementar criação de categoria via Supabase
-    console.log('createCategoriaFinanceira - placeholder', categoriaData);
-    return false;
-  }, [usuario]);
-
-  useEffect(() => {
-    if (usuario) {
-      loadContasFixas();
-      loadCategorias();
-    }
-  }, [usuario, loadContasFixas, loadCategorias]);
-
-  // Adicionar propriedades em falta para compatibilidade
-  const criarContaFixa = createContaFixa;
-  const atualizarContaFixa = updateContaFixa;
-  const removerContaFixa = deleteContaFixa;
-  const toggleAtiva = useCallback(async (contaId: string) => {
-    console.log('toggleAtiva - placeholder', contaId);
-    return false;
-  }, []);
-  const estatisticas = { totalAtivas: 0, totalPagas: 0, totalPendente: 0 };
-
+  const supabaseHook = useSupabaseContasFixas();
+  
+  // Estatísticas calculadas
+  const estatisticas = useMemo(() => {
+    const total = supabaseHook.contasFixas.length;
+    const pagas = supabaseHook.contasFixas.filter(c => c.status === 'pago').length;
+    const emAberto = supabaseHook.contasFixas.filter(c => c.status === 'em_aberto').length;
+    const valorTotal = supabaseHook.contasFixas.reduce((sum, c) => sum + c.valor, 0);
+    
+    return {
+      total,
+      pagas,
+      emAberto,
+      valorTotal,
+    };
+  }, [supabaseHook.contasFixas]);
+  
   return {
-    loading,
-    contasFixas,
-    categorias,
-    createContaFixa,
-    updateContaFixa,
-    deleteContaFixa,
-    pagarContaFixa,
-    createCategoriaFinanceira,
-    loadContasFixas,
-    loadCategorias,
-    criarContaFixa,
-    atualizarContaFixa,
-    removerContaFixa,
-    toggleAtiva,
+    ...supabaseHook,
+    // Funções de CRUD renomeadas para compatibilidade com código existente
+    criarContaFixa: supabaseHook.createContaFixa,
+    atualizarContaFixa: supabaseHook.updateContaFixa,
+    removerContaFixa: supabaseHook.deleteContaFixa,
+    criarCategoria: supabaseHook.createCategoria,
+    recarregar: supabaseHook.loadContasFixas,
     estatisticas,
+    
+    // Funcionalidades específicas que precisam ser implementadas
+    marcarComoPaga: async (id: string) => {
+      return supabaseHook.updateContaFixa(id, { status: 'pago' });
+    },
+    
+    pagarContaFixa: async (id: string) => {
+      return supabaseHook.updateContaFixa(id, { status: 'pago' });
+    },
+    
+    marcarComoEmAberto: async (id: string) => {
+      return supabaseHook.updateContaFixa(id, { status: 'em_aberto' });
+    },
+    
+    toggleAtiva: async (id: string) => {
+      const conta = supabaseHook.contasFixas.find(c => c.id === id);
+      if (conta) {
+        return supabaseHook.updateContaFixa(id, { ativa: !conta.ativa });
+      }
+    },
+    
+    getContasVencidas: () => {
+      const hoje = new Date();
+      return supabaseHook.contasFixas.filter(conta => {
+        if (!conta.ativa || conta.status === 'pago') return false;
+        
+        const proximoVencimento = conta.proximoVencimento ? new Date(conta.proximoVencimento) : null;
+        return proximoVencimento && proximoVencimento < hoje;
+      });
+    },
+    
+    getContasAVencer: () => {
+      const hoje = new Date();
+      const proximasSemana = new Date();
+      proximasSemana.setDate(hoje.getDate() + 7);
+      
+      return supabaseHook.contasFixas.filter(conta => {
+        if (!conta.ativa || conta.status === 'pago') return false;
+        
+        const proximoVencimento = conta.proximoVencimento ? new Date(conta.proximoVencimento) : null;
+        return proximoVencimento && proximoVencimento >= hoje && proximoVencimento <= proximasSemana;
+      });
+    },
   };
 }

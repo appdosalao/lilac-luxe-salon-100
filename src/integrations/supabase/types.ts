@@ -77,6 +77,36 @@ export type Database = {
         }
         Relationships: []
       }
+      categorias_financeiras: {
+        Row: {
+          cor: string | null
+          created_at: string
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           created_at: string
@@ -116,6 +146,57 @@ export type Database = {
           telefone?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      contas_fixas: {
+        Row: {
+          ativa: boolean
+          categoria: string
+          created_at: string
+          data_vencimento: number
+          frequencia: string
+          id: string
+          nome: string
+          observacoes: string | null
+          proximo_vencimento: string | null
+          repetir: boolean
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          ativa?: boolean
+          categoria: string
+          created_at?: string
+          data_vencimento: number
+          frequencia?: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          proximo_vencimento?: string | null
+          repetir?: boolean
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          ativa?: boolean
+          categoria?: string
+          created_at?: string
+          data_vencimento?: number
+          frequencia?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          proximo_vencimento?: string | null
+          repetir?: boolean
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
         }
         Relationships: []
       }
@@ -184,6 +265,66 @@ export type Database = {
             columns: ["servico_id"]
             isOneToOne: false
             referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lancamentos: {
+        Row: {
+          categoria: string | null
+          cliente_id: string | null
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          origem_id: string | null
+          origem_tipo: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data: string
+          descricao: string
+          id?: string
+          origem_id?: string | null
+          origem_tipo?: string | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          origem_id?: string | null
+          origem_tipo?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_lancamentos_agendamento"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_lancamentos_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
