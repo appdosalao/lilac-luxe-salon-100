@@ -212,13 +212,62 @@ export function AgendamentoOnlineForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    Object.keys(formData).forEach(field => {
-      if (field !== 'observacoes') {
-        validateField(field, formData[field as keyof FormData]);
+    console.log('=== HANDLE SUBMIT INICIADO ===');
+    console.log('FormData atual:', formData);
+    console.log('Aceitos os termos:', aceitouTermos);
+    
+    // Validação manual - criar objeto de erros local
+    const validationErrors: Record<string, string> = {};
+    
+    // Validar cada campo obrigatório
+    if (!formData.nomeCompleto.trim()) {
+      validationErrors.nomeCompleto = 'Nome obrigatório';
+    }
+    
+    if (!formData.email) {
+      validationErrors.email = 'E-mail obrigatório';
+    } else if (!validarEmail(formData.email)) {
+      validationErrors.email = 'E-mail inválido';
+    }
+    
+    if (!formData.telefone) {
+      validationErrors.telefone = 'Telefone obrigatório';
+    } else if (!validarTelefone(formData.telefone)) {
+      validationErrors.telefone = 'Telefone inválido';
+    }
+    
+    if (!formData.servicoId) {
+      validationErrors.servicoId = 'Selecione um serviço';
+    }
+    
+    if (!formData.data) {
+      validationErrors.data = 'Selecione uma data';
+    } else if (configuracaoHorarios?.length > 0) {
+      // Verificar se o dia da semana está ativo nas configurações
+      const dataObj = new Date(formData.data + 'T12:00:00');
+      const diaSemana = dataObj.getDay();
+      const configDia = configuracaoHorarios.find(h => h.dia_semana === diaSemana && h.ativo);
+      
+      if (!configDia) {
+        const diasAtivos = configuracaoHorarios
+          .filter(h => h.ativo)
+          .map(h => {
+            const nomesDias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            return nomesDias[h.dia_semana];
+          });
+        validationErrors.data = `Atendemos apenas: ${diasAtivos.join(', ')}`;
       }
-    });
+    }
+    
+    if (!formData.horario) {
+      validationErrors.horario = 'Selecione um horário';
+    }
 
-    if (Object.keys(errors).length > 0) {
+    console.log('Erros de validação encontrados:', validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      console.log('Parando por causa de erros de validação');
+      setErrors(validationErrors);
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos corretamente.",
@@ -228,6 +277,7 @@ export function AgendamentoOnlineForm() {
     }
 
     if (!aceitouTermos) {
+      console.log('Parando por causa dos termos não aceitos');
       toast({
         title: "Aceitar termos obrigatório",
         description: "Você deve aceitar os termos para continuar.",
@@ -236,12 +286,16 @@ export function AgendamentoOnlineForm() {
       return;
     }
 
+    console.log('Setando isSubmitting para true...');
     setIsSubmitting(true);
     
     try {
+      console.log('Chamando criarAgendamento...');
       const sucesso = await criarAgendamento(formData);
+      console.log('Resultado de criarAgendamento:', sucesso);
       
       if (sucesso) {
+        console.log('Sucesso! Processando dados para tela de sucesso...');
         const servico = servicosPublicos.find(s => s.id === formData.servicoId);
         setAgendamentoDetalhes({
           servico: servico?.nome,
@@ -261,10 +315,13 @@ export function AgendamentoOnlineForm() {
           horario: '',
           observacoes: ''
         });
+      } else {
+        console.log('Agendamento falhou - sucesso foi false');
       }
     } catch (error) {
-      console.error('Erro ao enviar agendamento:', error);
+      console.error('Erro capturado no try/catch:', error);
     } finally {
+      console.log('Setando isSubmitting para false...');
       setIsSubmitting(false);
     }
   };
