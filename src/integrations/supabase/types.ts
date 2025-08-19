@@ -77,6 +77,81 @@ export type Database = {
         }
         Relationships: []
       }
+      agendamentos_online: {
+        Row: {
+          agendamento_id: string | null
+          created_at: string
+          data: string
+          duracao: number
+          email: string
+          horario: string
+          id: string
+          ip_address: unknown | null
+          nome_completo: string
+          observacoes: string | null
+          origem: string | null
+          servico_id: string
+          status: string
+          telefone: string
+          updated_at: string
+          user_agent: string | null
+          valor: number
+        }
+        Insert: {
+          agendamento_id?: string | null
+          created_at?: string
+          data: string
+          duracao?: number
+          email: string
+          horario: string
+          id?: string
+          ip_address?: unknown | null
+          nome_completo: string
+          observacoes?: string | null
+          origem?: string | null
+          servico_id: string
+          status?: string
+          telefone: string
+          updated_at?: string
+          user_agent?: string | null
+          valor?: number
+        }
+        Update: {
+          agendamento_id?: string | null
+          created_at?: string
+          data?: string
+          duracao?: number
+          email?: string
+          horario?: string
+          id?: string
+          ip_address?: unknown | null
+          nome_completo?: string
+          observacoes?: string | null
+          origem?: string | null
+          servico_id?: string
+          status?: string
+          telefone?: string
+          updated_at?: string
+          user_agent?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_online_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_online_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_financeiras: {
         Row: {
           cor: string | null
@@ -715,7 +790,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      converter_agendamento_online: {
+        Args: { agendamento_online_id: string; user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

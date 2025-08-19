@@ -44,33 +44,42 @@ export function AgendamentoOnlineForm() {
   const [aceitouTermos, setAceitouTermos] = useState(false);
 
   useEffect(() => {
-    if (formData.servicoId && formData.data) {
-      if (configuracoes) {
-        // Usar as configurações de horários
-        const dataObj = new Date(formData.data + 'T12:00:00');
-        const diaSemana = dataObj.getDay();
-        const servico = servicosPublicos.find(s => s.id === formData.servicoId);
-        const duracaoServico = servico?.duracao || 60;
-        const horariosConfig = getHorariosDisponiveis(diaSemana, duracaoServico);
+    const calcularHorarios = async () => {
+      if (formData.servicoId && formData.data) {
+        if (configuracoes) {
+          // Usar as configurações de horários
+          const dataObj = new Date(formData.data + 'T12:00:00');
+          const diaSemana = dataObj.getDay();
+          const servico = servicosPublicos.find(s => s.id === formData.servicoId);
+          const duracaoServico = servico?.duracao || 60;
+          const horariosConfig = getHorariosDisponiveis(diaSemana, duracaoServico);
+          
+          // Converter para formato do agendamento online
+          const horariosFormatados = horariosConfig.map(horario => ({
+            horario,
+            disponivel: true
+          }));
+          
+          setHorariosDisponiveis(horariosFormatados);
+        } else {
+          // Fallback para horários calculados pelo hook original
+          try {
+            const horariosCalculados = await calcularHorariosDisponiveis(formData.servicoId, formData.data);
+            setHorariosDisponiveis(horariosCalculados);
+          } catch (error) {
+            console.error('Erro ao calcular horários:', error);
+            setHorariosDisponiveis([]);
+          }
+        }
         
-        // Converter para formato do agendamento online
-        const horariosFormatados = horariosConfig.map(horario => ({
-          horario,
-          disponivel: true
-        }));
-        
-        setHorariosDisponiveis(horariosFormatados);
-      } else {
-        // Fallback para horários calculados pelo hook original
-        const horariosCalculados = calcularHorariosDisponiveis(formData.servicoId, formData.data);
-        setHorariosDisponiveis(horariosCalculados);
+        // Limpar horário se não estiver mais disponível
+        if (formData.horario && horariosDisponiveis.length > 0 && !horariosDisponiveis.find(h => h.horario === formData.horario)?.disponivel) {
+          setFormData(prev => ({ ...prev, horario: '' }));
+        }
       }
-      
-      // Limpar horário se não estiver mais disponível
-      if (formData.horario && horariosDisponiveis.length > 0 && !horariosDisponiveis.find(h => h.horario === formData.horario)?.disponivel) {
-        setFormData(prev => ({ ...prev, horario: '' }));
-      }
-    }
+    };
+
+    calcularHorarios();
   }, [formData.servicoId, formData.data, configuracoes, servicosPublicos, getHorariosDisponiveis, calcularHorariosDisponiveis, horariosDisponiveis]);
 
   const dataMinima = new Date().toISOString().split('T')[0];

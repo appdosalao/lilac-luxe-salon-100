@@ -1,27 +1,38 @@
 import { useState, useMemo, useCallback } from 'react';
 import { AgendamentoOnlineForm, HorarioDisponivel, ServicoPublico } from '@/types/agendamentoOnline';
-import { useDatabase } from '@/hooks/useDatabase';
+import { useSupabaseAgendamentoOnline } from '@/hooks/useSupabaseAgendamentoOnline';
 import { toast } from '@/hooks/use-toast';
 
 export function useAgendamentoOnline() {
   const { 
-    servicos, 
-    agendamentos, 
-    clientes,
-    createCliente,
-    createAgendamento,
-  } = useDatabase();
+    getServicosPublicos,
+    createAgendamentoOnline,
+    verificarDisponibilidade
+  } = useSupabaseAgendamentoOnline();
+  
+  const [servicosPublicos, setServicosPublicos] = useState<ServicoPublico[]>([]);
 
-  // Converter serviços para formato público
-  const servicosPublicos: ServicoPublico[] = useMemo(() => {
-    return servicos.map(servico => ({
-      id: servico.id,
-      nome: servico.nome,
-      duracao: servico.duracao,
-      valor: servico.valor,
-      descricao: servico.descricao
-    }));
-  }, [servicos]);
+  // Carregar serviços públicos ao inicializar
+  const loadServicos = useCallback(async () => {
+    try {
+      const servicos = await getServicosPublicos();
+      const servicosFormatados: ServicoPublico[] = servicos.map(servico => ({
+        id: servico.id,
+        nome: servico.nome,
+        duracao: servico.duracao,
+        valor: servico.valor,
+        descricao: servico.descricao
+      }));
+      setServicosPublicos(servicosFormatados);
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error);
+    }
+  }, [getServicosPublicos]);
+
+  // Inicializar serviços
+  useState(() => {
+    loadServicos();
+  });
 
   // Horários de funcionamento (8h às 18h)
   const horariosBase = [
@@ -32,46 +43,47 @@ export function useAgendamentoOnline() {
   ];
 
   // Verificar se horário está disponível
-  const isHorarioDisponivel = useCallback((data: string, horario: string, duracao: number): boolean => {
-    const inicioNovo = new Date(`${data}T${horario}`);
-    const fimNovo = new Date(inicioNovo.getTime() + duracao * 60000);
-
-    // Verificar conflitos com agendamentos existentes
-    const temConflito = agendamentos.some(agendamento => {
-      if (agendamento.data !== data || agendamento.status === 'cancelado') {
-        return false;
-      }
-
-      const inicioExistente = new Date(`${agendamento.data}T${agendamento.hora}`);
-      const fimExistente = new Date(inicioExistente.getTime() + agendamento.duracao * 60000);
-
-      // Verificar sobreposição
-      return (inicioNovo < fimExistente && fimNovo > inicioExistente);
-    });
-
-    console.log(`Verificando horário ${data} ${horario}: conflitos encontrados =`, temConflito);
-    return !temConflito;
-  }, [agendamentos]);
+  const isHorarioDisponivel = useCallback(async (data: string, horario: string, duracao: number): Promise<boolean> => {
+    try {
+      return await verificarDisponibilidade(data, horario, duracao, '');
+    } catch (error) {
+      console.error('Erro ao verificar disponibilidade:', error);
+      return false;
+    }
+  }, [verificarDisponibilidade]);
 
   // Calcular horários disponíveis para um serviço em uma data específica
-  const calcularHorariosDisponiveis = useCallback((servicoId: string, data: string): HorarioDisponivel[] => {
+  const calcularHorariosDisponiveis = useCallback(async (servicoId: string, data: string): Promise<HorarioDisponivel[]> => {
     const servico = servicosPublicos.find(s => s.id === servicoId);
     if (!servico) return [];
 
-    return horariosBase.map(horario => {
-      const disponivel = isHorarioDisponivel(data, horario, servico.duracao);
-      
+    const horariosResultado: HorarioDisponivel[] = [];
+
+    for (const horario of horariosBase) {
       // Verificar se o horário + duração não ultrapassa 18h
       const inicioNovo = new Date(`${data}T${horario}`);
       const fimNovo = new Date(inicioNovo.getTime() + servico.duracao * 60000);
       const horaLimite = new Date(`${data}T18:00`);
       const ultrapassaLimite = fimNovo > horaLimite;
 
-      return {
+      if (ultrapassaLimite) {
+        horariosResultado.push({
+          horario,
+          disponivel: false
+        });
+        continue;
+      }
+
+      // Verificar disponibilidade via Supabase
+      const disponivel = await isHorarioDisponivel(data, horario, servico.duracao);
+      
+      horariosResultado.push({
         horario,
-        disponivel: disponivel && !ultrapassaLimite
-      };
-    });
+        disponivel
+      });
+    }
+
+    return horariosResultado;
   }, [servicosPublicos, isHorarioDisponivel]);
 
   // Validar email
@@ -154,7 +166,8 @@ export function useAgendamentoOnline() {
       }
 
       // Verificar se o horário está disponível
-      if (!isHorarioDisponivel(dados.data, dados.horario, servico.duracao)) {
+      const horarioDisponivel = await isHorarioDisponivel(dados.data, dados.horario, servico.duracao);
+      if (!horarioDisponivel) {
         toast({
           title: "Horário indisponível",
           description: "Este horário não está mais disponível. Por favor, escolha outro.",
@@ -163,52 +176,20 @@ export function useAgendamentoOnline() {
         return false;
       }
 
-      // Verificar se cliente já existe (por email como chave única)
-      let cliente = clientes.find(c => c.email === dados.email);
-      
-      if (!cliente) {
-        // Criar novo cliente
-        const novoCliente = {
-          nomeCompleto: dados.nomeCompleto,
-          email: dados.email,
-          telefone: dados.telefone,
-          servicoFrequente: servico.nome,
-          ultimaVisita: new Date(dados.data),
-          observacoes: `Cliente criado via agendamento online em ${new Date().toLocaleDateString('pt-BR')}`,
-          historicoServicos: []
-        };
-        
-        cliente = await createCliente();
-        if (!cliente) {
-          toast({
-            title: "Erro ao criar cliente",
-            description: "Erro ao registrar cliente. Tente novamente.",
-            variant: "destructive",
-          });
-          return false;
-        }
-      }
-
-      // Criar agendamento
+      // Criar agendamento online
       const agendamentoData = {
-        clienteId: cliente.id,
-        servicoId: dados.servicoId,
+        nome_completo: dados.nomeCompleto,
+        email: dados.email,
+        telefone: dados.telefone,
+        servico_id: dados.servicoId,
         data: dados.data,
-        hora: dados.horario,
+        horario: dados.horario,
+        observacoes: dados.observacoes,
         valor: servico.valor,
-        valorPago: 0,
-        valorDevido: servico.valor,
-        formaPagamento: 'fiado' as const,
-        statusPagamento: 'em_aberto' as const,
-        status: 'agendado' as const,
-        observacoes: dados.observacoes ? `${dados.observacoes} (Agendamento online)` : 'Agendamento realizado via formulário online',
-        origem: 'online' as const,
-        origem_cronograma: false,
-        confirmado: false,
-        duracao: servico.duracao,
+        duracao: servico.duracao
       };
 
-      const agendamentoCriado = await createAgendamento();
+      const agendamentoCriado = await createAgendamentoOnline(agendamentoData);
       
       if (!agendamentoCriado) {
         toast({
@@ -234,7 +215,7 @@ export function useAgendamentoOnline() {
       });
       return false;
     }
-  }, [servicosPublicos, isHorarioDisponivel, createCliente, createAgendamento, clientes]);
+  }, [servicosPublicos, isHorarioDisponivel, createAgendamentoOnline]);
 
   return {
     servicosPublicos,
