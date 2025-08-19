@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FC, ReactNode } from "react";
 
 // Wrapper seguro para TooltipProvider
-export const SafeTooltipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Verificar se React está disponível antes de usar hooks
-  if (!React || typeof useState !== 'function') {
-    console.warn('React not available, rendering children without TooltipProvider');
+export const SafeTooltipProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  // Verificar se useState está disponível antes de usar hooks
+  if (typeof useState !== 'function') {
+    console.warn('React hooks not available, rendering children without TooltipProvider');
     return <>{children}</>;
   }
 
