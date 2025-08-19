@@ -6,34 +6,25 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Edit, Trash2, Play, Pause, CheckCircle } from "lucide-react";
 import { useCronogramas } from "@/hooks/useCronogramas";
+import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
 import { useDatabase } from "@/hooks/useDatabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import CronogramaForm from "./CronogramaForm";
-import CronogramaComAgendamentos from "./CronogramaComAgendamentos";
 
 export default function CronogramasList() {
   const [editingCronograma, setEditingCronograma] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
-  const [activatingCronograma, setActivatingCronograma] = useState<any>(null);
-  const [showActivationDialog, setShowActivationDialog] = useState(false);
 
-  const { cronogramas, loading, deleteCronograma } = useCronogramas();
-  const { clientes, servicos, agendamentos, createMultipleAgendamentos } = useDatabase();
-  const { toast } = useToast();
+  const { cronogramas, loading, deleteCronograma, createMultipleAgendamentos } = useCronogramas();
+  const { clientes } = useSupabaseClientes();
+  const { servicos } = useDatabase();
 
   const handleDelete = async (id: string) => {
     try {
       await deleteCronograma(id);
-      toast({
-        title: "Cronograma removido",
-        description: "O cronograma foi removido com sucesso.",
-      });
+      toast.success('Cronograma removido com sucesso!');
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao remover cronograma.",
-        variant: "destructive",
-      });
+      toast.error('Erro ao remover cronograma.');
     }
   };
 
@@ -47,60 +38,38 @@ export default function CronogramasList() {
     setEditingCronograma(null);
   };
 
-  const handleAtivarCronograma = (cronograma: any) => {
-    setActivatingCronograma(cronograma);
-    setShowActivationDialog(true);
-  };
-
-  const handleGerarAgendamentos = async (agendamentos: any[]) => {
-    try {
-      await createMultipleAgendamentos(agendamentos);
-      setShowActivationDialog(false);
-      setActivatingCronograma(null);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao gerar agendamentos.",
-        variant: "destructive",
-      });
+  const getStatusBadge = (ativo: boolean) => {
+    if (ativo) {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />Ativo</Badge>;
     }
+    return <Badge variant="secondary"><Pause className="w-3 h-3 mr-1" />Inativo</Badge>;
   };
 
-  const handleCancelAtivar = () => {
-    setShowActivationDialog(false);
-    setActivatingCronograma(null);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />Ativo</Badge>;
-      case 'cancelado':
-        return <Badge variant="destructive"><Pause className="w-3 h-3 mr-1" />Cancelado</Badge>;
-      case 'concluido':
-        return <Badge variant="secondary"><CheckCircle className="w-3 h-3 mr-1" />Concluído</Badge>;
+  const getRecorrenciaText = (recorrencia: string) => {
+    switch (recorrencia) {
+      case 'semanal':
+        return 'Semanal';
+      case 'quinzenal':
+        return 'Quinzenal';
+      case 'mensal':
+        return 'Mensal';
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return recorrencia;
     }
   };
 
-  const getRecorrenciaText = (cronograma: any) => {
-    if (cronograma.recorrencia === 'Personalizada' && cronograma.intervalo_dias) {
-      return `A cada ${cronograma.intervalo_dias} dias`;
-    }
-    return cronograma.recorrencia;
+  const getDiaSemanaText = (diaSemana: number) => {
+    const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    return dias[diaSemana] || 'Não definido';
   };
 
   const getProximoRetorno = (cronograma: any) => {
-    const dataInicio = new Date(cronograma.data_inicio);
+    const dataInicio = new Date(cronograma.dataInicio);
     const hoje = new Date();
     
     let intervalo = 7; // padrão semanal
-    if (cronograma.recorrencia === 'Quinzenal') intervalo = 14;
-    else if (cronograma.recorrencia === 'Mensal') intervalo = 30;
-    else if (cronograma.recorrencia === 'Personalizada' && cronograma.intervalo_dias) {
-      intervalo = cronograma.intervalo_dias;
-    }
+    if (cronograma.recorrencia === 'quinzenal') intervalo = 14;
+    else if (cronograma.recorrencia === 'mensal') intervalo = 30;
 
     // Encontrar a próxima data
     let proximaData = new Date(dataInicio);
@@ -148,28 +117,6 @@ export default function CronogramasList() {
         </Dialog>
       </div>
 
-      <Dialog open={showActivationDialog} onOpenChange={setShowActivationDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Ativar Cronograma</DialogTitle>
-            <DialogDescription>
-              Configure os agendamentos automáticos para este cronograma
-            </DialogDescription>
-          </DialogHeader>
-          {activatingCronograma && (
-            <CronogramaComAgendamentos
-              cronograma={activatingCronograma}
-              clientes={clientes.map(c => ({ id: c.id, nome: c.nomeCompleto }))}
-              servicos={servicos}
-              agendamentosExistentes={agendamentos}
-              onGerarAgendamentos={handleGerarAgendamentos}
-              onSuccess={() => setShowActivationDialog(false)}
-              onCancel={handleCancelAtivar}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       {cronogramas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
@@ -185,97 +132,106 @@ export default function CronogramasList() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {cronogramas.map((cronograma) => (
-            <Card key={cronograma.id_cronograma} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{cronograma.cliente_nome}</CardTitle>
-                  {getStatusBadge(cronograma.status)}
-                </div>
-                <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {cronograma.tipo_servico}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Próximo retorno:</span>
-                    <span className="font-medium">{getProximoRetorno(cronograma)}</span>
+          {cronogramas.map((cronograma) => {
+            const cliente = clientes.find(c => c.id === cronograma.clienteId);
+            const servico = servicos.find(s => s.id === cronograma.servicoId);
+            
+            return (
+              <Card key={cronograma.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{cronograma.titulo}</CardTitle>
+                    {getStatusBadge(cronograma.ativo)}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duração:</span>
-                    <span>{cronograma.duracao_minutos} min</span>
+                  <CardDescription className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {cliente?.nome || 'Cliente não encontrado'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Serviço:</span>
+                      <span className="font-medium">{servico?.nome || 'Serviço não encontrado'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Próximo retorno:</span>
+                      <span className="font-medium">{getProximoRetorno(cronograma)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Dia da semana:</span>
+                      <span>{getDiaSemanaText(cronograma.diaSemana)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Recorrência:</span>
+                      <span>{getRecorrenciaText(cronograma.recorrencia)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Horário:</span>
+                      <span>{cronograma.horaInicio} - {cronograma.horaFim}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Recorrência:</span>
-                    <span>{getRecorrenciaText(cronograma)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Horário:</span>
-                    <span>{cronograma.hora_inicio}</span>
-                  </div>
-                </div>
 
-                {cronograma.observacoes && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Obs:</span>
-                    <p className="text-foreground mt-1">{cronograma.observacoes}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-3">
-                  {cronograma.status === 'ativo' && (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleAtivarCronograma(cronograma)}
-                      className="flex-1"
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Ativar
-                    </Button>
+                  {cronograma.observacoes && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Obs:</span>
+                      <p className="text-foreground mt-1">{cronograma.observacoes}</p>
+                    </div>
                   )}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingCronograma(cronograma);
-                      setShowForm(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
+                  <div className="flex gap-2 pt-3">
+                    {cronograma.ativo && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => createMultipleAgendamentos(cronograma.id)}
+                        className="flex-1"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Gerar Agendamentos
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir este cronograma? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(cronograma.id_cronograma)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingCronograma(cronograma);
+                        setShowForm(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir este cronograma? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(cronograma.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

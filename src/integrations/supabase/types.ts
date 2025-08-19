@@ -119,6 +119,108 @@ export type Database = {
         }
         Relationships: []
       }
+      cronogramas: {
+        Row: {
+          ativo: boolean
+          cliente_id: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          observacoes: string | null
+          recorrencia: string
+          servico_id: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          cliente_id: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          observacoes?: string | null
+          recorrencia?: string
+          servico_id: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          cliente_id?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          dia_semana?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          observacoes?: string | null
+          recorrencia?: string
+          servico_id?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      retornos: {
+        Row: {
+          agendamento_id: string | null
+          cliente_id: string
+          created_at: string
+          cronograma_id: string
+          data_retorno: string
+          hora_retorno: string
+          id: string
+          observacoes: string | null
+          servico_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agendamento_id?: string | null
+          cliente_id: string
+          created_at?: string
+          cronograma_id: string
+          data_retorno: string
+          hora_retorno: string
+          id?: string
+          observacoes?: string | null
+          servico_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agendamento_id?: string | null
+          cliente_id?: string
+          created_at?: string
+          cronograma_id?: string
+          data_retorno?: string
+          hora_retorno?: string
+          id?: string
+          observacoes?: string | null
+          servico_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       servicos: {
         Row: {
           created_at: string

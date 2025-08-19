@@ -1,29 +1,48 @@
 export interface Cronograma {
-  id_cronograma: string;
-  cliente_id: string;
-  cliente_nome: string;
-  tipo_servico: string;
-  servico_id: string;
-  data_inicio: string;
-  hora_inicio: string;
-  duracao_minutos: number;
-  recorrencia: 'Semanal' | 'Quinzenal' | 'Mensal' | 'Personalizada';
-  intervalo_dias?: number; // Para recorrência personalizada
+  id: string;
+  clienteId: string;
+  servicoId: string;
+  titulo: string;
+  descricao: string;
+  diaSemana: number; // 0=domingo, 1=segunda, etc
+  horaInicio: string;
+  horaFim: string;
+  recorrencia: string; // semanal, quinzenal, mensal
+  dataInicio: string;
+  dataFim?: string;
+  ativo: boolean;
+  observacoes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CronogramaFormData {
+  clienteId: string;
+  servicoId: string;
+  titulo: string;
+  descricao?: string;
+  diaSemana: number;
+  horaInicio: string;
+  horaFim: string;
+  recorrencia: string;
+  dataInicio: string;
+  dataFim?: string;
+  ativo?: boolean;
   observacoes?: string;
-  status: 'ativo' | 'cancelado' | 'concluido';
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Retorno {
-  id_retorno: string;
-  id_cliente: string;
-  id_cronograma: string;
-  data_retorno: string;
-  status: 'Pendente' | 'Realizado' | 'Cancelado';
-  id_agendamento_retorno?: string;
-  created_at: string;
-  updated_at: string;
+  id: string;
+  cronogramaId: string;
+  clienteId: string;
+  servicoId: string;
+  dataRetorno: string;
+  horaRetorno: string;
+  status: 'pendente' | 'agendado' | 'concluido' | 'cancelado';
+  observacoes?: string;
+  agendamentoId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CronogramaWithRetornos extends Cronograma {

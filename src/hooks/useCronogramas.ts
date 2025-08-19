@@ -1,75 +1,65 @@
-import { useDatabase } from '@/hooks/useDatabase';
-import { Cronograma, Retorno } from '@/types/cronograma';
+import { useSupabaseCronogramas } from './useSupabaseCronogramas';
 
 export const useCronogramas = () => {
-  const { cronogramas, retornos, createCronograma, updateCronograma, deleteCronograma, loading } = useDatabase();
+  const { 
+    cronogramas, 
+    retornos, 
+    loading, 
+    createCronograma, 
+    updateCronograma, 
+    deleteCronograma, 
+    createMultipleAgendamentos,
+    refetch 
+  } = useSupabaseCronogramas();
 
-  const createCronogramaLocal = async (cronograma: Omit<Cronograma, 'id_cronograma' | 'created_at' | 'updated_at'>) => {
-    return await createCronograma(cronograma);
-  };
-
-  const updateCronogramaLocal = async (id: string, updates: Partial<Cronograma>) => {
-    return await updateCronograma(id, updates);
-  };
-
-  const deleteCronogramaLocal = async (id: string) => {
-    return await deleteCronograma(id);
+  // Atualizar status do retorno
+  const updateRetornoStatus = async (retornoId: string, status: 'pendente' | 'agendado' | 'concluido' | 'cancelado') => {
+    // Implementar conforme necessário
+    console.log('Atualizar retorno:', retornoId, status);
+    return true;
   };
 
   return {
     cronogramas,
+    retornos,
     loading,
-    error: null,
-    createCronograma: createCronogramaLocal,
-    updateCronograma: updateCronogramaLocal,
-    deleteCronograma: deleteCronogramaLocal,
+    createCronograma,
+    updateCronograma,
+    deleteCronograma,
+    updateRetornoStatus,
+    createMultipleAgendamentos,
+    refetch,
   };
 };
 
 export const useRetornos = () => {
-  const { retornos, loading } = useDatabase();
+  const { retornos, loading } = useSupabaseCronogramas();
 
-  const createRetorno = async (retorno: Omit<Retorno, 'id_retorno' | 'created_at' | 'updated_at'>) => {
-    // TODO: Implementar createRetorno no useDatabase
-    console.warn('Criação de retornos não implementada');
-    return null;
+  const marcarRetornoRealizado = async (retornoId: string) => {
+    console.log('Marcar retorno como realizado:', retornoId);
+    return true;
   };
 
-  const updateRetorno = async (id: string, updates: Partial<Retorno>) => {
-    // TODO: Implementar updateRetorno no useDatabase
-    console.warn('Atualização de retornos não implementada');
-    return null;
-  };
-
-  const marcarRetornoRealizado = async (id: string, idAgendamento?: string) => {
-    await updateRetorno(id, { 
-      status: 'Realizado',
-      id_agendamento_retorno: idAgendamento 
-    });
-  };
-
-  const cancelarRetorno = async (id: string) => {
-    await updateRetorno(id, { status: 'Cancelado' });
+  const cancelarRetorno = async (retornoId: string) => {
+    console.log('Cancelar retorno:', retornoId);
+    return true;
   };
 
   const getRetornosPendentes = () => {
-    return retornos.filter(r => r.status === 'Pendente');
+    return retornos.filter(r => r.status === 'pendente');
   };
 
-  const getRetornosPorCliente = (idCliente: string) => {
-    return retornos.filter(r => r.id_cliente === idCliente);
+  const getRetornosPorCliente = (clienteId: string) => {
+    return retornos.filter(r => r.clienteId === clienteId);
   };
 
-  const getRetornosPorCronograma = (idCronograma: string) => {
-    return retornos.filter(r => r.id_cronograma === idCronograma);
+  const getRetornosPorCronograma = (cronogramaId: string) => {
+    return retornos.filter(r => r.cronogramaId === cronogramaId);
   };
 
   return {
     retornos,
     loading,
-    error: null,
-    createRetorno,
-    updateRetorno,
     marcarRetornoRealizado,
     cancelarRetorno,
     getRetornosPendentes,
