@@ -72,7 +72,7 @@ export default function CronogramaComAgendamentos({
         data: dataInicio,
         duracao: servico.duracao,
         valor: servico.valor,
-        cronogramaId: cronograma.id_cronograma,
+        cronogramaId: cronograma.id,
       };
 
       const agendamentosGerados = gerarAgendamentosCronograma(
@@ -107,7 +107,7 @@ export default function CronogramaComAgendamentos({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          Ativar Cronograma: {cronograma?.tipo_servico}
+          Ativar Cronograma: {cronograma?.titulo}
         </CardTitle>
         <CardDescription>
           Configure os detalhes para gerar agendamentos automáticos
@@ -181,7 +181,7 @@ export default function CronogramaComAgendamentos({
                 Resumo do Cronograma
               </h4>
               <p className="text-sm text-muted-foreground mb-1">
-                <strong>Intervalo:</strong> A cada {cronograma.intervalo_dias} dias
+                <strong>Recorrência:</strong> {cronograma.recorrencia}
               </p>
               <p className="text-sm text-muted-foreground mb-1">
                 <strong>Descrição:</strong> {cronograma.observacoes || "Sem observações"}
