@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { AgendamentoOnlineForm, HorarioDisponivel, ServicoPublico } from '@/types/agendamentoOnline';
 import { useSupabaseAgendamentoOnline } from '@/hooks/useSupabaseAgendamentoOnline';
 import { toast } from '@/hooks/use-toast';
@@ -30,9 +30,9 @@ export function useAgendamentoOnline() {
   }, [getServicosPublicos]);
 
   // Inicializar serviços
-  useState(() => {
+  useEffect(() => {
     loadServicos();
-  });
+  }, [loadServicos]);
 
   // Horários de funcionamento (8h às 18h)
   const horariosBase = [

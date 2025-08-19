@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAgendamentoOnline } from '@/hooks/useAgendamentoOnline';
-import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { useShare } from '@/hooks/useShare';
-import { AgendamentoOnlineForm as FormData } from '@/types/agendamentoOnline';
+import { AgendamentoOnlineForm as FormData, HorarioDisponivel } from '@/types/agendamentoOnline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ export function AgendamentoOnlineForm() {
     formatarTelefone
   } = useAgendamentoOnline();
   
-  const { configuracoes, getHorariosDisponiveis, isHorarioDisponivel } = useConfiguracoes();
+  const { configuracaoHorarios } = useSupabaseConfiguracoes();
   const { canShare, isSharing, shareContent, copyToClipboard } = useShare();
 
   const [formData, setFormData] = useState<FormData>({
@@ -36,7 +36,7 @@ export function AgendamentoOnlineForm() {
     observacoes: ''
   });
 
-  const [horariosDisponiveis, setHorariosDisponiveis] = useState<any[]>([]);
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<HorarioDisponivel[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [agendamentoDetalhes, setAgendamentoDetalhes] = useState<any>(null);
@@ -46,21 +46,43 @@ export function AgendamentoOnlineForm() {
   useEffect(() => {
     const calcularHorarios = async () => {
       if (formData.servicoId && formData.data) {
-        if (configuracoes) {
-          // Usar as configurações de horários
+        if (configuracaoHorarios?.length > 0) {
+          // Usar as configurações de horários do Supabase
           const dataObj = new Date(formData.data + 'T12:00:00');
           const diaSemana = dataObj.getDay();
           const servico = servicosPublicos.find(s => s.id === formData.servicoId);
           const duracaoServico = servico?.duracao || 60;
-          const horariosConfig = getHorariosDisponiveis(diaSemana, duracaoServico);
           
-          // Converter para formato do agendamento online
-          const horariosFormatados = horariosConfig.map(horario => ({
-            horario,
-            disponivel: true
-          }));
+          // Buscar configuração para o dia da semana
+          const configDia = configuracaoHorarios.find(h => h.dia_semana === diaSemana && h.ativo);
           
-          setHorariosDisponiveis(horariosFormatados);
+          if (configDia) {
+            // Gerar horários baseados na configuração
+            const horarios: HorarioDisponivel[] = [];
+            const inicio = parseInt(configDia.horario_abertura.replace(':', ''));
+            const fim = parseInt(configDia.horario_fechamento.replace(':', ''));
+            
+            for (let hora = inicio; hora + (duracaoServico / 60 * 100) <= fim; hora += 30) {
+              const horarioStr = `${Math.floor(hora / 100).toString().padStart(2, '0')}:${(hora % 100).toString().padStart(2, '0')}`;
+              
+              // Verificar se não está no intervalo
+              const dentroIntervalo = configDia.intervalo_inicio && configDia.intervalo_fim &&
+                hora >= parseInt(configDia.intervalo_inicio.replace(':', '')) &&
+                hora <= parseInt(configDia.intervalo_fim.replace(':', ''));
+              
+              if (!dentroIntervalo) {
+                horarios.push({
+                  horario: horarioStr,
+                  disponivel: true
+                });
+              }
+            }
+            
+            setHorariosDisponiveis(horarios);
+          } else {
+            // Dia não configurado
+            setHorariosDisponiveis([]);
+          }
         } else {
           // Fallback para horários calculados pelo hook original
           try {
@@ -71,16 +93,11 @@ export function AgendamentoOnlineForm() {
             setHorariosDisponiveis([]);
           }
         }
-        
-        // Limpar horário se não estiver mais disponível
-        if (formData.horario && horariosDisponiveis.length > 0 && !horariosDisponiveis.find(h => h.horario === formData.horario)?.disponivel) {
-          setFormData(prev => ({ ...prev, horario: '' }));
-        }
       }
     };
 
     calcularHorarios();
-  }, [formData.servicoId, formData.data, configuracoes, servicosPublicos, getHorariosDisponiveis, calcularHorariosDisponiveis, horariosDisponiveis]);
+  }, [formData.servicoId, formData.data, configuracaoHorarios, servicosPublicos, calcularHorariosDisponiveis]);
 
   const dataMinima = new Date().toISOString().split('T')[0];
 
@@ -109,29 +126,20 @@ export function AgendamentoOnlineForm() {
       case 'data':
         if (!value) {
           newErrors.data = 'Selecione uma data';
-        } else if (configuracoes) {
-          // Verificar se o dia da semana está ativo
+        } else if (configuracaoHorarios?.length > 0) {
+          // Verificar se o dia da semana está ativo nas configurações
           const dataObj = new Date(value + 'T12:00:00');
           const diaSemana = dataObj.getDay();
-          const diasMapping = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'] as const;
-          const diasAtivos = configuracoes.horarios.diasAtivos;
+          const configDia = configuracaoHorarios.find(h => h.dia_semana === diaSemana && h.ativo);
           
-          if (!diasAtivos[diasMapping[diaSemana]]) {
-            const diasDisponiveis = Object.entries(diasAtivos)
-              .filter(([_, ativo]) => ativo)
-              .map(([dia, _]) => {
-                const nomesDias = {
-                  domingo: 'Domingo',
-                  segunda: 'Segunda',
-                  terca: 'Terça',
-                  quarta: 'Quarta',
-                  quinta: 'Quinta',
-                  sexta: 'Sexta',
-                  sabado: 'Sábado'
-                };
-                return nomesDias[dia as keyof typeof nomesDias];
+          if (!configDia) {
+            const diasAtivos = configuracaoHorarios
+              .filter(h => h.ativo)
+              .map(h => {
+                const nomesDias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                return nomesDias[h.dia_semana];
               });
-            newErrors.data = `Atendemos apenas: ${diasDisponiveis.join(', ')}`;
+            newErrors.data = `Atendemos apenas: ${diasAtivos.join(', ')}`;
           } else {
             delete newErrors.data;
           }
@@ -465,33 +473,22 @@ export function AgendamentoOnlineForm() {
                    Data e Horário
                  </h3>
                  
-                 {configuracoes && (
+                 {configuracaoHorarios && configuracaoHorarios.length > 0 && (
                    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 dark:bg-blue-900/20 dark:border-blue-800">
                      <div className="text-sm text-blue-700 dark:text-blue-300">
                        <p className="font-medium mb-2">📅 Horários de Atendimento:</p>
                        <div className="grid grid-cols-2 gap-2 text-xs">
-                         {Object.entries(configuracoes.horarios.diasAtivos).map(([dia, ativo]) => {
-                           const nomesDias = {
-                             domingo: 'Dom',
-                             segunda: 'Seg',
-                             terca: 'Ter',
-                             quarta: 'Qua',
-                             quinta: 'Qui',
-                             sexta: 'Sex',
-                             sabado: 'Sáb'
-                           };
+                         {configuracaoHorarios.filter(h => h.ativo).map((config) => {
+                           const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
                            return (
-                             <span key={dia} className={ativo ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}>
-                               {nomesDias[dia as keyof typeof nomesDias]}: {ativo ? '✓' : '✗'}
+                             <span key={config.dia_semana} className="text-green-600 dark:text-green-400">
+                               {nomesDias[config.dia_semana]}: ✓ ({config.horario_abertura}-{config.horario_fechamento})
                              </span>
                            );
                          })}
                        </div>
                        <p className="mt-2 text-xs">
-                         🕐 {configuracoes.horarios.horarioExpediente.inicio} às {configuracoes.horarios.horarioExpediente.termino}
-                         {configuracoes.horarios.intervaloAlmoco && (
-                           <span> (pausa: {configuracoes.horarios.intervaloAlmoco.inicio}-{configuracoes.horarios.intervaloAlmoco.termino})</span>
-                         )}
+                         🕐 Intervalos podem variar por dia da semana
                        </p>
                      </div>
                    </div>
@@ -531,7 +528,7 @@ export function AgendamentoOnlineForm() {
                          ))}
                          {horariosDisponiveis.length === 0 && formData.data && formData.servicoId && (
                            <SelectItem value="no-horarios-disponiveis" disabled>
-                             {configuracoes ? 'Dia não disponível para atendimento' : 'Nenhum horário disponível'}
+                             {configuracaoHorarios?.length ? 'Dia não disponível para atendimento' : 'Nenhum horário disponível'}
                            </SelectItem>
                          )}
                          {horariosDisponiveis.length > 0 && horariosDisponiveis.every(h => !h.disponivel) && (
