@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Clock, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Calendar, Clock, User, Mail, Phone, MapPin, CreditCard, AlertCircle } from 'lucide-react';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
+import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
 
 export function AgendamentoOnlineForm() {
@@ -18,6 +20,12 @@ export function AgendamentoOnlineForm() {
     calcularHorariosDisponiveis,
     criarAgendamento
   } = useAgendamentoOnlineService();
+
+  const {
+    configuracaoHorarios,
+    verificarDisponibilidade,
+    getHorariosDisponiveisDia
+  } = useSupabaseConfiguracoes();
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
@@ -32,6 +40,7 @@ export function AgendamentoOnlineForm() {
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<HorarioDisponivel[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [taxaAccepted, setTaxaAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -41,10 +50,50 @@ export function AgendamentoOnlineForm() {
 
   useEffect(() => {
     if (formData.servico_id && formData.data) {
-      calcularHorariosDisponiveis(formData.servico_id, formData.data)
-        .then(setHorariosDisponiveis);
+      carregarHorariosDisponiveis();
     }
-  }, [formData.servico_id, formData.data, calcularHorariosDisponiveis]);
+  }, [formData.servico_id, formData.data]);
+
+  const carregarHorariosDisponiveis = async () => {
+    if (!formData.servico_id || !formData.data) return;
+
+    const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
+    if (!servicoSelecionado) return;
+
+    const dataSelecionada = new Date(formData.data + 'T00:00:00');
+    const diaSemana = dataSelecionada.getDay();
+
+    // Verificar se há configuração de horário para este dia
+    const configuracoesDia = configuracaoHorarios?.filter(config => 
+      config.dia_semana === diaSemana && config.ativo
+    ) || [];
+
+    if (configuracoesDia.length === 0) {
+      setHorariosDisponiveis([]);
+      return;
+    }
+
+    // Usar a lógica do sistema para obter horários disponíveis
+    const horariosDoSistema = getHorariosDisponiveisDia?.(
+      diaSemana, 
+      servicoSelecionado.duracao
+    ) || [];
+
+    // Verificar disponibilidade real com agendamentos existentes
+    const horariosComDisponibilidade = await Promise.all(
+      horariosDoSistema.map(async (horario) => {
+        const disponivel = await calcularHorariosDisponiveis(formData.servico_id!, formData.data)
+          .then(horarios => horarios.find(h => h.horario === horario)?.disponivel ?? false);
+
+        return {
+          horario,
+          disponivel
+        };
+      })
+    );
+
+    setHorariosDisponiveis(horariosComDisponibilidade);
+  };
 
   const formatarTelefone = (valor: string): string => {
     const digits = valor.replace(/\D/g, '');
@@ -109,6 +158,10 @@ export function AgendamentoOnlineForm() {
       alert('Você deve aceitar os termos e condições para continuar.');
       return;
     }
+    if (!taxaAccepted) {
+      alert('Você deve aceitar as condições da taxa antecipada para continuar.');
+      return;
+    }
 
     setIsSubmitting(true);
     const sucesso = await criarAgendamento(formData);
@@ -119,8 +172,21 @@ export function AgendamentoOnlineForm() {
     setIsSubmitting(false);
   };
 
-  const dataMinima = new Date().toISOString().split('T')[0];
+  const hoje = new Date();
+  const dataMinima = hoje.toISOString().split('T')[0];
+  const dataMaxima = new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 90 dias no futuro
   const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
+
+  // Verificar se a data selecionada é um dia disponível
+  const isDataDisponivel = (data: string) => {
+    if (!data) return false;
+    const dataSelecionada = new Date(data + 'T00:00:00');
+    const diaSemana = dataSelecionada.getDay();
+    
+    return configuracaoHorarios?.some(config => 
+      config.dia_semana === diaSemana && config.ativo
+    ) || false;
+  };
 
   if (success) {
     return (
@@ -249,6 +315,7 @@ export function AgendamentoOnlineForm() {
                     id="data"
                     type="date"
                     min={dataMinima}
+                    max={dataMaxima}
                     value={formData.data}
                     onChange={(e) => handleInputChange('data', e.target.value)}
                     className={errors.data ? 'border-red-500' : ''}
@@ -256,31 +323,66 @@ export function AgendamentoOnlineForm() {
                   {errors.data && (
                     <span className="text-sm text-red-500">{errors.data}</span>
                   )}
+                  {formData.data && !isDataDisponivel(formData.data) && (
+                    <Alert className="mt-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Esta data não está disponível para agendamentos. Escolha outro dia.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="horario">Horário *</Label>
                   <Select 
                     onValueChange={(value) => handleInputChange('horario', value)}
-                    disabled={!formData.servico_id || !formData.data}
+                    disabled={!formData.servico_id || !formData.data || !isDataDisponivel(formData.data)}
                   >
                     <SelectTrigger className={errors.horario ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecione um horário" />
+                      <SelectValue placeholder={
+                        !formData.servico_id || !formData.data 
+                          ? "Selecione um serviço e data primeiro" 
+                          : !isDataDisponivel(formData.data)
+                          ? "Data indisponível"
+                          : horariosDisponiveis.length === 0
+                          ? "Nenhum horário disponível"
+                          : "Selecione um horário"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
-                      {horariosDisponiveis.map((horario) => (
-                        <SelectItem 
-                          key={horario.horario} 
-                          value={horario.horario}
-                          disabled={!horario.disponivel}
-                        >
-                          {horario.horario} {!horario.disponivel && '(Indisponível)'}
+                      {horariosDisponiveis.length > 0 ? (
+                        horariosDisponiveis.map((horario) => (
+                          <SelectItem 
+                            key={horario.horario} 
+                            value={horario.horario}
+                            disabled={!horario.disponivel}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span>{horario.horario}</span>
+                              {!horario.disponivel && (
+                                <span className="text-muted-foreground text-xs ml-2">(Ocupado)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          {!formData.data || !isDataDisponivel(formData.data) 
+                            ? "Selecione uma data válida" 
+                            : "Nenhum horário disponível para esta data"
+                          }
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.horario && (
                     <span className="text-sm text-red-500">{errors.horario}</span>
+                  )}
+                  {servicoSelecionado && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Duração do serviço: {servicoSelecionado.duracao} minutos
+                    </p>
                   )}
                 </div>
 
@@ -296,6 +398,33 @@ export function AgendamentoOnlineForm() {
                 </div>
               </div>
 
+              {/* Taxa Antecipada */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Condições de Agendamento
+                </h3>
+                
+                <Alert className="border-primary/20 bg-primary/5">
+                  <CreditCard className="h-4 w-4" />
+                  <AlertDescription className="text-sm leading-relaxed">
+                    <div className="flex items-start space-x-2 mt-2">
+                      <Checkbox
+                        id="taxa"
+                        checked={taxaAccepted}
+                        onCheckedChange={(checked) => setTaxaAccepted(checked as boolean)}
+                        className="mt-0.5"
+                      />
+                      <Label htmlFor="taxa" className="text-sm leading-relaxed cursor-pointer">
+                        Oi, tudo bem? 💙 Para garantir seu horário pedimos uma taxa antecipada de R$40,00. 
+                        Fique tranquilo(a): esse valor é abatido do serviço no dia do atendimento 😉. 
+                        Só não conseguimos devolver em caso de cancelamento sem justificativa, tá bom? *
+                      </Label>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </div>
+
               {/* Termos */}
               <div className="flex items-start space-x-2">
                 <Checkbox
@@ -304,17 +433,21 @@ export function AgendamentoOnlineForm() {
                   onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                 />
                 <Label htmlFor="terms" className="text-sm leading-5">
-                  Aceito os termos e condições e concordo em receber confirmações por email e WhatsApp
+                  Aceito os termos e condições e concordo em receber confirmações por email e WhatsApp *
                 </Label>
               </div>
 
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isSubmitting || loading}
+                disabled={isSubmitting || loading || !taxaAccepted || !termsAccepted}
               >
                 {isSubmitting ? 'Agendando...' : 'Confirmar Agendamento'}
               </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                * Campos obrigatórios
+              </p>
             </form>
           </CardContent>
         </Card>
