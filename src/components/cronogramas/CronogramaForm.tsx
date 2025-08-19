@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cronograma } from "@/types/cronograma";
 import { useCronogramas } from "@/hooks/useCronogramas";
-import { useDatabase } from "@/hooks/useDatabase";
+import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
+import { useServicos } from "@/hooks/useServicos";
 import { useToast } from "@/hooks/use-toast";
 
 interface CronogramaFormProps {
@@ -29,7 +30,8 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
   });
 
   const { createCronograma, updateCronograma, loading } = useCronogramas();
-  const { clientes, servicos } = useDatabase();
+  const { clientes } = useSupabaseClientes();
+  const { servicos } = useServicos();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +67,7 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
     try {
       const cronogramaData = {
         cliente_id: formData.cliente_id,
-        cliente_nome: cliente.nomeCompleto,
+        cliente_nome: cliente.nome,
         servico_id: formData.servico_id,
         tipo_servico: servico.nome,
         data_inicio: formData.data_inicio,
@@ -123,7 +125,7 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
                 <SelectContent>
                   {clientes.filter(cliente => cliente.id && cliente.id.trim() !== '').map((cliente) => (
                     <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nomeCompleto}
+                      {cliente.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
