@@ -45,59 +45,28 @@ export function AgendamentoOnlineForm() {
 
   React.useEffect(() => {
     const calcularHorarios = async () => {
+      console.log('🔄 Calculando horários:', { servicoId: formData.servicoId, data: formData.data });
+      
       if (formData.servicoId && formData.data) {
-        if (configuracaoHorarios?.length > 0) {
-          // Usar as configurações de horários do Supabase
-          const dataObj = new Date(formData.data + 'T12:00:00');
-          const diaSemana = dataObj.getDay();
-          const servico = servicosPublicos.find(s => s.id === formData.servicoId);
-          const duracaoServico = servico?.duracao || 60;
-          
-          // Buscar configuração para o dia da semana
-          const configDia = configuracaoHorarios.find(h => h.dia_semana === diaSemana && h.ativo);
-          
-          if (configDia) {
-            // Gerar horários baseados na configuração
-            const horarios: HorarioDisponivel[] = [];
-            const inicio = parseInt(configDia.horario_abertura.replace(':', ''));
-            const fim = parseInt(configDia.horario_fechamento.replace(':', ''));
-            
-            for (let hora = inicio; hora + (duracaoServico / 60 * 100) <= fim; hora += 30) {
-              const horarioStr = `${Math.floor(hora / 100).toString().padStart(2, '0')}:${(hora % 100).toString().padStart(2, '0')}`;
-              
-              // Verificar se não está no intervalo
-              const dentroIntervalo = configDia.intervalo_inicio && configDia.intervalo_fim &&
-                hora >= parseInt(configDia.intervalo_inicio.replace(':', '')) &&
-                hora <= parseInt(configDia.intervalo_fim.replace(':', ''));
-              
-              if (!dentroIntervalo) {
-                horarios.push({
-                  horario: horarioStr,
-                  disponivel: true
-                });
-              }
-            }
-            
-            setHorariosDisponiveis(horarios);
-          } else {
-            // Dia não configurado
-            setHorariosDisponiveis([]);
-          }
-        } else {
-          // Fallback para horários calculados pelo hook original
-          try {
-            const horariosCalculados = await calcularHorariosDisponiveis(formData.servicoId, formData.data);
-            setHorariosDisponiveis(horariosCalculados);
-          } catch (error) {
-            console.error('Erro ao calcular horários:', error);
-            setHorariosDisponiveis([]);
-          }
+        console.log('📋 Configurações disponíveis:', configuracaoHorarios);
+        
+        try {
+          // Sempre usar o hook original para cálculo de disponibilidade
+          const horariosCalculados = await calcularHorariosDisponiveis(formData.servicoId, formData.data);
+          console.log('⏰ Horários calculados:', horariosCalculados);
+          setHorariosDisponiveis(horariosCalculados);
+        } catch (error) {
+          console.error('❌ Erro ao calcular horários:', error);
+          setHorariosDisponiveis([]);
         }
+      } else {
+        console.log('⚠️ Dados insuficientes para calcular horários');
+        setHorariosDisponiveis([]);
       }
     };
 
     calcularHorarios();
-  }, [formData.servicoId, formData.data, configuracaoHorarios, servicosPublicos, calcularHorariosDisponiveis]);
+  }, [formData.servicoId, formData.data, calcularHorariosDisponiveis]);
 
   const dataMinima = new Date().toISOString().split('T')[0];
 
