@@ -3,14 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
 import { toast } from 'sonner';
+import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
 
 export function useSupabaseAgendamentos() {
   const { user } = useSupabaseAuth();
+  const supabaseConfig = useSupabaseConfiguracoes();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(false);
   const [filtros, setFiltros] = useState<AgendamentoFiltros>({});
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itensPorPagina] = useState(10);
+
+  // Verificar se horário está disponível baseado nas configurações
+  const verificarHorarioDisponivel = (data: string, hora: string) => {
+    const dataObj = new Date(data);
+    const diaSemana = dataObj.getDay();
+    return supabaseConfig.verificarDisponibilidade(diaSemana, hora);
+  };
 
   // Carregar agendamentos do Supabase
   const carregarAgendamentos = async () => {
@@ -121,6 +130,12 @@ export function useSupabaseAgendamentos() {
   const criarAgendamento = async (novoAgendamento: any) => {
     if (!user) {
       toast.error('Usuário não autenticado');
+      return false;
+    }
+
+    // Verificar se horário está dentro das configurações de funcionamento
+    if (!verificarHorarioDisponivel(novoAgendamento.data, novoAgendamento.hora)) {
+      toast.error('Horário não disponível para agendamento');
       return false;
     }
 

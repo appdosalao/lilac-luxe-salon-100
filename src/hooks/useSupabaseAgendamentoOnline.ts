@@ -232,6 +232,42 @@ export const useSupabaseAgendamentoOnline = () => {
   // Verificar disponibilidade de horário
   const verificarDisponibilidade = async (data: string, horario: string, duracao: number, servicoId: string): Promise<boolean> => {
     try {
+      // Verificar se horário está dentro das configurações de funcionamento
+      const dataObj = new Date(data);
+      const diaSemana = dataObj.getDay();
+      
+      // Se não houver configuração de horário para o dia, considerar indisponível
+      const { data: configuracaoHorario } = await supabase
+        .from('configuracoes_horarios')
+        .select('*')
+        .eq('dia_semana', diaSemana)
+        .eq('ativo', true)
+        .single();
+
+      if (!configuracaoHorario) {
+        return false;
+      }
+
+      // Verificar se horário está dentro do funcionamento
+      const hora = horario.replace(':', '');
+      const abertura = configuracaoHorario.horario_abertura.replace(':', '');
+      const fechamento = configuracaoHorario.horario_fechamento.replace(':', '');
+
+      if (hora < abertura || hora > fechamento) {
+        return false;
+      }
+
+      // Verificar se não está no intervalo
+      if (configuracaoHorario.intervalo_inicio && configuracaoHorario.intervalo_fim) {
+        const inicioIntervalo = configuracaoHorario.intervalo_inicio.replace(':', '');
+        const fimIntervalo = configuracaoHorario.intervalo_fim.replace(':', '');
+        
+        if (hora >= inicioIntervalo && hora <= fimIntervalo) {
+          return false;
+        }
+      }
+      
+      // Verificar conflitos com agendamentos existentes
       // Calcular horário de fim
       const [horas, minutos] = horario.split(':').map(Number);
       const inicioMinutos = horas * 60 + minutos;

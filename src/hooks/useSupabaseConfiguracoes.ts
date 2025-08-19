@@ -246,6 +246,27 @@ export const useSupabaseConfiguracoes = () => {
     return true;
   };
 
+  // Obter horários disponíveis para um dia específico
+  const getHorariosDisponiveisDia = (diaSemana: number, duracaoServico = 60) => {
+    const config = buscarHorariosPorDia(diaSemana);
+    if (!config || !config.ativo) return [];
+
+    const horarios: string[] = [];
+    const inicio = parseInt(config.horario_abertura.replace(':', ''));
+    const fim = parseInt(config.horario_fechamento.replace(':', ''));
+    const incremento = 30; // Intervalos de 30 minutos
+
+    for (let hora = inicio; hora + duracaoServico / 60 * 100 <= fim; hora += incremento) {
+      const horarioStr = `${Math.floor(hora / 100).toString().padStart(2, '0')}:${(hora % 100).toString().padStart(2, '0')}`;
+      
+      if (verificarDisponibilidade(diaSemana, horarioStr)) {
+        horarios.push(horarioStr);
+      }
+    }
+
+    return horarios;
+  };
+
   useEffect(() => {
     if (user?.id) {
       const loadConfiguracoes = async () => {
@@ -316,6 +337,7 @@ export const useSupabaseConfiguracoes = () => {
     deletarHorario,
     buscarHorariosPorDia,
     verificarDisponibilidade,
+    getHorariosDisponiveisDia,
     refetch: () => {
       fetchHorarios();
       fetchNotificacoes();
