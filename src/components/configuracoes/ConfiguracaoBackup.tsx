@@ -124,7 +124,7 @@ export function ConfiguracaoBackup() {
       // Importar dados reais usando LocalDatabase
       const { LocalDatabase } = await import('@/lib/database');
       const database = LocalDatabase.getInstance();
-      const { useAuth } = await import('@/contexts/AuthContext');
+      const { useSupabaseAuth } = await import('@/contexts/SupabaseAuthContext');
       
       // Obter userId atual (assumindo que o usuário logado é o mesmo do backup)
       const userId = dadosBackup.userId || 'current_user';

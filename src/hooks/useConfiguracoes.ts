@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Configuracoes, CONFIG_DEFAULT } from '@/types/configuracao';
 import { LocalStorageManager } from '@/lib/localStorage';
 import { toast } from '@/hooks/use-toast';
@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 const STORAGE_KEY = 'configuracoes' as keyof typeof import('@/lib/localStorage').LOCAL_STORAGE_KEYS;
 
 export const useConfiguracoes = () => {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [configuracoes, setConfiguracoes] = useState<Configuracoes | null>(null);
   const [loading, setLoading] = useState(true);
 

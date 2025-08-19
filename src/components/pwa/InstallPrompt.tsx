@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Download, X, Smartphone, Monitor, Tablet } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface InstallPromptProps {
   variant?: 'banner' | 'card' | 'floating';
@@ -13,7 +13,7 @@ interface InstallPromptProps {
 
 export const InstallPrompt = ({ variant = 'banner', showDismiss = true }: InstallPromptProps) => {
   const { isInstallable, installApp, dismissInstall } = usePWA();
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [isInstalling, setIsInstalling] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 

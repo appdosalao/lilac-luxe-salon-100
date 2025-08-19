@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { LancamentoFiltros, ResumoFinanceiro, NovoLancamento } from '@/types/lancamento';
 import { useDatabase } from '@/hooks/useDatabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { db } from '@/lib/database';
 
 export function useLancamentos() {
   const { lancamentos: todosLancamentos, createLancamento, loading, agendamentos } = useDatabase();
   const [filtros, setFiltros] = useState<LancamentoFiltros>({});
   
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const userId = usuario?.id;
 
   const lancamentosFiltrados = useMemo(() => {

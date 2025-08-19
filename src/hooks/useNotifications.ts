@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from '@/hooks/use-toast';
 
 interface NotificationSettings {
@@ -30,7 +30,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 };
 
 export const useNotifications = () => {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [settings, setSettings] = useState<NotificationSettings>(() => {
     const saved = localStorage.getItem('notification-settings');
     if (saved) {

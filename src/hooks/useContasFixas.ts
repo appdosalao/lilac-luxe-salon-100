@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { db } from '@/lib/database';
 import { ContaFixa, NovaContaFixa, CategoriaFinanceira, NovaCategoriaFinanceira } from '@/types/contaFixa';
 import { toast } from '@/hooks/use-toast';
 
 export function useContasFixas() {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
   const [contasFixas, setContasFixas] = useState<ContaFixa[]>([]);
   const [categorias, setCategorias] = useState<CategoriaFinanceira[]>([]);

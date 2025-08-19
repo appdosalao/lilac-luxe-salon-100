@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, DollarSign, Plus, Users, UserPlus, TrendingUp, Sparkles, PiggyBank, Settings } from "lucide-react";
 import { useAgendamentos } from "@/hooks/useAgendamentos";
 import { useLancamentos } from "@/hooks/useLancamentos";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ConfiguracaoNotificacoesAvancadas } from "@/components/configuracoes/ConfiguracaoNotificacoesAvancadas";
@@ -16,7 +16,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { agendamentosFiltrados } = useAgendamentos();
   const { lancamentos } = useLancamentos();
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
 
   // Data atual
   const hoje = new Date();

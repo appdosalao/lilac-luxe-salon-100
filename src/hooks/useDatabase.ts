@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { db } from '@/lib/database';
 import { Cliente } from '@/types/cliente';
 import { Servico } from '@/types/servico';
@@ -10,7 +10,7 @@ import { ContaFixa, CategoriaFinanceira } from '@/types/contaFixa';
 import { toast } from '@/hooks/use-toast';
 
 export const useDatabase = () => {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
   // Estados para cache dos dados

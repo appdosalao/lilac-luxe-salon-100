@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePushNotifications } from './usePushNotifications';
 import { toast } from '@/hooks/use-toast';
 import { TipoNotificacao } from '@/types/notificacao';
@@ -14,7 +14,7 @@ interface ScheduledNotification {
 }
 
 export const useNotificationScheduler = () => {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const { isSubscribed } = usePushNotifications();
 
   // Agendar notificação

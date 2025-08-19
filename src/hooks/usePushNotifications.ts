@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from '@/hooks/use-toast';
 
 interface PushSubscriptionData {
@@ -11,7 +11,7 @@ interface PushSubscriptionData {
 }
 
 export const usePushNotifications = () => {
-  const { usuario } = useAuth();
+  const { usuario } = useSupabaseAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscriptionData | null>(null);
