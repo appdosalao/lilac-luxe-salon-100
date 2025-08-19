@@ -1,3 +1,4 @@
+import React from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 // Placeholder para funcionalidades que ainda precisam ser implementadas
