@@ -171,7 +171,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_cronogramas_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cronogramas_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       retornos_novos: {
         Row: {
@@ -207,7 +222,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_retornos_agendamento"
+            columns: ["id_agendamento_retorno"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cliente"
+            columns: ["id_cliente"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cronograma"
+            columns: ["id_cronograma"]
+            isOneToOne: false
+            referencedRelation: "cronogramas_completos"
+            referencedColumns: ["id_cronograma"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cronograma"
+            columns: ["id_cronograma"]
+            isOneToOne: false
+            referencedRelation: "cronogramas_novos"
+            referencedColumns: ["id_cronograma"]
+          },
+        ]
       }
       servicos: {
         Row: {
@@ -277,7 +321,102 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      cronogramas_completos: {
+        Row: {
+          cliente_email: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          cliente_nome_real: string | null
+          cliente_telefone: string | null
+          created_at: string | null
+          data_inicio: string | null
+          duracao_minutos: number | null
+          hora_inicio: string | null
+          id_cronograma: string | null
+          intervalo_dias: number | null
+          observacoes: string | null
+          proximo_retorno: string | null
+          recorrencia: string | null
+          retornos_pendentes: number | null
+          retornos_realizados: number | null
+          servico_duracao: number | null
+          servico_id: string | null
+          servico_nome_real: string | null
+          servico_valor: number | null
+          status: string | null
+          tipo_servico: string | null
+          total_retornos: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cronogramas_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cronogramas_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retornos_completos: {
+        Row: {
+          agendamento_data: string | null
+          agendamento_hora: string | null
+          agendamento_status: string | null
+          cliente_nome: string | null
+          cliente_telefone: string | null
+          created_at: string | null
+          data_retorno: string | null
+          hora_inicio: string | null
+          id_agendamento_retorno: string | null
+          id_cliente: string | null
+          id_cronograma: string | null
+          id_retorno: string | null
+          recorrencia: string | null
+          status: string | null
+          tipo_servico: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_retornos_agendamento"
+            columns: ["id_agendamento_retorno"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cliente"
+            columns: ["id_cliente"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cronograma"
+            columns: ["id_cronograma"]
+            isOneToOne: false
+            referencedRelation: "cronogramas_completos"
+            referencedColumns: ["id_cronograma"]
+          },
+          {
+            foreignKeyName: "fk_retornos_cronograma"
+            columns: ["id_cronograma"]
+            isOneToOne: false
+            referencedRelation: "cronogramas_novos"
+            referencedColumns: ["id_cronograma"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
