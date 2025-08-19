@@ -2,6 +2,12 @@ import * as React from "react";
 
 // Wrapper seguro para TooltipProvider
 export const SafeTooltipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Verificar se React está disponível antes de usar hooks
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React not available, rendering children without TooltipProvider');
+    return <>{children}</>;
+  }
+
   const [isReady, setIsReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -13,8 +19,8 @@ export const SafeTooltipProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => clearTimeout(timer);
   }, []);
 
-  // Se não estiver pronto ou se o React não estiver disponível, renderizar sem tooltip
-  if (!isReady || typeof React.useState !== 'function') {
+  // Se não estiver pronto, renderizar sem tooltip
+  if (!isReady) {
     return <>{children}</>;
   }
 
