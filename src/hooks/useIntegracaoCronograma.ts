@@ -69,13 +69,7 @@ export const useIntegracaoCronograma = () => {
 
     for (let i = 0; i < numeroSessoes; i++) {
       const dataAgendamento = new Date(dataBase);
-      
-      // Calcular intervalo baseado na recorrência
-      let intervaloDias = 7; // padrão semanal
-      if (cronograma.recorrencia === 'quinzenal') intervaloDias = 14;
-      else if (cronograma.recorrencia === 'mensal') intervaloDias = 30;
-      
-      dataAgendamento.setDate(dataBase.getDate() + (i * intervaloDias));
+      dataAgendamento.setDate(dataBase.getDate() + (i * cronograma.intervalo_dias));
       
       const dataFormatada = dataAgendamento.toISOString().split('T')[0];
       
@@ -86,7 +80,7 @@ export const useIntegracaoCronograma = () => {
       );
 
       const agendamento: Agendamento = {
-        id: `cronograma_${cronograma.id}_${i}_${Date.now()}`,
+        id: `cronograma_${cronograma.id_cronograma}_${i}_${Date.now()}`,
         clienteId: dadosAgendamento.clienteId,
         clienteNome: dadosAgendamento.clienteNome,
         servicoId: dadosAgendamento.servicoId,
@@ -100,10 +94,10 @@ export const useIntegracaoCronograma = () => {
         formaPagamento: 'fiado',
         statusPagamento: 'em_aberto',
         status: 'agendado',
-        observacoes: `Agendamento gerado automaticamente pelo cronograma: ${cronograma.titulo}`,
+        observacoes: `Agendamento gerado automaticamente pelo cronograma: ${cronograma.tipo_servico}`,
         origem: 'cronograma',
         origem_cronograma: true,
-        cronogramaId: cronograma.id,
+        cronogramaId: cronograma.id_cronograma,
         confirmado: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

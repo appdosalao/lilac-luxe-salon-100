@@ -7,9 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cronograma } from "@/types/cronograma";
 import { useCronogramas } from "@/hooks/useCronogramas";
-import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
-import { useServicos } from "@/hooks/useServicos";
-import { toast } from "sonner";
+import { useDatabase } from "@/hooks/useDatabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface CronogramaFormProps {
   cronograma?: Cronograma;
@@ -19,82 +18,91 @@ interface CronogramaFormProps {
 
 export default function CronogramaForm({ cronograma, onSuccess, onCancel }: CronogramaFormProps) {
   const [formData, setFormData] = useState({
-    clienteId: cronograma?.clienteId || '',
-    servicoId: cronograma?.servicoId || '',
-    titulo: cronograma?.titulo || '',
-    descricao: cronograma?.descricao || '',
-    diaSemana: cronograma?.diaSemana || 1, // Segunda-feira
-    horaInicio: cronograma?.horaInicio || '09:00',
-    horaFim: cronograma?.horaFim || '10:00',
-    recorrencia: cronograma?.recorrencia || 'semanal',
-    dataInicio: cronograma?.dataInicio || '',
-    dataFim: cronograma?.dataFim || '',
-    ativo: cronograma?.ativo ?? true,
+    cliente_id: cronograma?.cliente_id || '',
+    servico_id: cronograma?.servico_id || '',
+    data_inicio: cronograma?.data_inicio || '',
+    hora_inicio: cronograma?.hora_inicio || '09:00',
+    recorrencia: cronograma?.recorrencia || 'Semanal' as const,
+    intervalo_dias: cronograma?.intervalo_dias || undefined,
     observacoes: cronograma?.observacoes || '',
+    status: cronograma?.status || 'ativo' as const,
   });
 
   const { createCronograma, updateCronograma, loading } = useCronogramas();
-  const { clientes } = useSupabaseClientes();
-  const { todosServicos: servicos } = useServicos();
+  const { clientes, servicos } = useDatabase();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.clienteId || !formData.servicoId || !formData.titulo || !formData.dataInicio) {
-      toast.error('Preencha todos os campos obrigatórios.');
+    if (!formData.cliente_id || !formData.servico_id || !formData.data_inicio) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const cliente = clientes.find(c => c.id === formData.clienteId);
-    const servico = servicos.find(s => s.id === formData.servicoId);
+    const cliente = clientes.find(c => c.id === formData.cliente_id);
+    const servico = servicos.find(s => s.id === formData.servico_id);
 
     if (!cliente || !servico) {
-      toast.error('Cliente ou serviço não encontrado.');
+      toast({
+        title: "Erro",
+        description: "Cliente ou serviço não encontrado.",
+        variant: "destructive",
+      });
       return;
     }
+
+    // Calcular intervalo em dias baseado na recorrência
+    let intervalo_dias = formData.intervalo_dias;
+    if (formData.recorrencia === 'Semanal') intervalo_dias = 7;
+    else if (formData.recorrencia === 'Quinzenal') intervalo_dias = 14;
+    else if (formData.recorrencia === 'Mensal') intervalo_dias = 30;
     
     try {
       const cronogramaData = {
-        clienteId: formData.clienteId,
-        servicoId: formData.servicoId,
-        titulo: formData.titulo,
-        descricao: formData.descricao,
-        diaSemana: formData.diaSemana,
-        horaInicio: formData.horaInicio,
-        horaFim: formData.horaFim,
+        cliente_id: formData.cliente_id,
+        cliente_nome: cliente.nomeCompleto,
+        servico_id: formData.servico_id,
+        tipo_servico: servico.nome,
+        data_inicio: formData.data_inicio,
+        hora_inicio: formData.hora_inicio,
+        duracao_minutos: servico.duracao,
         recorrencia: formData.recorrencia,
-        dataInicio: formData.dataInicio,
-        dataFim: formData.dataFim,
-        ativo: formData.ativo,
+        intervalo_dias,
         observacoes: formData.observacoes,
+        status: formData.status,
       };
 
       if (cronograma) {
-        await updateCronograma(cronograma.id, cronogramaData);
-        toast.success('Cronograma atualizado com sucesso!');
+        await updateCronograma(cronograma.id_cronograma, cronogramaData);
+        toast({
+          title: "Cronograma atualizado",
+          description: "O cronograma foi atualizado com sucesso.",
+        });
       } else {
         await createCronograma(cronogramaData);
-        toast.success('Cronograma criado com sucesso!');
+        toast({
+          title: "Cronograma criado",
+          description: "O cronograma foi criado com sucesso.",
+        });
       }
       onSuccess?.();
     } catch (error) {
-      toast.error('Ocorreu um erro ao salvar o cronograma.');
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o cronograma.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleChange = (field: string, value: string | number | boolean) => {
+  const handleChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  const diasSemana = [
-    { value: 0, label: 'Domingo' },
-    { value: 1, label: 'Segunda-feira' },
-    { value: 2, label: 'Terça-feira' },
-    { value: 3, label: 'Quarta-feira' },
-    { value: 4, label: 'Quinta-feira' },
-    { value: 5, label: 'Sexta-feira' },
-    { value: 6, label: 'Sábado' },
-  ];
 
   return (
     <Card>
@@ -105,28 +113,17 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="titulo">Título *</Label>
-            <Input
-              id="titulo"
-              value={formData.titulo}
-              onChange={(e) => handleChange('titulo', e.target.value)}
-              placeholder="Ex: Retorno mensal da Maria"
-              required
-            />
-          </div>
-
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="clienteId">Cliente *</Label>
-              <Select value={formData.clienteId} onValueChange={(value) => handleChange('clienteId', value)}>
+              <Label htmlFor="cliente_id">Cliente *</Label>
+              <Select value={formData.cliente_id} onValueChange={(value) => handleChange('cliente_id', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clientes.map((cliente) => (
+                  {clientes.filter(cliente => cliente.id && cliente.id.trim() !== '').map((cliente) => (
                     <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
+                      {cliente.nomeCompleto}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -134,13 +131,13 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="servicoId">Serviço *</Label>
-              <Select value={formData.servicoId} onValueChange={(value) => handleChange('servicoId', value)}>
+              <Label htmlFor="servico_id">Serviço *</Label>
+              <Select value={formData.servico_id} onValueChange={(value) => handleChange('servico_id', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o serviço" />
                 </SelectTrigger>
                 <SelectContent>
-                  {servicos.map((servico) => (
+                  {servicos.filter(servico => servico.id && servico.id.trim() !== '').map((servico) => (
                     <SelectItem key={servico.id} value={servico.id}>
                       {servico.nome} - {servico.duracao}min - R$ {servico.valor}
                     </SelectItem>
@@ -150,34 +147,32 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
-            <Textarea
-              id="descricao"
-              value={formData.descricao}
-              onChange={(e) => handleChange('descricao', e.target.value)}
-              placeholder="Descreva o cronograma..."
-              rows={2}
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="data_inicio">Data de Início *</Label>
+              <Input
+                id="data_inicio"
+                type="date"
+                value={formData.data_inicio}
+                onChange={(e) => handleChange('data_inicio', e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hora_inicio">Horário de Início *</Label>
+              <Input
+                id="hora_inicio"
+                type="time"
+                value={formData.hora_inicio}
+                onChange={(e) => handleChange('hora_inicio', e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="diaSemana">Dia da Semana *</Label>
-              <Select value={formData.diaSemana.toString()} onValueChange={(value) => handleChange('diaSemana', parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o dia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {diasSemana.map((dia) => (
-                    <SelectItem key={dia.value} value={dia.value.toString()}>
-                      {dia.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="recorrencia">Recorrência *</Label>
               <Select value={formData.recorrencia} onValueChange={(value) => handleChange('recorrencia', value)}>
@@ -185,60 +180,42 @@ export default function CronogramaForm({ cronograma, onSuccess, onCancel }: Cron
                   <SelectValue placeholder="Selecione a recorrência" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="semanal">Semanal</SelectItem>
-                  <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                  <SelectItem value="mensal">Mensal</SelectItem>
+                  <SelectItem value="Semanal">Semanal (7 dias)</SelectItem>
+                  <SelectItem value="Quinzenal">Quinzenal (14 dias)</SelectItem>
+                  <SelectItem value="Mensal">Mensal (30 dias)</SelectItem>
+                  <SelectItem value="Personalizada">Personalizada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="horaInicio">Horário de Início *</Label>
-              <Input
-                id="horaInicio"
-                type="time"
-                value={formData.horaInicio}
-                onChange={(e) => handleChange('horaInicio', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="horaFim">Horário de Fim *</Label>
-              <Input
-                id="horaFim"
-                type="time"
-                value={formData.horaFim}
-                onChange={(e) => handleChange('horaFim', e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="dataInicio">Data de Início *</Label>
-              <Input
-                id="dataInicio"
-                type="date"
-                value={formData.dataInicio}
-                onChange={(e) => handleChange('dataInicio', e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                required
-              />
-            </div>
+            {formData.recorrencia === 'Personalizada' && (
+              <div className="space-y-2">
+                <Label htmlFor="intervalo_dias">Intervalo (dias)</Label>
+                <Input
+                  id="intervalo_dias"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={formData.intervalo_dias || ''}
+                  onChange={(e) => handleChange('intervalo_dias', parseInt(e.target.value) || undefined)}
+                  placeholder="Ex: 21 dias"
+                  required
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="dataFim">Data de Fim</Label>
-              <Input
-                id="dataFim"
-                type="date"
-                value={formData.dataFim}
-                onChange={(e) => handleChange('dataFim', e.target.value)}
-                min={formData.dataInicio}
-              />
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
