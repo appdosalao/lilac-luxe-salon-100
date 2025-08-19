@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioLogin } from '@/types/usuario';
 
 const loginSchema = z.object({
@@ -18,7 +18,7 @@ const loginSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signIn } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,8 +31,8 @@ const Login = () => {
     setError('');
 
     try {
-      const success = await login(data.email, data.senha);
-      if (success) {
+      const { error } = await signIn(data.email, data.senha);
+      if (!error) {
         navigate('/');
       } else {
         setError('E-mail ou senha incorretos');

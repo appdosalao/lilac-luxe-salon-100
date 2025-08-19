@@ -26,7 +26,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -77,7 +77,7 @@ export function AppSidebar() {
   const { state, setOpen, open } = useSidebar();
   const isMobileDevice = useIsMobile();
   const location = useLocation();
-  const { usuario, logout } = useAuth();
+  const { usuario, signOut } = useSupabaseAuth();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -166,7 +166,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton 
-              onClick={logout}
+              onClick={signOut}
               className="text-destructive hover:text-destructive hover:bg-destructive/5"
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />

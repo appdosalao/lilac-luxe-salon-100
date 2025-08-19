@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioCadastro } from '@/types/usuario';
 
 const cadastroSchema = z.object({
@@ -25,7 +25,7 @@ const cadastroSchema = z.object({
 
 const Cadastro = () => {
   const navigate = useNavigate();
-  const { cadastrar } = useAuth();
+  const { signUp } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,11 +38,16 @@ const Cadastro = () => {
     setError('');
 
     try {
-      const success = await cadastrar(data);
-      if (success) {
-        navigate('/');
+      const { error } = await signUp(data.email, data.senha, {
+        nome_completo: data.nome_completo,
+        nome_personalizado_app: data.nome_personalizado_app,
+        telefone: data.telefone
+      });
+      
+      if (!error) {
+        navigate('/login');
       } else {
-        setError('Erro ao criar conta. Tente novamente.');
+        setError(error.message || 'Erro ao criar conta');
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta. Tente novamente.');
