@@ -1,5 +1,8 @@
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+
 // Placeholder para funcionalidades que ainda precisam ser implementadas
 export const useDatabase = () => {
+  const { user } = useSupabaseAuth();
   return {
     loading: false,
     agendamentos: [],
