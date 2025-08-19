@@ -111,7 +111,7 @@ async function cacheFirst(request, cacheName) {
   
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse.ok && networkResponse.status !== 206) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
@@ -130,7 +130,7 @@ async function cacheFirst(request, cacheName) {
 async function networkFirst(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse.ok && networkResponse.status !== 206) {
       const cache = await caches.open(cacheName);
       cache.put(request, networkResponse.clone());
     }
@@ -146,7 +146,7 @@ async function networkFirst(request, cacheName) {
 async function networkFirstWithCacheFallback(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    if (networkResponse.ok && networkResponse.status !== 206) {
       const cache = await caches.open(cacheName);
       cache.put(request, networkResponse.clone());
     }
