@@ -12,6 +12,9 @@ export interface ConfiguracaoHorario {
   horario_fechamento: string;
   intervalo_inicio?: string;
   intervalo_fim?: string;
+  permite_agendamento_fora_horario?: boolean;
+  tempo_minimo_antecedencia?: number;
+  tempo_maximo_antecedencia?: number;
   created_at: string;
   updated_at: string;
 }

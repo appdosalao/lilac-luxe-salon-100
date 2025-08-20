@@ -150,6 +150,13 @@ export type Database = {
             referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       categorias_financeiras: {
@@ -291,6 +298,9 @@ export type Database = {
           id: string
           intervalo_fim: string | null
           intervalo_inicio: string | null
+          permite_agendamento_fora_horario: boolean | null
+          tempo_maximo_antecedencia: number | null
+          tempo_minimo_antecedencia: number | null
           updated_at: string
           user_id: string
         }
@@ -303,6 +313,9 @@ export type Database = {
           id?: string
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
+          permite_agendamento_fora_horario?: boolean | null
+          tempo_maximo_antecedencia?: number | null
+          tempo_minimo_antecedencia?: number | null
           updated_at?: string
           user_id: string
         }
@@ -315,6 +328,9 @@ export type Database = {
           id?: string
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
+          permite_agendamento_fora_horario?: boolean | null
+          tempo_maximo_antecedencia?: number | null
+          tempo_minimo_antecedencia?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -499,6 +515,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      intervalos_trabalho: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       lancamentos: {
         Row: {
@@ -950,6 +1002,33 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      buscar_horarios_com_multiplos_intervalos: {
+        Args: {
+          data_selecionada: string
+          duracao_servico?: number
+          user_id_param: string
+        }
+        Returns: {
+          bloqueio_motivo: string
+          disponivel: boolean
+          horario: string
+        }[]
+      }
+      buscar_horarios_disponiveis: {
+        Args: { data_selecionada: string; user_id_param: string }
+        Returns: {
+          disponivel: boolean
+          horario: string
+        }[]
+      }
+      buscar_horarios_disponiveis_seguro: {
+        Args: { data_teste?: string; user_id_param?: string }
+        Returns: {
+          disponivel: boolean
+          horario: string
+          motivo: string
+        }[]
+      }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
@@ -963,9 +1042,35 @@ export type Database = {
         }
         Returns: string
       }
+      diagnosticar_usuarios_validos: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          nome_completo: string
+          user_id: string
+        }[]
+      }
+      diagnostico_sistema_agendamento: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          tabela: string
+          total_registros: number
+          total_registros_ativos: number
+        }[]
+      }
       test_delete_permissions: {
         Args: { record_id: string; table_name: string }
         Returns: Json
+      }
+      testar_horarios_disponiveis: {
+        Args: { data_teste?: string }
+        Returns: {
+          dia_semana_config: number
+          horario_abertura: string
+          horario_fechamento: string
+          horarios_disponiveis: Json
+          user_email: string
+        }[]
       }
     }
     Enums: {
