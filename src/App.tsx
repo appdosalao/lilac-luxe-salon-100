@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { type FC } from "react";
 // import { Toaster } from "@/components/ui/toaster";
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { SafeTooltipProvider } from "@/components/ui/safe-tooltip-provider";
