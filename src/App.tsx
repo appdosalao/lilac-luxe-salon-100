@@ -14,7 +14,7 @@ import Clientes from "./pages/Clientes";
 import Servicos from "./pages/Servicos";
 import Cronogramas from "./pages/Cronogramas";
 import Financeiro from "./pages/Financeiro";
-import Configuracoes from "./pages/Configuracoes";
+import Configuracoes from './pages/Configuracoes-Simple';
 import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Login from "./pages/Login";

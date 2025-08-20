@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ConfiguracaoHorarios } from '@/components/configuracoes/ConfiguracaoHorarios';
+import { ConfiguracaoHorarios } from '@/components/configuracoes/ConfiguracaoHorarios-Simple';
 import { ConfiguracaoNotificacoesAvancadas } from '@/components/configuracoes/ConfiguracaoNotificacoesAvancadas';
 import { ConfiguracaoBackup } from '@/components/configuracoes/ConfiguracaoBackup';
 import { TesteSom } from '@/components/notificacoes/TesteSom';
