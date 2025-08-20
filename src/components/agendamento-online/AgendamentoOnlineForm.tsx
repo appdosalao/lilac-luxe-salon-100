@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Calendar, Clock, User, Mail, Phone, MapPin, CreditCard, AlertCircle } from 'lucide-react';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
-import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
+import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
 
 export function AgendamentoOnlineForm() {
@@ -22,10 +22,11 @@ export function AgendamentoOnlineForm() {
   } = useAgendamentoOnlineService();
 
   const {
-    configuracaoHorarios,
-    verificarDisponibilidade,
-    getHorariosDisponiveisDia
-  } = useSupabaseConfiguracoes();
+    isDiaAtivo,
+    getHorariosDisponiveis,
+    isAgendamentoValido,
+    loading: loadingHorarios
+  } = useHorariosTrabalho();
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
@@ -63,21 +64,14 @@ export function AgendamentoOnlineForm() {
     const dataSelecionada = new Date(formData.data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
 
-    // Verificar se há configuração de horário para este dia
-    const configuracoesDia = configuracaoHorarios?.filter(config => 
-      config.dia_semana === diaSemana && config.ativo
-    ) || [];
-
-    if (configuracoesDia.length === 0) {
+    // Verificar se o dia está ativo para atendimento
+    if (!isDiaAtivo(diaSemana)) {
       setHorariosDisponiveis([]);
       return;
     }
 
-    // Usar a lógica do sistema para obter horários disponíveis
-    const horariosDoSistema = getHorariosDisponiveisDia?.(
-      diaSemana, 
-      servicoSelecionado.duracao
-    ) || [];
+    // Obter horários disponíveis baseados na configuração de trabalho
+    const horariosDoSistema = getHorariosDisponiveis(diaSemana, servicoSelecionado.duracao);
 
     // Verificar disponibilidade real com agendamentos existentes
     const horariosComDisponibilidade = await Promise.all(
@@ -183,9 +177,7 @@ export function AgendamentoOnlineForm() {
     const dataSelecionada = new Date(data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
     
-    return configuracaoHorarios?.some(config => 
-      config.dia_semana === diaSemana && config.ativo
-    ) || false;
+    return isDiaAtivo(diaSemana);
   };
 
   if (success) {
