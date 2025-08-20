@@ -1,11 +1,9 @@
 import { type FC } from "react";
-// import { Toaster } from "@/components/ui/toaster";
-// import { Toaster as Sonner } from "@/components/ui/sonner";
-// import { SafeTooltipProvider } from "@/components/ui/safe-tooltip-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
-import { PWAProvider } from "./components/pwa/PWAProvider";
+// Temporarily disabled components to fix React bundling issue
+// import { PWAProvider } from "./components/pwa/PWAProvider";
 // Temporarily commented out to isolate the error
 // import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -32,8 +30,8 @@ const App: FC = () => {
       <BrowserRouter>
         <SupabaseAuthProvider>
           <div id="app-container">
-            {/* Temporarily removed NotificationProviderAvancado to isolate React errors */}
-            <PWAProvider>
+            {/* Temporarily removed PWAProvider to fix React bundling issue */}
+            {/* <PWAProvider> */}
                 {/* Temporariamente removidos os Toasters que estão causando problemas */}
                 {/* <Toaster />
                 <Sonner /> */}
@@ -106,7 +104,7 @@ const App: FC = () => {
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </PWAProvider>
+              {/* </PWAProvider> */}
               {/* Temporarily removed NotificationProviderAvancado */}
             </div>
         </SupabaseAuthProvider>
