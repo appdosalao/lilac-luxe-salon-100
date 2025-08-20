@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+console.log('usePWA: React hooks importados:', { useState: typeof useState, useEffect: typeof useEffect });
+
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -23,9 +25,11 @@ interface PWAActions {
 }
 
 export const usePWA = (): PWAState & PWAActions => {
+  console.log('usePWA: Iniciando hook, useState type:', typeof useState);
+  
   // Verificação de segurança para garantir que useState está disponível
   if (typeof useState !== 'function') {
-    console.warn('useState não está disponível, retornando estado padrão');
+    console.error('useState não é uma função:', useState);
     return {
       isInstallable: false,
       isInstalled: false,
