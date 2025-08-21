@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
+import * as React from 'react';
+
+const { useState } = React;
+import { toast } from 'sonner';
 
 export interface ShareData {
   title?: string;
@@ -46,17 +48,10 @@ export const useShare = () => {
   const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({
-        title: "✅ Copiado!",
-        description: "Conteúdo copiado para a área de transferência.",
-      });
+      toast.success("✅ Copiado! Conteúdo copiado para a área de transferência.");
       return true;
     } catch (error) {
-      toast({
-        title: "❌ Erro ao copiar",
-        description: "Não foi possível copiar o conteúdo.",
-        variant: "destructive",
-      });
+      toast.error("❌ Erro ao copiar. Não foi possível copiar o conteúdo.");
       return false;
     }
   };

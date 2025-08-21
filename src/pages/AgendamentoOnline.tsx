@@ -1,4 +1,6 @@
-import React, { Suspense } from 'react';
+import * as React from 'react';
+
+const { Suspense } = React;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Lazy load do formulário para evitar problemas de carregamento

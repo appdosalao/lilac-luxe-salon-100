@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import * as React from 'react';
+
+const { useState, useCallback } = React;
 import { supabase } from '@/integrations/supabase/client';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useAgendamentoOnlineService = () => {
   const [loading, setLoading] = useState(false);
@@ -19,11 +21,7 @@ export const useAgendamentoOnlineService = () => {
       setServicos(data || []);
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
-      toast({
-        title: "Erro ao carregar serviços",
-        description: "Não foi possível carregar a lista de serviços disponíveis.",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível carregar a lista de serviços disponíveis.");
     }
   }, []);
 
@@ -176,19 +174,12 @@ export const useAgendamentoOnlineService = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Agendamento confirmado! ✨",
-        description: `Seu agendamento para ${servico.nome} foi confirmado para ${new Date(dados.data).toLocaleDateString('pt-BR')} às ${dados.horario}. Você foi cadastrado como cliente.`,
-      });
+      toast.success(`Agendamento confirmado! ✨\nSeu agendamento para ${servico.nome} foi confirmado para ${new Date(dados.data).toLocaleDateString('pt-BR')} às ${dados.horario}. Você foi cadastrado como cliente.`);
 
       return true;
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
-      toast({
-        title: "Erro ao agendar",
-        description: "Não foi possível confirmar seu agendamento. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível confirmar seu agendamento. Tente novamente.");
       return false;
     } finally {
       setLoading(false);
