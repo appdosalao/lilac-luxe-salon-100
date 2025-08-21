@@ -171,17 +171,18 @@ export default function AgendamentoForm({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          {agendamento ? 'Editar Agendamento' : 'Novo Agendamento'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
+    <div className="p-4 sm:p-6">
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Calendar className="h-5 w-5 text-primary flex-shrink-0" />
+            <span className="truncate">{agendamento ? 'Editar Agendamento' : 'Novo Agendamento'}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
               {/* Cliente */}
               <FormField
                 control={form.control}
@@ -531,25 +532,31 @@ export default function AgendamentoForm({
               )}
             />
 
-            {/* Botões */}
-            <div className="flex gap-4 pt-4">
-              <Button 
-                type="submit" 
-                disabled={conflito}
-                className="bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {agendamento ? 'Atualizar' : 'Criar'} Agendamento
-              </Button>
-              
-              <Button type="button" variant="outline" onClick={onCancel}>
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
+              {/* Botões de Ação */}
+              <div className="action-buttons pt-4 border-t border-border/20">
+                <Button 
+                  type="submit" 
+                  disabled={conflito}
+                  className="action-button bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300 touch-feedback"
+                >
+                  <Save className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{agendamento ? 'Atualizar' : 'Criar'} Agendamento</span>
+                </Button>
+                
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onCancel}
+                  className="action-button touch-feedback"
+                >
+                  <X className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Cancelar</span>
+                </Button>
+              </div>
           </form>
         </Form>
       </CardContent>
     </Card>
+  </div>
   );
 }

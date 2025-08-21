@@ -115,80 +115,84 @@ export default function AgendamentosList({
             Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-responsive">
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <div className="relative sm:col-span-2 lg:col-span-3 xl:col-span-2">
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-4">
+            {/* Busca principal */}
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar cliente ou serviço..."
                 value={filtros.busca || ''}
                 onChange={(e) => onFiltrosChange({ ...filtros, busca: e.target.value })}
-                className="pl-10 btn-touch text-responsive-sm"
+                className="pl-10 h-10 sm:h-11 text-sm"
               />
             </div>
             
-            <Input
-              type="date"
-              value={filtros.data || ''}
-              onChange={(e) => onFiltrosChange({ ...filtros, data: e.target.value })}
-              placeholder="Filtrar por data"
-              className="btn-touch text-responsive-sm"
-            />
-            
-            <Select
-              value={filtros.status || 'all'}
-              onValueChange={(value) => onFiltrosChange({ ...filtros, status: value === 'all' ? undefined : value as any })}
-            >
-              <SelectTrigger className="btn-touch text-responsive-sm">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="agendado">Agendado</SelectItem>
-                <SelectItem value="concluido">Concluído</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={filtros.clienteId || 'all'}
-              onValueChange={(value) => onFiltrosChange({ ...filtros, clienteId: value === 'all' ? undefined : value })}
-            >
-              <SelectTrigger className="btn-touch text-responsive-sm">
-                <SelectValue placeholder="Cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clientes.map((cliente) => (
-                  <SelectItem key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Filtros em grid */}
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              <Input
+                type="date"
+                value={filtros.data || ''}
+                onChange={(e) => onFiltrosChange({ ...filtros, data: e.target.value })}
+                placeholder="Data"
+                className="h-10 sm:h-11 text-sm"
+              />
+              
+              <Select
+                value={filtros.status || 'all'}
+                onValueChange={(value) => onFiltrosChange({ ...filtros, status: value === 'all' ? undefined : value as any })}
+              >
+                <SelectTrigger className="h-10 sm:h-11 text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="agendado">Agendado</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select
+                value={filtros.clienteId || 'all'}
+                onValueChange={(value) => onFiltrosChange({ ...filtros, clienteId: value === 'all' ? undefined : value })}
+              >
+                <SelectTrigger className="h-10 sm:h-11 text-sm">
+                  <SelectValue placeholder="Cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {clientes.map((cliente) => (
+                    <SelectItem key={cliente.id} value={cliente.id}>
+                      {cliente.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select
-              value={filtros.statusPagamento || 'all'}
-              onValueChange={(value) => onFiltrosChange({ ...filtros, statusPagamento: value === 'all' ? undefined : value as any })}
-            >
-              <SelectTrigger className="btn-touch text-responsive-sm">
-                <SelectValue placeholder="Pagamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os pagamentos</SelectItem>
-                <SelectItem value="pago">✓ Pago</SelectItem>
-                <SelectItem value="parcial">⚠ Parcial</SelectItem>
-                <SelectItem value="em_aberto">⏳ Em aberto</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select
+                value={filtros.statusPagamento || 'all'}
+                onValueChange={(value) => onFiltrosChange({ ...filtros, statusPagamento: value === 'all' ? undefined : value as any })}
+              >
+                <SelectTrigger className="h-10 sm:h-11 text-sm">
+                  <SelectValue placeholder="Pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pago">✓ Pago</SelectItem>
+                  <SelectItem value="parcial">⚠ Parcial</SelectItem>
+                  <SelectItem value="em_aberto">⏳ Em aberto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
-          {(filtros.busca || filtros.data || filtros.status || filtros.clienteId) && (
-            <div className="mt-4">
+          {(filtros.busca || filtros.data || filtros.status || filtros.clienteId || filtros.statusPagamento) && (
+            <div className="mt-4 pt-4 border-t border-border/20">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onFiltrosChange({})}
+                className="h-9 text-xs"
               >
                 Limpar filtros
               </Button>
@@ -198,13 +202,13 @@ export default function AgendamentosList({
       </Card>
 
       {/* Lista de Agendamentos */}
-      <div className="space-y-4">
+      <div className="space-y-3 animate-fade-in">
         {agendamentos.length === 0 ? (
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center p-4 sm:p-6">
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum agendamento encontrado</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhum agendamento encontrado</h3>
+              <p className="text-sm text-muted-foreground max-w-md">
                 {Object.keys(filtros).length > 0 ? 
                   'Tente ajustar os filtros ou criar um novo agendamento.' :
                   'Comece criando seu primeiro agendamento.'
@@ -213,100 +217,42 @@ export default function AgendamentosList({
             </CardContent>
           </Card>
         ) : (
-          agendamentos.map((agendamento) => {
+          agendamentos.map((agendamento, index) => {
             const StatusIcon = statusConfig[agendamento.status].icon;
             
             return (
               <Card 
                 key={agendamento.id} 
-                className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-200 cursor-pointer"
+                className="agendamento-card animate-fade-in touch-feedback"
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => onViewDetails(agendamento)}
               >
-                <CardContent className="p-responsive">
-                  <div className="space-responsive">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="space-y-4">
                     {/* Header com cliente e status */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-lilac-light/10 flex-shrink-0">
-                          <User className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-lilac-light/10 flex-shrink-0">
+                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-foreground text-responsive-sm truncate">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-sm sm:text-base text-foreground truncate">
                             {agendamento.clienteNome}
                           </h3>
-                          <p className="text-responsive-xs text-muted-foreground flex items-center gap-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-1">
                             <Scissors className="h-3 w-3 flex-shrink-0" />
                             <span className="truncate">{agendamento.servicoNome}</span>
                           </p>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <Badge 
-                          className={`${statusConfig[agendamento.status].color} text-white text-xs`}
-                        >
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {statusConfig[agendamento.status].label}
-                        </Badge>
                         
-                        {agendamento.origem === 'online' && (
-                          <Badge className="bg-purple-500 text-white text-xs">
-                            📱 Online
-                          </Badge>
-                        )}
-                        
-                        <Badge 
-                          className={`${
-                            agendamento.statusPagamento === 'pago' ? 'bg-green-500' :
-                            agendamento.statusPagamento === 'parcial' ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          } text-white text-xs`}
-                        >
-                          {agendamento.statusPagamento === 'pago' ? '✓ Pago' :
-                           agendamento.statusPagamento === 'parcial' ? '⚠ Parcial' :
-                           '⏳ Em aberto'}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    {/* Informações do agendamento */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-responsive-xs">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{formatarData(agendamento.data)}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{formatarHora(agendamento.hora)} ({formatarDuracao(agendamento.duracao)})</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <DollarSign className="h-4 w-4 flex-shrink-0" />
-                        <div className="text-responsive-xs min-w-0">
-                          <div className="font-medium text-foreground">{formatarValor(agendamento.valor)}</div>
-                          {agendamento.valorDevido > 0 && (
-                            <div className="text-red-500 truncate">Deve: {formatarValor(agendamento.valorDevido)}</div>
-                          )}
-                          {agendamento.valorPago > 0 && (
-                            <div className="text-green-600 truncate">Pago: {formatarValor(agendamento.valorPago)}</div>
-                          )}
-                          {agendamento.dataPrevistaPagamento && (agendamento.formaPagamento === 'fiado' || agendamento.statusPagamento === 'parcial' || agendamento.statusPagamento === 'em_aberto') && (
-                            <div className="text-blue-600 truncate text-xs">
-                              Previsto: {formatarData(agendamento.dataPrevistaPagamento)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-start sm:justify-end">
+                        {/* Menu de ações - sempre visível no mobile */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="sm" className="btn-touch">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
                               onEdit(agendamento);
@@ -357,6 +303,85 @@ export default function AgendamentosList({
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      </div>
+                      
+                      {/* Status badges */}
+                      <div className="flex flex-wrap gap-2">
+                        <Badge 
+                          className={`${statusConfig[agendamento.status].color} text-white text-xs h-6`}
+                        >
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          <span className="hidden sm:inline">{statusConfig[agendamento.status].label}</span>
+                          <span className="sm:hidden">{statusConfig[agendamento.status].label.charAt(0)}</span>
+                        </Badge>
+                        
+                        {agendamento.origem === 'online' && (
+                          <Badge className="bg-purple-500 text-white text-xs h-6">
+                            <span className="text-xs">📱</span>
+                            <span className="ml-1 hidden sm:inline">Online</span>
+                          </Badge>
+                        )}
+                        
+                        <Badge 
+                          className={`${
+                            agendamento.statusPagamento === 'pago' ? 'bg-green-500' :
+                            agendamento.statusPagamento === 'parcial' ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          } text-white text-xs h-6`}
+                        >
+                          {agendamento.statusPagamento === 'pago' ? '✓' :
+                           agendamento.statusPagamento === 'parcial' ? '⚠' :
+                           '⏳'}
+                          <span className="ml-1 hidden sm:inline">
+                            {agendamento.statusPagamento === 'pago' ? 'Pago' :
+                             agendamento.statusPagamento === 'parcial' ? 'Parcial' :
+                             'Em aberto'}
+                          </span>
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {/* Informações do agendamento */}
+                    <div className="grid gap-3 text-xs sm:text-sm">
+                      {/* Data e hora */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{formatarData(agendamento.data)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{formatarHora(agendamento.hora)} ({formatarDuracao(agendamento.duracao)})</span>
+                        </div>
+                      </div>
+                      
+                      {/* Informações financeiras */}
+                      <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                        <DollarSign className="h-4 w-4 flex-shrink-0 text-muted-foreground mt-0.5" />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="font-medium text-foreground text-sm">
+                            Total: {formatarValor(agendamento.valor)}
+                          </div>
+                          
+                          {agendamento.valorPago > 0 && (
+                            <div className="text-green-600 text-xs">
+                              Pago: {formatarValor(agendamento.valorPago)}
+                            </div>
+                          )}
+                          
+                          {agendamento.valorDevido > 0 && (
+                            <div className="text-red-500 text-xs font-medium">
+                              Pendente: {formatarValor(agendamento.valorDevido)}
+                            </div>
+                          )}
+                          
+                          {agendamento.dataPrevistaPagamento && (agendamento.formaPagamento === 'fiado' || agendamento.statusPagamento === 'parcial' || agendamento.statusPagamento === 'em_aberto') && (
+                            <div className="text-blue-600 text-xs">
+                              Previsto: {formatarData(agendamento.dataPrevistaPagamento)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

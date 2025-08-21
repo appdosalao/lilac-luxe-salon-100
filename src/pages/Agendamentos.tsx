@@ -233,75 +233,81 @@ export default function Agendamentos() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Agendamentos</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Agendamentos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie todos os agendamentos do seu salão
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setFiltros({ statusPagamento: 'em_aberto' })}
-            className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-          >
-            <DollarSign className="mr-2 h-4 w-4" />
-            Contas a Receber
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setFiltros({ origem: 'cronograma' })}
-            className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-          >
-            💜 Cronogramas
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-3 lg:gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setFiltros({ statusPagamento: 'em_aberto' })}
+              className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 text-xs sm:text-sm h-9 sm:h-10 justify-start sm:justify-center"
+            >
+              <DollarSign className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate">Contas a Receber</span>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setFiltros({ origem: 'cronograma' })}
+              className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 text-xs sm:text-sm h-9 sm:h-10 justify-start sm:justify-center"
+            >
+              <span className="mr-2 text-xs sm:text-sm">💜</span>
+              <span className="truncate">Cronogramas</span>
+            </Button>
+          </div>
           <Button 
             onClick={handleNovoAgendamento}
-            className="bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300 text-sm h-10 sm:h-11"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Agendamento
+            <Plus className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Novo Agendamento</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light">
-              <Calendar className="h-6 w-6 text-primary-foreground" />
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/60 transition-colors">
+          <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light flex-shrink-0">
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
-            <div>
-              <p className="text-2xl font-bold">{agendamentosHoje}</p>
-              <p className="text-sm text-muted-foreground">Hoje</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent">
-              <Clock className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{agendamentosAmanha}</p>
-              <p className="text-sm text-muted-foreground">Amanhã</p>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{agendamentosHoje}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Hoje</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-accent to-lavender">
-              <Calendar className="h-6 w-6 text-primary-foreground" />
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/60 transition-colors">
+          <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent flex-shrink-0">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
-            <div>
-              <p className="text-2xl font-bold">{agendamentosEstaSemana}</p>
-              <p className="text-sm text-muted-foreground">Esta Semana</p>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{agendamentosAmanha}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Amanhã</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/60 transition-colors sm:col-span-2 lg:col-span-1">
+          <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-accent to-lavender flex-shrink-0">
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{agendamentosEstaSemana}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Esta Semana</p>
             </div>
           </CardContent>
         </Card>
