@@ -1,6 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import * as React from 'react';
+
+const { useState, useCallback, useEffect } = React;
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -66,11 +68,7 @@ export const usePushNotifications = () => {
       // Solicitar permissão
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
-        toast({
-          title: "Permissão negada",
-          description: "As notificações push foram bloqueadas. Ative nas configurações do navegador.",
-          variant: "destructive",
-        });
+        toast.error("Permissão negada - As notificações push foram bloqueadas. Ative nas configurações do navegador.");
         return false;
       }
 
@@ -100,19 +98,12 @@ export const usePushNotifications = () => {
       setSubscription(subscriptionData);
       setIsSubscribed(true);
 
-      toast({
-        title: "Notificações ativadas!",
-        description: "Você receberá notificações push sobre agendamentos e lembretes.",
-      });
+      toast.success("Notificações ativadas! Você receberá notificações push sobre agendamentos e lembretes.");
 
       return true;
     } catch (error) {
       console.error('Erro ao subscrever push notifications:', error);
-      toast({
-        title: "Erro ao ativar notificações",
-        description: "Não foi possível ativar as notificações push. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao ativar notificações - Não foi possível ativar as notificações push. Tente novamente.");
       return false;
     } finally {
       setIsLoading(false);
@@ -136,17 +127,10 @@ export const usePushNotifications = () => {
       setSubscription(null);
       setIsSubscribed(false);
 
-      toast({
-        title: "Notificações desativadas",
-        description: "Você não receberá mais notificações push.",
-      });
+      toast.warning("Notificações desativadas - Você não receberá mais notificações push.");
     } catch (error) {
       console.error('Erro ao cancelar subscription:', error);
-      toast({
-        title: "Erro ao desativar notificações",
-        description: "Não foi possível desativar as notificações. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao desativar notificações - Não foi possível desativar as notificações. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -186,18 +170,11 @@ export const usePushNotifications = () => {
           },
         });
 
-        toast({
-          title: "Notificação de teste enviada!",
-          description: "Verifique se a notificação apareceu.",
-        });
+        toast.success("Notificação de teste enviada! Verifique se a notificação apareceu.");
       }
     } catch (error) {
       console.error('Erro ao enviar notificação de teste:', error);
-      toast({
-        title: "Erro no teste",
-        description: "Não foi possível enviar a notificação de teste.",
-        variant: "destructive",
-      });
+      toast.error("Erro no teste - Não foi possível enviar a notificação de teste.");
     }
   }, [isSubscribed]);
 

@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import * as React from 'react';
+
+const { useState, useEffect } = React;
 
 console.log('usePWA: React hooks importados:', { useState: typeof useState, useEffect: typeof useEffect });
 

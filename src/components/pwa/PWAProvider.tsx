@@ -1,4 +1,7 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import * as React from 'react';
+
+const { createContext, useContext } = React;
+import type { ReactNode } from 'react';
 
 console.log('PWAProvider: React importado, useContext type:', typeof useContext);
 import { usePWA } from '@/hooks/usePWA';

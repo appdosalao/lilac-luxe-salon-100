@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import * as React from 'react';
+
+const { useState, useEffect, useCallback, useMemo } = React;
 import { ServicoFiltros, NovoServico, Servico } from '@/types/servico';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import * as React from "react";
+
+const { useState } = React;
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,7 +16,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Cliente, ClienteFormData } from "@/types/cliente";
-import { toast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 
 // Criar tipo local para o formulário que coincida com ClienteFormData
 type FormData = {
@@ -68,12 +70,7 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
     onSubmit(data);
     form.reset();
     setOpen(false);
-    toast({
-      title: cliente ? "Cliente atualizada" : "Cliente cadastrada",
-      description: cliente 
-        ? "Os dados da cliente foram atualizados com sucesso." 
-        : "Nova cliente foi cadastrada com sucesso.",
-    });
+    toast.success(cliente ? "Cliente atualizada - Os dados da cliente foram atualizados com sucesso." : "Cliente cadastrada - Nova cliente foi cadastrada com sucesso.");
   };
 
   const defaultTrigger = (

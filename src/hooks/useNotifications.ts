@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import * as React from 'react';
+
+const { useState, useEffect, useCallback, useRef } = React;
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface NotificationSettings {
   soundEnabled: boolean;
@@ -99,12 +101,7 @@ export const useNotifications = () => {
     // Tocar som
     playNotificationSound();
 
-    // Mostrar toast também
-    toast({
-      title: "Novo Agendamento!",
-      description: `${agendamento.clienteNome} - ${agendamento.servicoNome}`,
-      duration: 5000,
-    });
+    toast.success(`Novo Agendamento! ${agendamento.clienteNome} - ${agendamento.servicoNome}`);
 
     // Auto-hide se habilitado
     if (settings.autoHide) {

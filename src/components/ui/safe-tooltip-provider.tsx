@@ -1,4 +1,7 @@
-import { useState, useEffect, FC, ReactNode } from "react";
+import * as React from 'react';
+
+const { useState, useEffect } = React;
+import type { FC, ReactNode } from "react";
 
 // Wrapper seguro para TooltipProvider
 export const SafeTooltipProvider: FC<{ children: ReactNode }> = ({ children }) => {

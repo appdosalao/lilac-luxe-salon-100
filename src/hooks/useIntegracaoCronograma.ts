@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import * as React from 'react';
+
+const { useState, useCallback } = React;
 import { Cronograma } from '@/types/cronograma';
 import { Agendamento } from '@/types/agendamento';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AgendamentoCronograma {
   clienteId: string;
@@ -117,10 +119,7 @@ export const useIntegracaoCronograma = () => {
     if (agendamento.origem === 'cronograma' && agendamento.cronogramaId) {
       // Encontrar e atualizar o retorno correspondente
       // Esta lógica será integrada com o hook de retornos
-      toast({
-        title: "Cronograma atualizado",
-        description: "O progresso do cronograma foi atualizado automaticamente.",
-      });
+      toast.success("Cronograma atualizado - O progresso do cronograma foi atualizado automaticamente.");
     }
   }, []);
 
@@ -131,10 +130,7 @@ export const useIntegracaoCronograma = () => {
   ) => {
     if (agendamento.origem === 'cronograma' && agendamento.cronogramaId) {
       // Cancelar o retorno correspondente
-      toast({
-        title: "Cronograma atualizado",
-        description: "O retorno foi cancelado no cronograma.",
-      });
+      toast.warning("Cronograma atualizado - O retorno foi cancelado no cronograma.");
     }
   }, []);
 
