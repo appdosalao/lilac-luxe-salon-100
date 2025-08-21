@@ -47,12 +47,12 @@ export default function Layout({ children }: LayoutProps) {
                 asChild
                 className="gap-1 xs:gap-2 border-primary/20 text-primary hover:bg-primary/5 btn-touch flex-shrink-0 text-responsive-xs"
               >
-                <Link to="/agendamento-online" target="_blank">
+                <a href="/agendamento-online" target="_blank" rel="noopener noreferrer">
                   <Calendar className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
                   <span className="hidden xs:inline">Agendamento Online</span>
                   <span className="xs:hidden">Online</span>
                   <ExternalLink className="h-2 w-2 xs:h-3 xs:w-3 flex-shrink-0" />
-                </Link>
+                </a>
               </Button>
             </header>
 
