@@ -77,7 +77,7 @@ export const useAgendamentoOnlineService = () => {
     }
   }, []);
 
-  // Calcular horários disponíveis para uma data e serviço
+  // Calcular horários disponíveis usando a função do Supabase
   const calcularHorariosDisponiveis = useCallback(async (
     servicoId: string, 
     data: string
@@ -85,34 +85,41 @@ export const useAgendamentoOnlineService = () => {
     const servico = servicos.find(s => s.id === servicoId);
     if (!servico) return [];
 
-    const horariosBase = [
-      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-      '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-      '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-      '17:00', '17:30'
-    ];
+    try {
+      // Buscar um usuário válido para usar na função
+      const { data: usuarios, error: userError } = await supabase
+        .from('usuarios')
+        .select('id')
+        .limit(1);
 
-    const horariosDisponiveis: HorarioDisponivel[] = [];
-
-    for (const horario of horariosBase) {
-      // Verificar se o serviço cabe no horário de funcionamento
-      const [horas, minutos] = horario.split(':').map(Number);
-      const inicioMinutos = horas * 60 + minutos;
-      const fimMinutos = inicioMinutos + servico.duracao;
-      const limiteFim = 18 * 60; // 18:00
-
-      if (fimMinutos > limiteFim) {
-        horariosDisponiveis.push({ horario, disponivel: false });
-        continue;
+      if (userError || !usuarios || usuarios.length === 0) {
+        console.error('Nenhum usuário encontrado');
+        return [];
       }
 
-      // Verificar disponibilidade real
-      const disponivel = await verificarDisponibilidade(data, horario, servico.duracao);
-      horariosDisponiveis.push({ horario, disponivel });
-    }
+      const userId = usuarios[0].id;
 
-    return horariosDisponiveis;
-  }, [servicos, verificarDisponibilidade]);
+      // Usar função do Supabase para buscar horários com intervalos
+      const { data: horariosResult, error } = await supabase.rpc('buscar_horarios_com_multiplos_intervalos', {
+        data_selecionada: data,
+        user_id_param: userId,
+        duracao_servico: servico.duracao
+      });
+
+      if (error) {
+        console.error('Erro ao buscar horários:', error);
+        return [];
+      }
+
+      return (horariosResult || []).map(h => ({
+        horario: h.horario,
+        disponivel: h.disponivel
+      }));
+    } catch (error) {
+      console.error('Erro ao calcular horários disponíveis:', error);
+      return [];
+    }
+  }, [servicos]);
 
   // Criar cliente se não existir
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {

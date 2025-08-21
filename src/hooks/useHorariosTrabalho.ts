@@ -21,13 +21,12 @@ export const useHorariosTrabalho = () => {
 
   const carregarConfiguracoes = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
+      // Para agendamento online, buscar configurações de todos os usuários ativos
       const { data, error } = await supabase
         .from('configuracoes_horarios')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('ativo', true)
+        .order('dia_semana');
 
       if (error) throw error;
       setConfiguracoes(data || []);
@@ -40,8 +39,9 @@ export const useHorariosTrabalho = () => {
 
   // Verificar se um dia está ativo para atendimento
   const isDiaAtivo = (diaSemana: number): boolean => {
-    const config = configuracoes.find(c => c.dia_semana === diaSemana);
-    return config?.ativo || false;
+    // Para agendamento online, o dia está ativo se ao menos uma configuração estiver ativa
+    const config = configuracoes.find(c => c.dia_semana === diaSemana && c.ativo);
+    return !!config;
   };
 
   // Verificar se um horário está dentro do horário de funcionamento

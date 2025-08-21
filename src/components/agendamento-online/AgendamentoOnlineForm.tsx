@@ -73,18 +73,13 @@ export function AgendamentoOnlineForm() {
     // Obter horários disponíveis baseados na configuração de trabalho
     const horariosDoSistema = getHorariosDisponiveis(diaSemana, servicoSelecionado.duracao);
 
-    // Verificar disponibilidade real com agendamentos existentes
-    const horariosComDisponibilidade = await Promise.all(
-      horariosDoSistema.map(async (horario) => {
-        const disponivel = await calcularHorariosDisponiveis(formData.servico_id!, formData.data)
-          .then(horarios => horarios.find(h => h.horario === horario)?.disponivel ?? false);
+    if (horariosDoSistema.length === 0) {
+      setHorariosDisponiveis([]);
+      return;
+    }
 
-        return {
-          horario,
-          disponivel
-        };
-      })
-    );
+    // Verificar disponibilidade real com agendamentos existentes
+    const horariosComDisponibilidade = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
 
     setHorariosDisponiveis(horariosComDisponibilidade);
   };

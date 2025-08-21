@@ -2,10 +2,7 @@ import { type FC } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
-// Temporarily disabled components to fix React bundling issue
-// import { PWAProvider } from "./components/pwa/PWAProvider";
-// Temporarily commented out to isolate the error
-// import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
+import { Toaster } from "@/components/ui/toaster";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -30,11 +27,7 @@ const App: FC = () => {
       <BrowserRouter>
         <SupabaseAuthProvider>
           <div id="app-container">
-            {/* Temporarily removed PWAProvider to fix React bundling issue */}
-            {/* <PWAProvider> */}
-                {/* Temporariamente removidos os Toasters que estão causando problemas */}
-                {/* <Toaster />
-                <Sonner /> */}
+                <Toaster />
                 <Routes>
                   {/* Rotas públicas */}
                   <Route path="/login" element={<Login />} />
