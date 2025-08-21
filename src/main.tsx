@@ -1,7 +1,10 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+
+console.log("main.tsx - React check:", React ? 'React loaded' : 'React is null');
+console.log("main.tsx - StrictMode check:", StrictMode ? 'StrictMode loaded' : 'StrictMode is null');
 
 // Registrar Service Worker
 if ('serviceWorker' in navigator) {
@@ -17,9 +20,16 @@ if ('serviceWorker' in navigator) {
 }
 
 const rootElement = document.getElementById("root");
-if (!rootElement) throw new Error('Failed to find the root element');
+if (!rootElement) {
+  console.error('Root element not found!');
+  throw new Error('Failed to find the root element');
+}
 
-createRoot(rootElement).render(
+console.log("Creating React root...");
+const root = createRoot(rootElement);
+
+console.log("Rendering App with StrictMode...");
+root.render(
   <StrictMode>
     <App />
   </StrictMode>
