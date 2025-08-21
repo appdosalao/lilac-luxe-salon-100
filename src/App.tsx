@@ -2,7 +2,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -27,7 +27,7 @@ const App: React.FC = () => {
       <BrowserRouter>
         <SupabaseAuthProvider>
           <div id="app-container">
-                <Toaster />
+                <Toaster position="top-right" />
                 <Routes>
                   {/* Rotas públicas */}
                   <Route path="/login" element={<Login />} />
