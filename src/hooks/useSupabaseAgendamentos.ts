@@ -439,23 +439,25 @@ export function useSupabaseAgendamentos() {
       const agendamentoOnlineId = id.replace('online_', '');
       setLoading(true);
       try {
+        console.log('🗑️ Executando delete de agendamento online no Supabase...', agendamentoOnlineId);
         const { error } = await supabase
           .from('agendamentos_online')
-          .update({ status: 'cancelado' })
+          .delete()
           .eq('id', agendamentoOnlineId);
 
         if (error) {
-          console.error('Erro ao cancelar agendamento online:', error);
-          toast.error('Erro ao cancelar agendamento');
+          console.error('❌ Erro do Supabase ao excluir agendamento online:', error);
+          toast.error('Erro ao excluir agendamento online: ' + error.message);
           return false;
         }
 
+        console.log('✅ Agendamento online excluído com sucesso no banco');
         await carregarAgendamentos();
-        toast.success('Agendamento cancelado com sucesso!');
+        toast.success('Agendamento online excluído com sucesso!');
         return true;
       } catch (error) {
-        console.error('Erro ao cancelar agendamento online:', error);
-        toast.error('Erro ao cancelar agendamento');
+        console.error('❌ Erro ao excluir agendamento online:', error);
+        toast.error('Erro ao excluir agendamento online');
         return false;
       } finally {
         setLoading(false);
