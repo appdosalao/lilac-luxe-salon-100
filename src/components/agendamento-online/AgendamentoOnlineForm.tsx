@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, User, Mail, Phone, MapPin, CreditCard, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, MapPin, CreditCard, AlertCircle, Share2, Copy } from 'lucide-react';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
+import { useShare } from '@/hooks/useShare';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
 
 export function AgendamentoOnlineForm() {
@@ -28,6 +29,8 @@ export function AgendamentoOnlineForm() {
     loading: loadingHorarios,
     configuracoes
   } = useHorariosTrabalho(); // Para agendamento online, usar o primeiro usuário disponível
+
+  const { shareContent, copyToClipboard, isSharing } = useShare();
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
@@ -188,6 +191,59 @@ export function AgendamentoOnlineForm() {
   const dataMaxima = new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 90 dias no futuro
   const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
 
+  // Função para compartilhar comprovante
+  const compartilharComprovante = async () => {
+    const dataFormatada = new Date(formData.data).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    const comprovanteTexto = `🎉 *AGENDAMENTO CONFIRMADO*
+
+📋 *Detalhes do Agendamento:*
+👤 Cliente: ${formData.nome_completo}
+💇 Serviço: ${servicoSelecionado?.nome}
+📅 Data: ${dataFormatada}
+⏰ Horário: ${formData.horario}
+💰 Valor: R$ ${servicoSelecionado?.valor.toFixed(2).replace('.', ',')}
+
+✅ Seu agendamento foi confirmado com sucesso!
+Você receberá uma confirmação em breve.
+
+📱 Guarde este comprovante para apresentar no dia do atendimento.`;
+
+    await shareContent({
+      title: "Comprovante de Agendamento",
+      text: comprovanteTexto
+    });
+  };
+
+  // Função para copiar comprovante
+  const copiarComprovante = async () => {
+    const dataFormatada = new Date(formData.data).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    const comprovanteTexto = `🎉 AGENDAMENTO CONFIRMADO
+
+📋 Detalhes do Agendamento:
+👤 Cliente: ${formData.nome_completo}
+💇 Serviço: ${servicoSelecionado?.nome}
+📅 Data: ${dataFormatada}
+⏰ Horário: ${formData.horario}
+💰 Valor: R$ ${servicoSelecionado?.valor.toFixed(2).replace('.', ',')}
+
+✅ Seu agendamento foi confirmado com sucesso!
+Você receberá uma confirmação em breve.
+
+📱 Guarde este comprovante para apresentar no dia do atendimento.`;
+
+    await copyToClipboard(comprovanteTexto);
+  };
+
   // Verificar se a data selecionada é um dia disponível
   const isDataDisponivel = (data: string) => {
     if (!data) return false;
@@ -217,8 +273,31 @@ export function AgendamentoOnlineForm() {
               <p><strong>Horário:</strong> {formData.horario}</p>
               <p><strong>Valor:</strong> R$ {servicoSelecionado?.valor.toFixed(2)}</p>
             </div>
+            
+            {/* Botões de compartilhamento */}
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={compartilharComprovante}
+                disabled={isSharing}
+                className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                <Share2 className="w-4 h-4" />
+                {isSharing ? 'Compartilhando...' : 'Compartilhar Comprovante'}
+              </Button>
+              
+              <Button 
+                onClick={copiarComprovante}
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copiar Comprovante
+              </Button>
+            </div>
+            
             <Button 
               onClick={() => window.location.reload()} 
+              variant="outline"
               className="w-full"
             >
               Fazer Novo Agendamento
