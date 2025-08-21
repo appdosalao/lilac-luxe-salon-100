@@ -1,9 +1,6 @@
 import * as React from "react"
 
-const { useState, useEffect } = React || {
-  useState: () => [null, () => {}],
-  useEffect: () => {}
-};
+const { useState, useEffect } = React;
 
 import type {
   ToastActionElement,
@@ -172,21 +169,9 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  // Verificação de segurança para useState
-  if (typeof useState !== 'function') {
-    console.warn('useState não está disponível no useToast');
-    return {
-      toasts: [],
-      toast: () => ({ id: '', dismiss: () => {}, update: () => {} }),
-      dismiss: () => {}
-    };
-  }
-  
   const [state, setState] = useState<State>(memoryState)
 
   useEffect(() => {
-    if (typeof useEffect !== 'function') return;
-    
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)
