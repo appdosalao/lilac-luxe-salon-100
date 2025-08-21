@@ -25,8 +25,9 @@ export function AgendamentoOnlineForm() {
     isDiaAtivo,
     getHorariosDisponiveis,
     isAgendamentoValido,
-    loading: loadingHorarios
-  } = useHorariosTrabalho();
+    loading: loadingHorarios,
+    configuracoes
+  } = useHorariosTrabalho(); // Para agendamento online, usar o primeiro usuário disponível
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
@@ -50,6 +51,14 @@ export function AgendamentoOnlineForm() {
   }, [carregarServicos]);
 
   useEffect(() => {
+    console.log('Configurações carregadas:', { 
+      total: configuracoes.length,
+      loading: loadingHorarios,
+      items: configuracoes
+    });
+  }, [configuracoes, loadingHorarios]);
+
+  useEffect(() => {
     if (formData.servico_id && formData.data) {
       carregarHorariosDisponiveis();
     }
@@ -64,22 +73,35 @@ export function AgendamentoOnlineForm() {
     const dataSelecionada = new Date(formData.data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
 
+    console.log('Debug - Carregando horários:', {
+      data: formData.data,
+      diaSemana,
+      configuracoes: configuracoes.length,
+      isDiaAtivo: isDiaAtivo(diaSemana)
+    });
+
     // Verificar se o dia está ativo para atendimento
     if (!isDiaAtivo(diaSemana)) {
+      console.log('Dia não está ativo:', diaSemana);
       setHorariosDisponiveis([]);
       return;
     }
 
     // Obter horários disponíveis baseados na configuração de trabalho
     const horariosDoSistema = getHorariosDisponiveis(diaSemana, servicoSelecionado.duracao);
+    
+    console.log('Horários do sistema:', horariosDoSistema);
 
     if (horariosDoSistema.length === 0) {
+      console.log('Nenhum horário disponível no sistema');
       setHorariosDisponiveis([]);
       return;
     }
 
     // Verificar disponibilidade real com agendamentos existentes
     const horariosComDisponibilidade = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
+    
+    console.log('Horários com disponibilidade:', horariosComDisponibilidade);
 
     setHorariosDisponiveis(horariosComDisponibilidade);
   };

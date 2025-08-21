@@ -86,18 +86,19 @@ export const useAgendamentoOnlineService = () => {
     if (!servico) return [];
 
     try {
-      // Buscar um usuário válido para usar na função
-      const { data: usuarios, error: userError } = await supabase
-        .from('usuarios')
-        .select('id')
+      // Buscar configurações ativas para determinar horários disponíveis
+      const { data: configuracoes, error: configError } = await supabase
+        .from('configuracoes_horarios')
+        .select('user_id')
+        .eq('ativo', true)
         .limit(1);
 
-      if (userError || !usuarios || usuarios.length === 0) {
-        console.error('Nenhum usuário encontrado');
+      if (configError || !configuracoes || configuracoes.length === 0) {
+        console.error('Nenhuma configuração de horário encontrada');
         return [];
       }
 
-      const userId = usuarios[0].id;
+      const userId = configuracoes[0].user_id;
 
       // Usar função do Supabase para buscar horários com intervalos
       const { data: horariosResult, error } = await supabase.rpc('buscar_horarios_com_multiplos_intervalos', {
@@ -111,10 +112,13 @@ export const useAgendamentoOnlineService = () => {
         return [];
       }
 
-      return (horariosResult || []).map(h => ({
-        horario: h.horario,
-        disponivel: h.disponivel
-      }));
+      console.log('Resultado RPC horários:', horariosResult);
+
+      // O resultado da RPC já vem no formato correto
+      return (horariosResult || []).map(item => ({
+        horario: item.horario || '',
+        disponivel: item.disponivel !== false
+      })).filter(h => h.horario); // Filtrar itens inválidos
     } catch (error) {
       console.error('Erro ao calcular horários disponíveis:', error);
       return [];

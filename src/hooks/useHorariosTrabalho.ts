@@ -11,22 +11,37 @@ interface ConfiguracaoHorario {
   intervalo_fim?: string;
 }
 
-export const useHorariosTrabalho = () => {
+export const useHorariosTrabalho = (userId?: string) => {
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoHorario[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     carregarConfiguracoes();
-  }, []);
+  }, [userId]);
 
   const carregarConfiguracoes = async () => {
     try {
-      // Para agendamento online, buscar configurações de todos os usuários ativos
-      const { data, error } = await supabase
+      let query = supabase
         .from('configuracoes_horarios')
         .select('*')
         .eq('ativo', true)
         .order('dia_semana');
+
+      // Se não foi passado userId específico, pegar o primeiro usuário disponível
+      if (!userId) {
+        const { data: usuarios } = await supabase
+          .from('usuarios')
+          .select('id')
+          .limit(1);
+        
+        if (usuarios && usuarios.length > 0) {
+          query = query.eq('user_id', usuarios[0].id);
+        }
+      } else {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setConfiguracoes(data || []);
