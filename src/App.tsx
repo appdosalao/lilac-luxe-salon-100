@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import { Toaster } from "sonner";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PWAProvider } from "./components/pwa/PWAProvider";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
@@ -26,8 +27,9 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SupabaseAuthProvider>
-          <div id="app-container">
-                <Toaster position="top-right" />
+          <PWAProvider>
+            <div id="app-container">
+              <Toaster position="top-right" />
                 <Routes>
                   {/* Rotas públicas */}
                   <Route path="/login" element={<Login />} />
@@ -97,9 +99,9 @@ const App: React.FC = () => {
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              {/* </PWAProvider> */}
               {/* Temporarily removed NotificationProviderAvancado */}
             </div>
+          </PWAProvider>
         </SupabaseAuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
