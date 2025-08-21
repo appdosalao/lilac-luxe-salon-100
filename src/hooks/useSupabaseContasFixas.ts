@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+
+const { useState, useEffect } = React;
 import { supabase } from '@/integrations/supabase/client';
 import { ContaFixa, NovaContaFixa, CategoriaFinanceira } from '@/types/contaFixa';
 
@@ -178,7 +180,7 @@ export const useSupabaseContasFixas = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadContasFixas();
     loadCategorias();
 
