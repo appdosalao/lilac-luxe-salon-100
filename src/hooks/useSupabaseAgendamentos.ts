@@ -33,11 +33,39 @@ export function useSupabaseAgendamentos() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itensPorPagina] = useState(10);
 
-  // Verificar se horário está disponível baseado nas configurações
-  const verificarHorarioDisponivel = (data: string, hora: string) => {
-    const dataObj = new Date(data);
-    const diaSemana = dataObj.getDay();
-    return supabaseConfig.verificarDisponibilidade(diaSemana, hora);
+  // Verificar se horário está disponível usando a função do Supabase
+  const verificarHorarioDisponivel = async (data: string, hora: string) => {
+    if (!user) return false;
+    
+    try {
+      // Garantir que o horário esteja no formato correto (HH:MM:SS ou HH:MM)
+      const horaFormatada = hora.includes(':') ? hora : `${hora}:00`;
+      
+      const { data: horariosDisponiveis, error } = await supabase.rpc(
+        'buscar_horarios_com_multiplos_intervalos', 
+        {
+          data_selecionada: data,
+          user_id_param: user.id,
+          duracao_servico: 30 // Duração mínima para verificação
+        }
+      );
+
+      if (error) {
+        console.error('Erro ao verificar disponibilidade:', error);
+        return false;
+      }
+
+      // Verificar se o horário específico está disponível
+      // Comparar tanto HH:MM:SS quanto HH:MM
+      return horariosDisponiveis?.some((h: any) => {
+        const horarioBanco = h.horario; // Formato HH:MM:SS do banco
+        const horarioBancoSemSegundos = horarioBanco ? horarioBanco.substring(0, 5) : ''; // HH:MM
+        return (horarioBanco === horaFormatada || horarioBancoSemSegundos === hora) && h.disponivel === true;
+      }) || false;
+    } catch (error) {
+      console.error('Erro ao verificar disponibilidade:', error);
+      return false;
+    }
   };
 
   // Carregar agendamentos regulares do Supabase
@@ -329,7 +357,8 @@ export function useSupabaseAgendamentos() {
     }
 
     // Verificar se horário está dentro das configurações de funcionamento
-    if (!verificarHorarioDisponivel(novoAgendamento.data, novoAgendamento.hora)) {
+    const horarioDisponivel = await verificarHorarioDisponivel(novoAgendamento.data, novoAgendamento.hora);
+    if (!horarioDisponivel) {
       toast.error('Horário não disponível para agendamento');
       return false;
     }
