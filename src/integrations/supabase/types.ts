@@ -26,6 +26,7 @@ export type Database = {
           id: string
           observacoes: string | null
           origem: string | null
+          prioridade: string | null
           servico_id: string
           status: string | null
           status_pagamento: string | null
@@ -46,6 +47,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           origem?: string | null
+          prioridade?: string | null
           servico_id: string
           status?: string | null
           status_pagamento?: string | null
@@ -66,6 +68,7 @@ export type Database = {
           id?: string
           observacoes?: string | null
           origem?: string | null
+          prioridade?: string | null
           servico_id?: string
           status?: string | null
           status_pagamento?: string | null
@@ -945,6 +948,19 @@ export type Database = {
           },
         ]
       }
+      disponibilidade_agendamentos: {
+        Row: {
+          dia_semana: number | null
+          horario_abertura: string | null
+          horario_fechamento: string | null
+          horarios_agendados: string | null
+          intervalo_fim: string | null
+          intervalo_inicio: string | null
+          total_agendamentos: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       retornos_completos: {
         Row: {
           agendamento_data: string | null
@@ -1029,6 +1045,13 @@ export type Database = {
           motivo: string
         }[]
       }
+      calcular_disponibilidade: {
+        Args: { p_data: string; p_user_id: string }
+        Returns: {
+          horario: string
+          status: string
+        }[]
+      }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
@@ -1058,6 +1081,40 @@ export type Database = {
           total_registros_ativos: number
         }[]
       }
+      get_current_user_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      inserir_configuracao_horario: {
+        Args: {
+          p_ativo?: boolean
+          p_dia_semana: number
+          p_duracao_padrao?: number
+          p_horario_abertura: string
+          p_horario_fechamento: string
+          p_intervalo_fim?: string
+          p_intervalo_inicio?: string
+          p_max_agendamentos?: number
+        }
+        Returns: string
+      }
+      obter_configuracoes_horario: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ativo: boolean
+          dia_semana: number
+          duracao_padrao_atendimento: number
+          horario_abertura: string
+          horario_fechamento: string
+          intervalo_fim: string
+          intervalo_inicio: string
+          max_agendamentos_simultaneos: number
+        }[]
+      }
+      proximo_horario_disponivel: {
+        Args: { p_data: string; p_duracao: number; p_user_id: string }
+        Returns: string
+      }
       test_delete_permissions: {
         Args: { record_id: string; table_name: string }
         Returns: Json
@@ -1071,6 +1128,19 @@ export type Database = {
           horarios_disponiveis: Json
           user_email: string
         }[]
+      }
+      validar_agendamento: {
+        Args: { p_data: string; p_horario: string; p_user_id: string }
+        Returns: boolean
+      }
+      validar_agendamento_simultaneo: {
+        Args: {
+          p_data: string
+          p_duracao: number
+          p_horario: string
+          p_user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
