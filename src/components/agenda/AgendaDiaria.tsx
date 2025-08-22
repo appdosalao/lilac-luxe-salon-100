@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, User, Tag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +75,7 @@ export function AgendaDiaria() {
       </div>
 
       {/* Resumo do Dia Aprimorado */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="group border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-4 text-center">
             <div className="flex flex-col items-center space-y-2">
@@ -100,6 +100,20 @@ export function AgendaDiaria() {
                 {agendamentosDoDia.filter(ag => ag.status === 'concluido').length}
               </div>
               <p className="text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="group border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 transition-all hover:shadow-lg hover:scale-105">
+          <CardContent className="p-4 text-center">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                R$ {agendamentosDoDia.reduce((total, ag) => total + Number(ag.valor || 0), 0).toFixed(2)}
+              </div>
+              <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor Total</p>
             </div>
           </CardContent>
         </Card>
