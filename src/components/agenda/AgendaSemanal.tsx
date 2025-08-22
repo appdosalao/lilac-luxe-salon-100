@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,32 +40,56 @@ export function AgendaSemanal() {
   );
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      {/* Navegação da Semana */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={semanaAnterior} className="h-8 w-8 p-0">
+    <div className="space-y-6">
+      {/* Navegação da Semana Aprimorada */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/10 to-primary/10 border border-border/50">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={semanaAnterior} 
+            className="h-9 w-9 p-0 rounded-full transition-all hover:scale-110 hover:shadow-md"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-center min-w-[250px] lg:min-w-[300px]">
-            <h2 className="text-sm lg:text-lg font-semibold">
+          <div className="text-center min-w-[280px] lg:min-w-[350px]">
+            <h2 className="text-lg lg:text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {format(inicioSemana, "dd 'de' MMM", { locale: ptBR })} - {format(fimSemana, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
             </h2>
           </div>
-          <Button variant="outline" size="sm" onClick={proximaSemana} className="h-8 w-8 p-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={proximaSemana} 
+            className="h-9 w-9 p-0 rounded-full transition-all hover:scale-110 hover:shadow-md"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={semanaAtualBtn} className="w-full sm:w-auto">
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={semanaAtualBtn} 
+          className="w-full sm:w-auto transition-all hover:scale-105 shadow-md"
+        >
           Semana Atual
         </Button>
       </div>
 
-      {/* Resumo da Semana */}
-      <Card>
-        <CardContent className="p-3 lg:p-4 text-center">
-          <div className="text-lg lg:text-2xl font-bold text-primary">{totalAgendamentosSemana}</div>
-          <p className="text-xs lg:text-sm text-muted-foreground">Agendamentos na semana</p>
+      {/* Resumo da Semana Aprimorado */}
+      <Card className="border-0 bg-gradient-to-br from-primary/5 to-accent/5 shadow-lg">
+        <CardContent className="p-6 text-center">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Calendar className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {totalAgendamentosSemana}
+              </div>
+              <p className="text-sm text-muted-foreground font-medium">Agendamentos na semana</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
