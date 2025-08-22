@@ -37,54 +37,54 @@ export function AgendaMensal() {
   const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Navegação do Mês */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={mesAnterior}>
+          <Button variant="outline" size="sm" onClick={mesAnterior} className="h-8 w-8 p-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-center min-w-[200px]">
-            <h2 className="text-lg font-semibold">
+          <div className="text-center min-w-[180px] lg:min-w-[200px]">
+            <h2 className="text-sm lg:text-lg font-semibold">
               {format(mesAtual, "MMMM 'de' yyyy", { locale: ptBR })}
             </h2>
           </div>
-          <Button variant="outline" size="sm" onClick={proximoMes}>
+          <Button variant="outline" size="sm" onClick={proximoMes} className="h-8 w-8 p-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={mesAtualBtn}>
+        <Button variant="outline" size="sm" onClick={mesAtualBtn} className="w-full sm:w-auto">
           Mês Atual
         </Button>
       </div>
 
       {/* Resumo do Mês */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-lg font-bold text-primary">{agendamentosDoMes.length}</div>
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-sm lg:text-lg font-bold text-primary">{agendamentosDoMes.length}</div>
             <p className="text-xs text-muted-foreground">Total</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-lg font-bold text-blue-600">
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-sm lg:text-lg font-bold text-blue-600">
               {agendamentosDoMes.filter(ag => ag.status === 'agendado').length}
             </div>
             <p className="text-xs text-muted-foreground">Agendados</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-lg font-bold text-green-600">
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-sm lg:text-lg font-bold text-green-600">
               {agendamentosDoMes.filter(ag => ag.status === 'concluido').length}
             </div>
             <p className="text-xs text-muted-foreground">Concluídos</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-lg font-bold text-purple-600">
+          <CardContent className="p-3 lg:p-4 text-center">
+            <div className="text-sm lg:text-lg font-bold text-purple-600">
               {agendamentosDoMes.filter(ag => ag.origem === 'cronograma').length}
             </div>
             <p className="text-xs text-muted-foreground">Cronograma</p>
@@ -94,21 +94,21 @@ export function AgendaMensal() {
 
       {/* Calendário */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-center">Calendário de Agendamentos</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-center text-sm lg:text-base">Calendário de Agendamentos</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
+        <CardContent className="p-2 lg:p-4">
           {/* Cabeçalho dos dias da semana */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
+          <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2 lg:mb-4">
             {diasDaSemana.map(dia => (
-              <div key={dia} className="text-center text-sm font-medium text-muted-foreground p-2">
+              <div key={dia} className="text-center text-xs lg:text-sm font-medium text-muted-foreground p-1 lg:p-2">
                 {dia}
               </div>
             ))}
           </div>
 
           {/* Grid do calendário */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 lg:gap-2">
             {diasDoCalendario.map((dia) => {
               const agendamentosDoDia = getAgendamentosDoDia(dia);
               const ehHoje = isSameDay(dia, new Date());
@@ -118,14 +118,14 @@ export function AgendaMensal() {
                 <div
                   key={dia.toString()}
                   className={cn(
-                    "min-h-[80px] p-2 border rounded-lg",
+                    "min-h-[60px] lg:min-h-[80px] p-1 lg:p-2 border rounded-lg",
                     ehHoje && "bg-primary/10 border-primary",
                     !ehDoMesAtual && "bg-muted/50 text-muted-foreground",
                     ehDoMesAtual && "hover:bg-accent/50"
                   )}
                 >
                   <div className={cn(
-                    "text-sm font-medium mb-1",
+                    "text-xs lg:text-sm font-medium mb-1",
                     ehHoje && "text-primary font-bold"
                   )}>
                     {format(dia, "dd")}
@@ -143,14 +143,16 @@ export function AgendaMensal() {
                           agendamento.origem === 'cronograma' && "bg-purple-100 text-purple-800"
                         )}
                       >
-                        {agendamento.hora} {agendamento.clienteNome}
+                        <span className="text-xs">{agendamento.hora}</span>{' '}
+                        <span className="hidden lg:inline">{agendamento.clienteNome}</span>
+                        <span className="lg:hidden">{agendamento.clienteNome.split(' ')[0]}</span>
                         {agendamento.origem === 'cronograma' && ' 💜'}
                       </div>
                     ))}
                     
                     {agendamentosDoDia.length > 2 && (
                       <div className="text-xs text-muted-foreground text-center">
-                        +{agendamentosDoDia.length - 2} mais
+                        +{agendamentosDoDia.length - 2}
                       </div>
                     )}
                   </div>

@@ -40,49 +40,52 @@ export default function Agenda() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Calendar className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Agenda</h1>
+          <Calendar className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
+          <h1 className="text-xl lg:text-2xl font-bold">Agenda</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant={visualizacao === 'dia' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setVisualizacao('dia')}
+            className="flex-1 sm:flex-none"
           >
-            <Clock className="h-4 w-4 mr-2" />
-            Dia
+            <Clock className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Dia</span>
           </Button>
           <Button
             variant={visualizacao === 'semana' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setVisualizacao('semana')}
+            className="flex-1 sm:flex-none"
           >
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Semana
+            <CalendarDays className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Semana</span>
           </Button>
           <Button
             variant={visualizacao === 'mes' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setVisualizacao('mes')}
+            className="flex-1 sm:flex-none"
           >
-            <CalendarRange className="h-4 w-4 mr-2" />
-            Mês
+            <CalendarRange className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Mês</span>
           </Button>
         </div>
       </div>
 
       {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Agendamentos Hoje</CardTitle>
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-xs lg:text-sm font-medium">Agendamentos Hoje</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{agendamentosHoje.length}</div>
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-2xl font-bold text-primary">{agendamentosHoje.length}</div>
             <p className="text-xs text-muted-foreground">
               {agendamentosHoje.filter(ag => ag.status === 'agendado').length} pendentes
             </p>
@@ -90,11 +93,11 @@ export default function Agenda() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Próximos 7 Dias</CardTitle>
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-xs lg:text-sm font-medium">Próximos 7 Dias</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{proximosSete.length}</div>
+          <CardContent className="pt-0">
+            <div className="text-lg lg:text-2xl font-bold text-primary">{proximosSete.length}</div>
             <p className="text-xs text-muted-foreground">
               {proximosSete.filter(ag => ag.status === 'agendado').length} agendados
             </p>
@@ -103,8 +106,8 @@ export default function Agenda() {
       </div>
 
       {/* Conteúdo da Agenda */}
-      <Card className="min-h-[600px]">
-        <CardContent className="p-6">
+      <Card className="min-h-[400px] lg:min-h-[600px]">
+        <CardContent className="p-3 lg:p-6">
           {visualizacao === 'dia' && <AgendaDiaria />}
           {visualizacao === 'semana' && <AgendaSemanal />}
           {visualizacao === 'mes' && <AgendaMensal />}

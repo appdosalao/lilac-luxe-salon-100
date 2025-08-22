@@ -40,63 +40,63 @@ export function AgendaSemanal() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Navegação da Semana */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={semanaAnterior}>
+          <Button variant="outline" size="sm" onClick={semanaAnterior} className="h-8 w-8 p-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-center min-w-[300px]">
-            <h2 className="text-lg font-semibold">
+          <div className="text-center min-w-[250px] lg:min-w-[300px]">
+            <h2 className="text-sm lg:text-lg font-semibold">
               {format(inicioSemana, "dd 'de' MMM", { locale: ptBR })} - {format(fimSemana, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
             </h2>
           </div>
-          <Button variant="outline" size="sm" onClick={proximaSemana}>
+          <Button variant="outline" size="sm" onClick={proximaSemana} className="h-8 w-8 p-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={semanaAtualBtn}>
+        <Button variant="outline" size="sm" onClick={semanaAtualBtn} className="w-full sm:w-auto">
           Semana Atual
         </Button>
       </div>
 
       {/* Resumo da Semana */}
       <Card>
-        <CardContent className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{totalAgendamentosSemana}</div>
-          <p className="text-sm text-muted-foreground">Agendamentos na semana</p>
+        <CardContent className="p-3 lg:p-4 text-center">
+          <div className="text-lg lg:text-2xl font-bold text-primary">{totalAgendamentosSemana}</div>
+          <p className="text-xs lg:text-sm text-muted-foreground">Agendamentos na semana</p>
         </CardContent>
       </Card>
 
       {/* Grid da Semana */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 lg:gap-4">
         {diasDaSemana.map((dia, index) => {
           const agendamentosDoDia = getAgendamentosDoDia(dia);
           const ehHoje = isSameDay(dia, new Date());
           
           return (
             <Card key={index} className={cn(
-              "min-h-[300px]",
+              "min-h-[250px] lg:min-h-[300px]",
               ehHoje && "ring-2 ring-primary ring-opacity-20 bg-primary/5"
             )}>
               <CardHeader className="pb-2">
                 <CardTitle className={cn(
-                  "text-sm font-medium text-center",
+                  "text-xs lg:text-sm font-medium text-center",
                   ehHoje && "text-primary font-bold"
                 )}>
                   {format(dia, "EEE", { locale: ptBR })}
                   <div className={cn(
-                    "text-lg",
+                    "text-sm lg:text-lg",
                     ehHoje && "text-primary"
                   )}>
                     {format(dia, "dd", { locale: ptBR })}
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3 space-y-2">
+              <CardContent className="p-2 lg:p-3 space-y-1 lg:space-y-2">
                 {agendamentosDoDia.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">
+                  <p className="text-xs text-muted-foreground text-center py-2 lg:py-4">
                     Sem agendamentos
                   </p>
                 ) : (
@@ -110,18 +110,18 @@ export function AgendaSemanal() {
                     >
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span className="font-mono">{agendamento.hora}</span>
+                        <span className="font-mono text-xs">{agendamento.hora}</span>
                       </div>
-                      <div className="font-medium truncate">
+                      <div className="font-medium truncate text-xs">
                         {agendamento.clienteNome}
                       </div>
-                      <div className="text-muted-foreground truncate">
+                      <div className="text-muted-foreground truncate text-xs">
                         {agendamento.servicoNome}
                       </div>
                       <div className="flex items-center justify-between">
                         <Badge 
                           variant="outline" 
-                          className={cn("text-xs", getStatusColor(agendamento.status))}
+                          className={cn("text-xs px-1 py-0", getStatusColor(agendamento.status))}
                         >
                           {agendamento.status}
                         </Badge>
