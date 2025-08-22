@@ -12,6 +12,7 @@ import Clientes from "./pages/Clientes";
 import Servicos from "./pages/Servicos";
 import Cronogramas from "./pages/Cronogramas";
 import Financeiro from "./pages/Financeiro";
+import Agenda from "./pages/Agenda";
 import Configuracoes from './pages/Configuracoes-Simple';
 import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
@@ -79,6 +80,13 @@ const App: React.FC = () => {
                     <ProtectedRoute>
                       <Layout>
                         <Financeiro />
+                      </Layout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/agenda" element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Agenda />
                       </Layout>
                     </ProtectedRoute>
                   } />

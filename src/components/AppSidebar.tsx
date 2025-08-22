@@ -59,6 +59,11 @@ const navigationItems = [
     icon: Clock,
   },
   {
+    title: "Agenda",
+    href: "/agenda",
+    icon: Calendar,
+  },
+  {
     title: "Financeiro",
     href: "/financeiro",
     icon: DollarSign,
