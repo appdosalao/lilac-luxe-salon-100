@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,10 @@ export function AgendaSemanal() {
 
   const totalAgendamentosSemana = diasDaSemana.reduce((total, dia) => 
     total + getAgendamentosDoDia(dia).length, 0
+  );
+
+  const valorTotalSemana = diasDaSemana.reduce((total, dia) => 
+    total + getAgendamentosDoDia(dia).reduce((valor, ag) => valor + Number(ag.valor || 0), 0), 0
   );
 
   return (
@@ -77,21 +81,39 @@ export function AgendaSemanal() {
       </div>
 
       {/* Resumo da Semana Aprimorado */}
-      <Card className="border-0 bg-gradient-to-br from-primary/5 to-accent/5 shadow-lg">
-        <CardContent className="p-6 text-center">
-          <div className="flex items-center justify-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {totalAgendamentosSemana}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="border-0 bg-gradient-to-br from-primary/5 to-accent/5 shadow-lg">
+          <CardContent className="p-6 text-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Calendar className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground font-medium">Agendamentos na semana</p>
+              <div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  {totalAgendamentosSemana}
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Agendamentos na semana</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 shadow-lg">
+          <CardContent className="p-6 text-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+                  R$ {valorTotalSemana.toFixed(2)}
+                </div>
+                <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor total da semana</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Grid da Semana */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 lg:gap-4">

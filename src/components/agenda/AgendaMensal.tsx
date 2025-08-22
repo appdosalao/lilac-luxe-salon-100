@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,8 @@ export function AgendaMensal() {
   const agendamentosDoMes = agendamentosFiltrados.filter(ag => 
     isSameMonth(new Date(ag.data), mesAtual)
   );
+
+  const valorTotalMes = agendamentosDoMes.reduce((total, ag) => total + Number(ag.valor || 0), 0);
 
   const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -99,10 +101,15 @@ export function AgendaMensal() {
         </Card>
         <Card className="group border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-4 text-center">
-            <div className="text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {agendamentosDoMes.filter(ag => ag.origem === 'cronograma').length}
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
+                R$ {valorTotalMes.toFixed(2)}
+              </div>
+              <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor Total</p>
             </div>
-            <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Cronograma</p>
           </CardContent>
         </Card>
       </div>
