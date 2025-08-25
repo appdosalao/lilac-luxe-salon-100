@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useMemo } = React;
+import React, { useState, useMemo } from 'react';
 import { useSupabaseLancamentos } from './useSupabaseLancamentos';
 import { useSupabaseContasFixas } from './useSupabaseContasFixas';
 import { LancamentoFiltros } from '@/types/lancamento';
