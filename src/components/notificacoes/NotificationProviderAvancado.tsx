@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useEnhancedNotifications } from '@/hooks/useEnhancedNotifications';

@@ -1,7 +1,7 @@
 // Patch temporário para adicionar indicadores visuais de cronograma
 // Este código será integrado ao componente principal
 
-import * as React from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Agendamento } from '@/types/agendamento';
 

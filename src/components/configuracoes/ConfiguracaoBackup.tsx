@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useEffect } = React;
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';

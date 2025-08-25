@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { forwardRef } = React;
+import React, { forwardRef } from 'react';
 import type { ElementRef, ComponentPropsWithoutRef, ReactElement } from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
