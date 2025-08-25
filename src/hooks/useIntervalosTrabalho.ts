@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useEffect } = React;
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
