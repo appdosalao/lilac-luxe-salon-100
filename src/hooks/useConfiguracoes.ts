@@ -106,29 +106,7 @@ export const useConfiguracoes = () => {
       },
       isHorarioDisponivel: supabaseConfig.verificarDisponibilidade,
       getHorariosDisponiveis: (diaSemana: number, duracaoServico = 60) => {
-        const horarios: string[] = [];
-        const config = supabaseConfig.buscarHorariosPorDia(diaSemana);
-        if (!config || !config.ativo) return horarios;
-
-        // Gerar horários de 30 em 30 minutos
-        const inicio = config.horario_abertura;
-        const fim = config.horario_fechamento;
-        
-        let horaAtual = inicio;
-        while (horaAtual < fim) {
-          if (supabaseConfig.verificarDisponibilidade(diaSemana, horaAtual)) {
-            horarios.push(horaAtual);
-          }
-          
-          // Incrementar 30 minutos
-          const [h, m] = horaAtual.split(':').map(Number);
-          const novoMinuto = m + 30;
-          const novaHora = h + Math.floor(novoMinuto / 60);
-          const minutoFinal = novoMinuto % 60;
-          horaAtual = `${novaHora.toString().padStart(2, '0')}:${minutoFinal.toString().padStart(2, '0')}`;
-        }
-        
-        return horarios;
+        return supabaseConfig.getHorariosDisponiveisDia(diaSemana, duracaoServico);
       },
       exportarDados: async () => {
         // Implementar export usando dados do Supabase
@@ -140,7 +118,12 @@ export const useConfiguracoes = () => {
         return false;
       },
     };
-  }, [supabaseConfig]);
+  }, [
+    supabaseConfig.configuracaoHorarios, 
+    supabaseConfig.configuracaoNotificacoes, 
+    supabaseConfig.configuracaoBackup,
+    supabaseConfig.loading
+  ]);
 
   return adaptedConfig;
 };

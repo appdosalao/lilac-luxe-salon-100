@@ -233,19 +233,27 @@ export const useSupabaseConfiguracoes = () => {
     const config = buscarHorariosPorDia(diaSemana);
     if (!config || !config.ativo) return false;
 
-    const hora = horario.replace(':', '');
-    const abertura = config.horario_abertura.replace(':', '');
-    const fechamento = config.horario_fechamento.replace(':', '');
+    // Converter horários para minutos para comparação correta
+    const [horaAtual, minAtual] = horario.split(':').map(Number);
+    const [horaAbertura, minAbertura] = config.horario_abertura.split(':').map(Number);
+    const [horaFechamento, minFechamento] = config.horario_fechamento.split(':').map(Number);
+
+    const minutosAtual = horaAtual * 60 + minAtual;
+    const minutosAbertura = horaAbertura * 60 + minAbertura;
+    const minutosFechamento = horaFechamento * 60 + minFechamento;
 
     // Verificar se está dentro do horário de funcionamento
-    if (hora < abertura || hora > fechamento) return false;
+    if (minutosAtual < minutosAbertura || minutosAtual >= minutosFechamento) return false;
 
     // Verificar se não está no intervalo (se configurado)
     if (config.intervalo_inicio && config.intervalo_fim) {
-      const inicioIntervalo = config.intervalo_inicio.replace(':', '');
-      const fimIntervalo = config.intervalo_fim.replace(':', '');
+      const [horaInicioInt, minInicioInt] = config.intervalo_inicio.split(':').map(Number);
+      const [horaFimInt, minFimInt] = config.intervalo_fim.split(':').map(Number);
       
-      if (hora >= inicioIntervalo && hora <= fimIntervalo) return false;
+      const minutosInicioInt = horaInicioInt * 60 + minInicioInt;
+      const minutosFimInt = horaFimInt * 60 + minFimInt;
+      
+      if (minutosAtual >= minutosInicioInt && minutosAtual < minutosFimInt) return false;
     }
 
     return true;
@@ -257,12 +265,18 @@ export const useSupabaseConfiguracoes = () => {
     if (!config || !config.ativo) return [];
 
     const horarios: string[] = [];
-    const inicio = parseInt(config.horario_abertura.replace(':', ''));
-    const fim = parseInt(config.horario_fechamento.replace(':', ''));
-    const incremento = 30; // Intervalos de 30 minutos
+    const [horaInicio, minInicio] = config.horario_abertura.split(':').map(Number);
+    const [horaFim, minFim] = config.horario_fechamento.split(':').map(Number);
+    
+    // Converter para minutos desde meia-noite
+    const inicioMinutos = horaInicio * 60 + minInicio;
+    const fimMinutos = horaFim * 60 + minFim;
+    const incrementoMinutos = 30; // Intervalos de 30 minutos
 
-    for (let hora = inicio; hora + duracaoServico / 60 * 100 <= fim; hora += incremento) {
-      const horarioStr = `${Math.floor(hora / 100).toString().padStart(2, '0')}:${(hora % 100).toString().padStart(2, '0')}`;
+    for (let minutoAtual = inicioMinutos; minutoAtual + duracaoServico <= fimMinutos; minutoAtual += incrementoMinutos) {
+      const horas = Math.floor(minutoAtual / 60);
+      const minutos = minutoAtual % 60;
+      const horarioStr = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
       
       if (verificarDisponibilidade(diaSemana, horarioStr)) {
         horarios.push(horarioStr);
