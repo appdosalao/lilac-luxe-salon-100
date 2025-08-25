@@ -13,7 +13,9 @@ import { Calendar, Clock, User, Mail, Phone, MapPin, CreditCard, AlertCircle, Sh
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { useShare } from '@/hooks/useShare';
+import { useConfiguracoesRealTime } from '@/hooks/useConfiguracoesRealTime';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
+import { supabase } from '@/integrations/supabase/client';
 
 export function AgendamentoOnlineForm() {
   const {
@@ -33,6 +35,7 @@ export function AgendamentoOnlineForm() {
   } = useHorariosTrabalho(); // Para agendamento online, usar o primeiro usuário disponível
 
   const { shareContent, copyToClipboard, isSharing } = useShare();
+  const { lastUpdate } = useConfiguracoesRealTime();
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
@@ -117,6 +120,28 @@ export function AgendamentoOnlineForm() {
     if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
   };
+
+  // Revalidar horários quando configurações de trabalho mudarem via real-time
+  useEffect(() => {
+    if (formData.servico_id && formData.data) {
+      // Subscription para mudanças nas configurações de horários
+      const channel = supabase
+        .channel('configuracoes_horarios_online')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'configuracoes_horarios'
+        }, () => {
+          console.log('Configurações de horário atualizadas - recarregando horários disponíveis');
+          carregarHorariosDisponiveis();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [formData.servico_id, formData.data, carregarHorariosDisponiveis, lastUpdate]);
 
   const validarFormulario = (): boolean => {
     const newErrors: FormErrors = {};

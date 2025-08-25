@@ -16,6 +16,7 @@ import { Agendamento } from '@/types/agendamento';
 import { Cliente } from '@/types/cliente';
 import { Servico } from '@/types/servico';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import { useConfiguracoesRealTime } from '@/hooks/useConfiguracoesRealTime';
 
 const agendamentoSchema = z.object({
   clienteId: z.string().min(1, 'Cliente é obrigatório'),
@@ -53,6 +54,7 @@ export default function AgendamentoForm({
   verificarConflito,
 }: AgendamentoFormProps) {
   const { configuracoes, getHorariosDisponiveis, isHorarioDisponivel } = useConfiguracoes();
+  const { lastUpdate } = useConfiguracoesRealTime();
   const [servicoSelecionado, setServicoSelecionado] = useState<Servico | null>(null);
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
   const [conflito, setConflito] = useState(false);
@@ -113,36 +115,33 @@ export default function AgendamentoForm({
     }
   }, [form.watch('clienteId'), clientes]);
 
-  // Atualizar horários disponíveis quando data muda
+  // Atualizar horários disponíveis quando data ou configurações mudam
   useEffect(() => {
     const data = form.watch('data');
-    if (data) {
-      if (configuracoes) {
-        const dataObj = new Date(data + 'T12:00:00');
-        const diaSemana = dataObj.getDay();
-        const duracaoServico = servicoSelecionado?.duracao || 60;
-        const horarios = getHorariosDisponiveis(diaSemana, duracaoServico);
-        setHorariosDisponiveis(horarios);
-      } else {
-        // Horários padrão quando configurações não estão carregadas
-        const horariosDefault = [
-          '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-          '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-          '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
-        ];
-        setHorariosDisponiveis(horariosDefault);
-      }
+    if (data && configuracoes) {
+      const dataObj = new Date(data + 'T12:00:00');
+      const diaSemana = dataObj.getDay();
+      const duracaoServico = servicoSelecionado?.duracao || 60;
+      const horarios = getHorariosDisponiveis(diaSemana, duracaoServico);
+      setHorariosDisponiveis(horarios);
       
       // Limpar horário se não estiver mais disponível
       const horarioAtual = form.watch('hora');
-      const horariosAtuais = horariosDisponiveis;
-      if (horarioAtual && horariosAtuais.length > 0 && !horariosAtuais.includes(horarioAtual)) {
+      if (horarioAtual && horarios.length > 0 && !horarios.includes(horarioAtual)) {
         form.setValue('hora', '');
       }
+    } else if (data && !configuracoes) {
+      // Horários padrão quando configurações não estão carregadas
+      const horariosDefault = [
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
+        '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
+      ];
+      setHorariosDisponiveis(horariosDefault);
     } else {
       setHorariosDisponiveis([]);
     }
-  }, [form.watch('data'), configuracoes, servicoSelecionado, getHorariosDisponiveis, horariosDisponiveis]);
+  }, [form.watch('data'), configuracoes, servicoSelecionado, getHorariosDisponiveis, form, lastUpdate]);
 
   const handleSubmit = (data: AgendamentoFormData) => {
     if (conflito) {

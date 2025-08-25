@@ -84,11 +84,12 @@ export const useAgendamentoOnlineService = () => {
     if (!servico) return [];
 
     try {
-      // Buscar configurações ativas para determinar horários disponíveis
+      // Buscar configurações mais recentes para garantir sincronização
       const { data: configuracoes, error: configError } = await supabase
         .from('configuracoes_horarios')
         .select('user_id')
         .eq('ativo', true)
+        .order('updated_at', { ascending: false })
         .limit(1);
 
       if (configError || !configuracoes || configuracoes.length === 0) {
@@ -98,7 +99,7 @@ export const useAgendamentoOnlineService = () => {
 
       const userId = configuracoes[0].user_id;
 
-      // Usar função do Supabase para buscar horários com intervalos
+      // Usar função do Supabase para buscar horários com intervalos atualizados
       const { data: horariosResult, error } = await supabase.rpc('buscar_horarios_com_multiplos_intervalos', {
         data_selecionada: data,
         user_id_param: userId,
@@ -110,7 +111,7 @@ export const useAgendamentoOnlineService = () => {
         return [];
       }
 
-      console.log('Resultado RPC horários:', horariosResult);
+      console.log('Horários disponíveis atualizados:', horariosResult);
 
       // O resultado da RPC já vem no formato correto
       return (horariosResult || []).map(item => ({
