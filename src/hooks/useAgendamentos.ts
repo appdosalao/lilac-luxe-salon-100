@@ -38,6 +38,17 @@ export function useAgendamentos() {
       return false;
     }
 
+    // Verificar se horário está dentro das configurações usando as funções do Supabase
+    const horarioDisponivel = await agendamentosData.verificarHorarioDisponivel?.(
+      novoAgendamento.data, 
+      novoAgendamento.hora
+    );
+    
+    if (!horarioDisponivel) {
+      console.error('Horário não está disponível nas configurações de trabalho');
+      return false;
+    }
+
     const agendamentoCompleto = {
       ...novoAgendamento,
       duracao: servico.duracao,
@@ -66,5 +77,6 @@ export function useAgendamentos() {
     verificarConflito,
     criarAgendamento,
     adicionarAgendamentosCronograma,
+    verificarHorarioDisponivel: agendamentosData.verificarHorarioDisponivel,
   };
 }

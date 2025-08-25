@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useEffect, useMemo } = React;
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
@@ -546,6 +544,7 @@ export function useSupabaseAgendamentos() {
     cancelarAgendamento,
     recarregar: carregarAgendamentos,
     converterAgendamentoOnlineParaRegular,
-    confirmarAgendamentoOnline
+    confirmarAgendamentoOnline,
+    verificarHorarioDisponivel
   };
 }
