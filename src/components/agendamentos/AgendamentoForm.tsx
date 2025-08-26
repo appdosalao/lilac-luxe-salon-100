@@ -13,8 +13,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Agendamento } from '@/types/agendamento';
 import { Cliente } from '@/types/cliente';
 import { Servico } from '@/types/servico';
-import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { useConfiguracoesRealTime } from '@/hooks/useConfiguracoesRealTime';
+import { toast } from 'sonner';
 
 const agendamentoSchema = z.object({
   clienteId: z.string().min(1, 'Cliente é obrigatório'),
@@ -51,7 +52,7 @@ export default function AgendamentoForm({
   onCancel,
   verificarConflito,
 }: AgendamentoFormProps) {
-  const { configuracoes, getHorariosDisponiveis, isHorarioDisponivel } = useConfiguracoes();
+  const { configuracoes, getHorariosDisponiveis, isDiaAtivo, isAgendamentoValido } = useHorariosTrabalho();
   const { lastUpdate } = useConfiguracoesRealTime();
   const [servicoSelecionado, setServicoSelecionado] = useState<Servico | null>(null);
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
@@ -116,9 +117,17 @@ export default function AgendamentoForm({
   // Atualizar horários disponíveis quando data ou configurações mudam
   useEffect(() => {
     const data = form.watch('data');
-    if (data && configuracoes) {
+    if (data && configuracoes && configuracoes.length > 0) {
       const dataObj = new Date(data + 'T12:00:00');
       const diaSemana = dataObj.getDay();
+      
+      // Verificar se o dia está ativo primeiro
+      if (!isDiaAtivo(diaSemana)) {
+        setHorariosDisponiveis([]);
+        form.setValue('hora', '');
+        return;
+      }
+      
       const duracaoServico = servicoSelecionado?.duracao || 60;
       const horarios = getHorariosDisponiveis(diaSemana, duracaoServico);
       setHorariosDisponiveis(horarios);
@@ -128,21 +137,22 @@ export default function AgendamentoForm({
       if (horarioAtual && horarios.length > 0 && !horarios.includes(horarioAtual)) {
         form.setValue('hora', '');
       }
-    } else if (data && !configuracoes) {
-      // Horários padrão quando configurações não estão carregadas
-      const horariosDefault = [
-        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-        '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-        '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
-      ];
-      setHorariosDisponiveis(horariosDefault);
+    } else if (data && (!configuracoes || configuracoes.length === 0)) {
+      // Sem configurações de horário definidas - mostrar aviso
+      setHorariosDisponiveis([]);
     } else {
       setHorariosDisponiveis([]);
     }
-  }, [form.watch('data'), configuracoes, servicoSelecionado, getHorariosDisponiveis, form, lastUpdate]);
+  }, [form.watch('data'), configuracoes, servicoSelecionado, getHorariosDisponiveis, isDiaAtivo, form, lastUpdate]);
 
   const handleSubmit = (data: AgendamentoFormData) => {
     if (conflito) {
+      return;
+    }
+    
+    // Validar se o agendamento está dentro dos horários de trabalho
+    if (!isAgendamentoValido(data.data, data.hora, data.duracao)) {
+      toast.error('Este horário não está disponível para agendamento!');
       return;
     }
 
@@ -286,19 +296,29 @@ export default function AgendamentoForm({
                           <SelectValue placeholder="Selecione um horário" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {horariosDisponiveis.length > 0 ? (
-                          horariosDisponiveis.map((horario) => (
-                            <SelectItem key={horario} value={horario}>
-                              {horario}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-horarios-disponiveis" disabled>
-                            {form.watch('data') ? 'Nenhum horário disponível' : 'Selecione uma data primeiro'}
-                          </SelectItem>
-                        )}
-                      </SelectContent>
+                       <SelectContent>
+                         {horariosDisponiveis.length > 0 ? (
+                           horariosDisponiveis.map((horario) => (
+                             <SelectItem key={horario} value={horario}>
+                               {horario}
+                             </SelectItem>
+                           ))
+                         ) : (
+                           <SelectItem value="no-horarios-disponiveis" disabled>
+                             {form.watch('data') ? (
+                               configuracoes && configuracoes.length > 0 
+                                 ? (() => {
+                                     const dataObj = new Date(form.watch('data') + 'T12:00:00');
+                                     const diaSemana = dataObj.getDay();
+                                     return !isDiaAtivo(diaSemana) 
+                                       ? 'Dia não disponível para atendimento'
+                                       : 'Nenhum horário disponível';
+                                   })()
+                                 : 'Configure os horários de trabalho primeiro'
+                             ) : 'Selecione uma data primeiro'}
+                           </SelectItem>
+                         )}
+                       </SelectContent>
                     </Select>
                     <FormMessage />
                     {conflito && (
