@@ -4,6 +4,10 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Debug: Check if hooks are available
+console.log('Dialog component - forwardRef:', forwardRef);
+console.log('Dialog component - DialogPrimitive:', DialogPrimitive);
+
 const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger

@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
+// Debug: Check if React is properly loaded
+console.log('React StrictMode:', StrictMode);
+console.log('ReactDOM createRoot:', createRoot);
+
 // Registrar Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
