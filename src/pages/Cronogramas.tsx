@@ -24,9 +24,9 @@ export default function Cronogramas() {
       </Alert>
 
       <Tabs defaultValue="cronogramas" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="cronogramas">Cronogramas</TabsTrigger>
-          <TabsTrigger value="retornos">Retornos</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 max-w-full sm:max-w-md">
+          <TabsTrigger value="cronogramas" className="text-sm">Cronogramas</TabsTrigger>
+          <TabsTrigger value="retornos" className="text-sm">Retornos</TabsTrigger>
         </TabsList>
         
         <TabsContent value="cronogramas" className="space-y-6">

@@ -90,10 +90,10 @@ export default function RetornosList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">Retornos dos Clientes</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold">Retornos dos Clientes</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Acompanhe e gerencie os retornos programados
           </p>
         </div>
@@ -102,17 +102,17 @@ export default function RetornosList() {
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Filter className="h-5 w-5" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="space-y-2 flex-1">
               <label className="text-sm font-medium">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Filtrar por status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,10 +124,10 @@ export default function RetornosList() {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               <label className="text-sm font-medium">Cliente</label>
               <Select value={clienteFilter} onValueChange={setClienteFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Filtrar por cliente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -159,59 +159,69 @@ export default function RetornosList() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Cronograma</TableHead>
-                  <TableHead>Data do Retorno</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRetornos.map((retorno) => (
-                  <TableRow key={retorno.id_retorno}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {getClienteNome(retorno.id_cliente)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getCronogramaNome(retorno.id_cronograma)}</TableCell>
-                    <TableCell>
-                      {format(new Date(retorno.data_retorno), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(retorno.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {retorno.status === 'Pendente' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleMarcarRealizado(retorno.id_retorno)}
-                              disabled={loading}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Realizado
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleCancelarRetorno(retorno.id_retorno)}
-                              disabled={loading}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[150px]">Cliente</TableHead>
+                    <TableHead className="min-w-[120px] hidden sm:table-cell">Cronograma</TableHead>
+                    <TableHead className="min-w-[120px]">Data do Retorno</TableHead>
+                    <TableHead className="min-w-[100px]">Status</TableHead>
+                    <TableHead className="min-w-[150px]">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredRetornos.map((retorno) => (
+                    <TableRow key={retorno.id_retorno}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{getClienteNome(retorno.id_cliente)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <span className="truncate">{getCronogramaNome(retorno.id_cronograma)}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {format(new Date(retorno.data_retorno), "dd/MM/yyyy", { locale: ptBR })}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(retorno.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          {retorno.status === 'Pendente' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleMarcarRealizado(retorno.id_retorno)}
+                                disabled={loading}
+                                className="w-full sm:w-auto text-xs"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Realizado</span>
+                                <span className="sm:hidden">OK</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCancelarRetorno(retorno.id_retorno)}
+                                disabled={loading}
+                                className="w-full sm:w-auto text-xs"
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Cancelar</span>
+                                <span className="sm:hidden">X</span>
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

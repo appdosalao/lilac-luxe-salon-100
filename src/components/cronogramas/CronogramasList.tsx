@@ -130,16 +130,16 @@ export default function CronogramasList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Lista de Cronogramas</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Lista de Cronogramas</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Gerencie cronogramas de retorno dos seus clientes
           </p>
         </div>
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingCronograma(null)}>
+            <Button onClick={() => setEditingCronograma(null)} className="w-full sm:w-auto">
               Novo Cronograma
             </Button>
           </DialogTrigger>
@@ -197,34 +197,34 @@ export default function CronogramasList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {cronogramas.map((cronograma) => (
             <Card key={cronograma.id_cronograma} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{cronograma.cliente_nome}</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="text-lg truncate">{cronograma.cliente_nome}</CardTitle>
                   {getStatusBadge(cronograma.status)}
                 </div>
                 <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {cronograma.tipo_servico}
+                  <Clock className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{cronograma.tipo_servico}</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                     <span className="text-muted-foreground">Próximo retorno:</span>
                     <span className="font-medium">{getProximoRetorno(cronograma)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                     <span className="text-muted-foreground">Duração:</span>
                     <span>{cronograma.duracao_minutos} min</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                     <span className="text-muted-foreground">Recorrência:</span>
-                    <span>{getRecorrenciaText(cronograma)}</span>
+                    <span className="break-words">{getRecorrenciaText(cronograma)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                     <span className="text-muted-foreground">Horário:</span>
                     <span>{cronograma.hora_inicio}</span>
                   </div>
@@ -233,11 +233,11 @@ export default function CronogramasList() {
                 {cronograma.observacoes && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">Obs:</span>
-                    <p className="text-foreground mt-1">{cronograma.observacoes}</p>
+                    <p className="text-foreground mt-1 break-words">{cronograma.observacoes}</p>
                   </div>
                 )}
 
-                <div className="flex gap-2 pt-3">
+                <div className="flex flex-col sm:flex-row gap-2 pt-3">
                   {cronograma.status === 'ativo' && (
                     <Button
                       variant="default"
@@ -246,45 +246,51 @@ export default function CronogramasList() {
                       className="flex-1"
                     >
                       <Play className="h-4 w-4 mr-1" />
-                      Ativar
+                      <span className="hidden sm:inline">Ativar</span>
+                      <span className="sm:hidden">Ativar</span>
                     </Button>
                   )}
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingCronograma(cronograma);
-                      setShowForm(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingCronograma(cronograma);
+                        setShowForm(true);
+                      }}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="ml-1 sm:hidden">Editar</span>
+                    </Button>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir este cronograma? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(cronograma.id_cronograma)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 sm:flex-initial">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="ml-1 sm:hidden">Excluir</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="mx-4 max-w-sm sm:max-w-lg">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir este cronograma? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(cronograma.id_cronograma)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>
