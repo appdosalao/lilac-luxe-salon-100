@@ -1,6 +1,5 @@
-import * as React from "react";
-
-const { useState } = React;
+import { useState } from "react";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,7 +45,7 @@ const clienteSchema = z.object({
 interface ClienteFormProps {
   cliente?: Cliente;
   onSubmit: (data: ClienteFormData) => void;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
 }
 
 export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormProps) {
