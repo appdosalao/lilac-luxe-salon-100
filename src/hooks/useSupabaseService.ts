@@ -1,7 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import * as React from 'react';
-
-const { useState, useCallback } = React;
+import { useState, useCallback } from 'react';
 
 export const useSupabaseService = () => {
   const [loading, setLoading] = useState(false);
