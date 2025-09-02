@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useCallback } = React;
+import { useState, useCallback } from 'react';
 import { Cronograma } from '@/types/cronograma';
 import { Agendamento } from '@/types/agendamento';
 import { toast } from 'sonner';
