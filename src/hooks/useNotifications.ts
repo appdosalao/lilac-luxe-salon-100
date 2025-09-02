@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useEffect, useCallback, useRef } = React;
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 

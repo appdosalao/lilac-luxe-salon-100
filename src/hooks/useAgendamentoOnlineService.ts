@@ -1,6 +1,4 @@
-import * as React from 'react';
-
-const { useState, useCallback } = React;
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
 import { toast } from 'sonner';
