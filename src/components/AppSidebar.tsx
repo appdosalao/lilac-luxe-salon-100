@@ -1,6 +1,4 @@
-import * as React from "react";
-
-const { useState } = React;
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
