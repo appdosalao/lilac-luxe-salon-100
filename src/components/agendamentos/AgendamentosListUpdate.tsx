@@ -1,7 +1,6 @@
 // Patch temporário para adicionar indicadores visuais de cronograma
 // Este código será integrado ao componente principal
 
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Agendamento } from '@/types/agendamento';
 
@@ -10,7 +9,7 @@ interface AgendamentoVisualsProps {
   children: React.ReactNode;
 }
 
-export const AgendamentoVisuals: React.FC<AgendamentoVisualsProps> = ({ agendamento, children }) => {
+export const AgendamentoVisuals = ({ agendamento, children }: AgendamentoVisualsProps) => {
   return (
     <div className="relative">
       {children}

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect, createContext, useContext } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useEnhancedNotifications } from '@/hooks/useEnhancedNotifications';
@@ -17,10 +17,10 @@ interface NotificationContextType {
   handleExpenseReminder: (despesa: any) => Promise<void>;
 }
 
-const NotificationContext = React.createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const useNotificationContext = () => {
-  const context = React.useContext(NotificationContext);
+  const context = useContext(NotificationContext);
   if (context === undefined) {
     throw new Error('useNotificationContext deve ser usado dentro de NotificationProviderAvancado');
   }
@@ -49,7 +49,7 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
   const { configuracoes } = useConfiguracoes();
 
   // Monitorar mudanças nos agendamentos
-  React.useEffect(() => {
+  useEffect(() => {
     if (agendamentos.length > 0) {
       checkForNewAgendamentos(agendamentos);
       
@@ -64,7 +64,7 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
   }, [agendamentos, checkForNewAgendamentos, scheduleAppointmentReminder, configuracoes]);
 
   // Monitorar despesas fixas e agendar lembretes
-  React.useEffect(() => {
+  useEffect(() => {
     if (contasFixas.length > 0 && configuracoes?.notificacoes?.despesasFixas?.ativo) {
       // Lógica para agendar lembretes de despesas fixas
       // Implementar baseado na data de vencimento
@@ -72,7 +72,7 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
   }, [contasFixas, configuracoes]);
 
   // Verificação periódica de notificações pendentes
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       checkPendingNotifications();
     }, 5 * 60 * 1000); // A cada 5 minutos
@@ -81,7 +81,7 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
   }, [checkPendingNotifications]);
 
   // Simular verificação periódica de novos agendamentos
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       if (agendamentos.length > 0) {
         checkForNewAgendamentos(agendamentos);
