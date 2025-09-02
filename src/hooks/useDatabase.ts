@@ -1,4 +1,4 @@
-import React from 'react';
+// removed unused React import
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 // Placeholder para funcionalidades que ainda precisam ser implementadas
