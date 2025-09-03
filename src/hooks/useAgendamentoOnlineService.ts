@@ -1,9 +1,21 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
 import { toast } from 'sonner';
 
 export const useAgendamentoOnlineService = () => {
+  // Safety check for React hooks
+  if (!React || !useState || !useCallback) {
+    console.error('React hooks not available in useAgendamentoOnlineService');
+    return {
+      loading: false,
+      servicos: [],
+      carregarServicos: () => Promise.resolve(),
+      calcularHorariosDisponiveis: () => Promise.resolve([]),
+      criarAgendamento: () => Promise.resolve(false)
+    };
+  }
+
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
 
