@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
 import { supabase } from '@/integrations/supabase/client';
+
+// Safety check for React hooks BEFORE the interfaces
+if (!React || typeof React.useState !== 'function') {
+  console.error('React hooks not available in useHorariosTrabalho');
+}
 
 interface ConfiguracaoHorario {
   id: string;
@@ -13,6 +18,20 @@ interface ConfiguracaoHorario {
 }
 
 export const useHorariosTrabalho = (userId?: string) => {
+  // Early return if React hooks aren't available
+  if (!React || !useState || !useEffect) {
+    console.error('React hooks not available in useHorariosTrabalho');
+    return {
+      configuracoes: [],
+      isLoading: false,
+      error: null,
+      isDiaAtivo: () => false,
+      getHorariosDisponiveis: () => [],
+      isAgendamentoValido: () => ({ valido: false, erro: 'React não disponível' }),
+      carregarConfiguracoes: () => Promise.resolve(),
+      refreshConfiguracoes: () => Promise.resolve()
+    };
+  }
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoHorario[]>([]);
   const [loading, setLoading] = useState(true);
 

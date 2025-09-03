@@ -3,8 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
 import { toast } from 'sonner';
 
+// Safety check for React hooks BEFORE the function
+if (!React || typeof React.useState !== 'function') {
+  console.error('React hooks not available');
+}
+
 export const useAgendamentoOnlineService = () => {
-  // Safety check for React hooks
+  // Early return if React hooks aren't available
   if (!React || !useState || !useCallback) {
     console.error('React hooks not available in useAgendamentoOnlineService');
     return {
