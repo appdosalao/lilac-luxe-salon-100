@@ -35,63 +35,18 @@ export const useAgendamentoOnlineService = () => {
     }
   }, []);
 
-  // Verificar disponibilidade de horário
-  const verificarDisponibilidade = useCallback(async (
-    data: string, 
-    horario: string, 
-    duracao: number
-  ): Promise<boolean> => {
-    try {
-      // Calcular horário de fim do serviço
-      const [horas, minutos] = horario.split(':').map(Number);
-      const inicioMinutos = horas * 60 + minutos;
-      const fimMinutos = inicioMinutos + duracao;
+  // A verificação de disponibilidade agora é feita pela função RPC do Supabase
 
-      // Verificar conflitos em agendamentos online
-      const { data: conflitosOnline } = await supabase
-        .from('agendamentos_online')
-        .select('horario, duracao')
-        .eq('data', data)
-        .in('status', ['pendente', 'confirmado']);
-
-      // Verificar conflitos em agendamentos regulares
-      const { data: conflitosRegulares } = await supabase
-        .from('agendamentos')
-        .select('hora, duracao')
-        .eq('data', data)
-        .neq('status', 'cancelado');
-
-      // Combinar todos os conflitos
-      const todosConflitos = [
-        ...(conflitosOnline || []).map(c => ({ hora: c.horario, duracao: c.duracao })),
-        ...(conflitosRegulares || []).map(c => ({ hora: c.hora, duracao: c.duracao }))
-      ];
-
-      // Verificar se há sobreposição
-      for (const conflito of todosConflitos) {
-        const [confHoras, confMinutos] = conflito.hora.split(':').map(Number);
-        const confInicioMinutos = confHoras * 60 + confMinutos;
-        const confFimMinutos = confInicioMinutos + conflito.duracao;
-
-        if (inicioMinutos < confFimMinutos && fimMinutos > confInicioMinutos) {
-          return false;
-        }
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Erro ao verificar disponibilidade:', error);
-      return false;
-    }
-  }, []);
-
-  // Calcular horários disponíveis usando a função do Supabase
+  // Calcular horários disponíveis usando a função melhorada do Supabase
   const calcularHorariosDisponiveis = useCallback(async (
     servicoId: string, 
     data: string
   ): Promise<HorarioDisponivel[]> => {
     const servico = servicos.find(s => s.id === servicoId);
-    if (!servico) return [];
+    if (!servico) {
+      console.log('Serviço não encontrado:', servicoId);
+      return [];
+    }
 
     try {
       // Buscar configurações mais recentes para garantir sincronização
@@ -109,7 +64,7 @@ export const useAgendamentoOnlineService = () => {
 
       const userId = configuracoes[0].user_id;
 
-      // Usar função do Supabase para buscar horários com intervalos atualizados
+      // Usar função melhorada do Supabase que considera duração e conflitos
       const { data: horariosResult, error } = await supabase.rpc('buscar_horarios_com_multiplos_intervalos', {
         data_selecionada: data,
         user_id_param: userId,
@@ -121,13 +76,15 @@ export const useAgendamentoOnlineService = () => {
         return [];
       }
 
-      console.log('Horários disponíveis atualizados:', horariosResult);
+      console.log(`Horários para serviço ${servico.nome} (${servico.duracao}min):`, horariosResult);
 
-      // O resultado da RPC já vem no formato correto
-      return (horariosResult || []).map(item => ({
-        horario: item.horario || '',
-        disponivel: item.disponivel !== false
-      })).filter(h => h.horario); // Filtrar itens inválidos
+      // Filtrar apenas horários disponíveis e formatar corretamente
+      return (horariosResult || [])
+        .filter(item => item.horario && item.disponivel === true)
+        .map(item => ({
+          horario: item.horario,
+          disponivel: true
+        }));
     } catch (error) {
       console.error('Erro ao calcular horários disponíveis:', error);
       return [];
@@ -153,13 +110,22 @@ export const useAgendamentoOnlineService = () => {
     }
   }, []);
 
-  // Criar agendamento online
+  // Criar agendamento online com validação final
   const criarAgendamento = useCallback(async (dados: AgendamentoOnlineData): Promise<boolean> => {
     setLoading(true);
     try {
       const servico = servicos.find(s => s.id === dados.servico_id);
       if (!servico) {
         throw new Error('Serviço não encontrado');
+      }
+
+      // Validação final de disponibilidade antes de criar
+      const horariosDisponiveis = await calcularHorariosDisponiveis(dados.servico_id, dados.data);
+      const horarioDisponivel = horariosDisponiveis.find(h => h.horario === dados.horario && h.disponivel);
+      
+      if (!horarioDisponivel) {
+        toast.error("Este horário não está mais disponível. Por favor, selecione outro horário.");
+        return false;
       }
 
       // Criar ou encontrar cliente
@@ -195,7 +161,7 @@ export const useAgendamentoOnlineService = () => {
     } finally {
       setLoading(false);
     }
-  }, [servicos, criarClienteSeNaoExistir]);
+  }, [servicos, criarClienteSeNaoExistir, calcularHorariosDisponiveis]);
 
   return {
     loading,

@@ -86,7 +86,9 @@ export function AgendamentoOnlineForm() {
     console.log('Debug - Carregando horários:', {
       data: formData.data,
       diaSemana,
-      configuracoes: configuracoes.length,
+      servicoId: formData.servico_id,
+      servicoNome: servicoSelecionado.nome,
+      servicoDuracao: servicoSelecionado.duracao,
       isDiaAtivo: isDiaAtivo(diaSemana)
     });
 
@@ -97,23 +99,12 @@ export function AgendamentoOnlineForm() {
       return;
     }
 
-    // Obter horários disponíveis baseados na configuração de trabalho
-    const horariosDoSistema = getHorariosDisponiveis(diaSemana, servicoSelecionado.duracao);
+    // Usar a função melhorada que considera duração e conflitos
+    const horariosDisponiveis = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
     
-    console.log('Horários do sistema:', horariosDoSistema);
+    console.log('Horários disponíveis considerando duração:', horariosDisponiveis);
 
-    if (horariosDoSistema.length === 0) {
-      console.log('Nenhum horário disponível no sistema');
-      setHorariosDisponiveis([]);
-      return;
-    }
-
-    // Verificar disponibilidade real com agendamentos existentes
-    const horariosComDisponibilidade = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
-    
-    console.log('Horários com disponibilidade:', horariosComDisponibilidade);
-
-    setHorariosDisponiveis(horariosComDisponibilidade);
+    setHorariosDisponiveis(horariosDisponiveis);
   };
 
   const formatarTelefone = (valor: string): string => {
