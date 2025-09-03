@@ -1,8 +1,13 @@
-import { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
+
+// Ensure React is available before using hooks
+if (!React || typeof React.useState !== 'function') {
+  console.error('React is not properly loaded or hooks are not available');
+}
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -19,6 +24,12 @@ interface SupabaseAuthContextType {
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export const SupabaseAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  // Safety check for React hooks availability
+  if (!useState || !useEffect) {
+    console.error('React hooks not available in SupabaseAuthProvider');
+    return <>{children}</>;
+  }
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
