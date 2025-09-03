@@ -1,11 +1,17 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
 // Debug: Check if React is properly loaded
+console.log('React:', React);
 console.log('React StrictMode:', StrictMode);
 console.log('ReactDOM createRoot:', createRoot);
+
+// Ensure React is properly loaded before continuing
+if (!React || !StrictMode || !createRoot) {
+  throw new Error('React dependencies are not properly loaded');
+}
 
 // Registrar Service Worker
 if ('serviceWorker' in navigator) {

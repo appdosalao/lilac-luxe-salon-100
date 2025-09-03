@@ -1,3 +1,4 @@
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
@@ -20,9 +21,20 @@ import Cadastro from "./pages/Cadastro";
 import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
 
+// Ensure React is available before creating QueryClient
+if (!React) {
+  throw new Error('React is not available');
+}
+
 const queryClient = new QueryClient();
 
 const App = () => {
+  // Safety check for React
+  if (!React || typeof React.createElement !== 'function') {
+    console.error('React is not properly loaded');
+    return <div>React is not properly loaded</div>;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
