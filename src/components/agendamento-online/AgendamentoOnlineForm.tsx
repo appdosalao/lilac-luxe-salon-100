@@ -16,6 +16,10 @@ import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/ag
 import { supabase } from '@/integrations/supabase/client';
 
 export function AgendamentoOnlineForm() {
+  // Safety check for React hooks
+  if (!React || !useState || !useEffect) {
+    return React?.createElement?.('div', null, 'Carregando...') || null;
+  }
   const {
     loading,
     servicos,

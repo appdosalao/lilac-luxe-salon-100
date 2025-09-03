@@ -4,7 +4,7 @@ import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/t
 import { toast } from 'sonner';
 
 export const useAgendamentoOnlineService = () => {
-  // Early return if React hooks aren't available
+  // Safety check for React hooks
   if (!React || !useState || !useCallback) {
     console.error('React hooks not available in useAgendamentoOnlineService');
     return {
