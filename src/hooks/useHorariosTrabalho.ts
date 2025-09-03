@@ -18,20 +18,6 @@ interface ConfiguracaoHorario {
 }
 
 export const useHorariosTrabalho = (userId?: string) => {
-  // Early return if React hooks aren't available
-  if (!React || !useState || !useEffect) {
-    console.error('React hooks not available in useHorariosTrabalho');
-    return {
-      configuracoes: [],
-      isLoading: false,
-      error: null,
-      isDiaAtivo: () => false,
-      getHorariosDisponiveis: () => [],
-      isAgendamentoValido: () => ({ valido: false, erro: 'React não disponível' }),
-      carregarConfiguracoes: () => Promise.resolve(),
-      refreshConfiguracoes: () => Promise.resolve()
-    };
-  }
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoHorario[]>([]);
   const [loading, setLoading] = useState(true);
 
