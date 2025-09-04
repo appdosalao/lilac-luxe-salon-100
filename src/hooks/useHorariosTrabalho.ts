@@ -123,21 +123,37 @@ export const useHorariosTrabalho = (userId?: string) => {
 
   // Verificar se um agendamento completo é válido
   const isAgendamentoValido = (data: string, horario: string, duracao: number = 60): boolean => {
+    console.log('Validando agendamento:', { data, horario, duracao });
+    
     const dataSelecionada = new Date(data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
+    console.log('Dia da semana:', diaSemana);
 
-    if (!isDiaAtivo(diaSemana)) return false;
-    if (!isHorarioValido(diaSemana, horario)) return false;
+    if (!isDiaAtivo(diaSemana)) {
+      console.log('Dia não está ativo');
+      return false;
+    }
+    
+    if (!isHorarioValido(diaSemana, horario)) {
+      console.log('Horário não é válido');
+      return false;
+    }
 
     // Verificar se o serviço termina dentro do horário de funcionamento
     const config = configuracoes.find(c => c.dia_semana === diaSemana && c.ativo);
-    if (!config) return false;
+    if (!config) {
+      console.log('Nenhuma configuração encontrada');
+      return false;
+    }
 
     const horarioMinutos = timeToMinutes(horario);
     const fimServicoMinutos = horarioMinutos + duracao;
     const fechamentoMinutos = timeToMinutes(config.horario_fechamento);
 
-    if (fimServicoMinutos > fechamentoMinutos) return false;
+    if (fimServicoMinutos > fechamentoMinutos) {
+      console.log('Serviço terminaria após fechamento');
+      return false;
+    }
 
     // Verificar conflito com intervalo de almoço
     if (config.intervalo_inicio && config.intervalo_fim) {
@@ -145,10 +161,12 @@ export const useHorariosTrabalho = (userId?: string) => {
       const fimAlmocoMinutos = timeToMinutes(config.intervalo_fim);
       
       if ((horarioMinutos < fimAlmocoMinutos && fimServicoMinutos > inicioAlmocoMinutos)) {
+        console.log('Conflito com intervalo de almoço');
         return false;
       }
     }
 
+    console.log('Agendamento é válido!');
     return true;
   };
 

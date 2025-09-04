@@ -146,12 +146,24 @@ export default function AgendamentoForm({
   }, [form.watch('data'), configuracoes, servicoSelecionado, getHorariosDisponiveis, isDiaAtivo, form, lastUpdate]);
 
   const handleSubmit = (data: AgendamentoFormData) => {
+    console.log('Dados do agendamento:', data);
+    
     if (conflito) {
+      console.log('Conflito detectado, cancelando submissão');
       return;
     }
     
     // Validar se o agendamento está dentro dos horários de trabalho
-    if (!isAgendamentoValido(data.data, data.hora, data.duracao)) {
+    const agendamentoValido = isAgendamentoValido(data.data, data.hora, data.duracao);
+    console.log('Agendamento válido?', agendamentoValido, {
+      data: data.data,
+      hora: data.hora,
+      duracao: data.duracao,
+      configuracoes: configuracoes
+    });
+    
+    if (!agendamentoValido) {
+      console.log('Agendamento não válido segundo validação');
       toast.error('Este horário não está disponível para agendamento!');
       return;
     }
