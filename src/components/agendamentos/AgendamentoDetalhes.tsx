@@ -68,7 +68,10 @@ export default function AgendamentoDetalhes({
   onCancel,
 }: AgendamentoDetalhesProps) {
   const formatarData = (data: string) => {
-    return format(new Date(data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    // Garantir que a data seja interpretada como local, não UTC
+    const [year, month, day] = data.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    return format(localDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   };
 
   const formatarHora = (hora: string) => {
