@@ -271,8 +271,7 @@ export default function AgendamentoForm({
                     <FormControl>
                       <Input 
                         type="date" 
-                        {...field} 
-                        min={new Date().toISOString().split('T')[0]}
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
