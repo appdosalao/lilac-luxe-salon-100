@@ -17,9 +17,7 @@ import Configuracoes from './pages/Configuracoes';
 import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro";
-import EsqueciSenha from "./pages/EsqueciSenha";
-import NotFound from "./pages/NotFound";
+import Cadastro from "./pages/Cadastro"; 
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 
 // Ensure React is available before creating QueryClient
@@ -48,7 +46,6 @@ const App = () => {
                     {/* Rotas públicas */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/cadastro" element={<Cadastro />} />
-                    <Route path="/esqueci-senha" element={<EsqueciSenha />} />
                     <Route path="/agendamento-online" element={<AgendamentoOnline />} />
                     <Route path="/agendamento-publico" element={<AgendamentoOnline />} />
                     <Route path="/agendar" element={<AgendamentoOnline />} />
@@ -118,7 +115,17 @@ const App = () => {
                       </ProtectedRoute>
                     } />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={
+                      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+                        <div className="text-center">
+                          <h1 className="text-4xl font-bold mb-4">404</h1>
+                          <p className="text-xl text-muted-foreground mb-4">Página não encontrada</p>
+                          <a href="/" className="text-primary hover:underline">
+                            Voltar ao início
+                          </a>
+                        </div>
+                      </div>
+                    } />
                   </Routes>
               </div>
             </NotificationProviderAvancado>
