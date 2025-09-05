@@ -17,7 +17,7 @@ import TabelaPagamentosClientes from "@/components/financeiro/TabelaPagamentosCl
 import ContasFixasList from "@/components/financeiro/ContasFixasList";
 import ContaFixaForm from "@/components/financeiro/ContaFixaForm";
 import ContasReceber from "@/components/financeiro/ContasReceber";
-import RelatoriosFinanceiros from "@/components/financeiro/RelatoriosFinanceiros";
+import RelatoriosAvancados from "@/components/financeiro/RelatoriosAvancados";
 import AvisosVencimento from "@/components/financeiro/AvisosVencimento";
 
 type ViewMode = 'list' | 'form';
@@ -249,16 +249,7 @@ export default function Financeiro() {
         </TabsContent>
 
         <TabsContent value="relatorios" className="space-responsive-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-6 w-6 flex-shrink-0" />
-            <h2 className="text-responsive-xl font-semibold">Relatórios Financeiros</h2>
-          </div>
-          
-          <RelatoriosFinanceiros 
-            lancamentos={lancamentos}
-            contasFixas={contasFixas}
-            agendamentos={agendamentos}
-          />
+          <RelatoriosAvancados />
         </TabsContent>
       </Tabs>
     </div>
