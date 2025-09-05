@@ -147,11 +147,21 @@ export const useSupabaseLancamentos = () => {
 
   // Calcular resumo financeiro
   const calculateResumoFinanceiro = (): ResumoFinanceiro => {
-    const totalEntradas = lancamentos
+    const agora = new Date();
+    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0);
+    
+    // Filtrar lançamentos do mês atual
+    const lancamentosMesAtual = lancamentos.filter(l => {
+      const dataLancamento = new Date(l.data);
+      return dataLancamento >= inicioMes && dataLancamento <= fimMes;
+    });
+    
+    const totalEntradas = lancamentosMesAtual
       .filter(l => l.tipo === 'entrada')
       .reduce((sum, l) => sum + l.valor, 0);
     
-    const totalSaidas = lancamentos
+    const totalSaidas = lancamentosMesAtual
       .filter(l => l.tipo === 'saida')
       .reduce((sum, l) => sum + l.valor, 0);
     
