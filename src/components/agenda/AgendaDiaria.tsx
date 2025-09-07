@@ -207,7 +207,7 @@ export function AgendaDiaria() {
                       </Badge>
                       <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
                         <span className="text-sm font-bold text-green-700 dark:text-green-300">
-                          R$ {Number(agendamento.valor || 0).toFixed(2)}
+                          R$ {agendamento.valor.toFixed(2)}
                         </span>
                       </div>
                     </div>
