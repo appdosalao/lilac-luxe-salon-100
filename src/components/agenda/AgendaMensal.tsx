@@ -34,7 +34,7 @@ export function AgendaMensal() {
     isSameMonth(new Date(ag.data), mesAtual)
   );
 
-  const valorTotalMes = agendamentosDoMes.reduce((total, ag) => total + Number(ag.valor || 0), 0);
+  
 
   const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -115,7 +115,7 @@ export function AgendaMensal() {
                 <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                R$ {valorTotalMes.toFixed(2)}
+                R$ {agendamentosDoMes.reduce((total, ag) => total + Number(ag.valor || 0), 0).toFixed(2)}
               </div>
               <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor Total</p>
             </div>
