@@ -10,14 +10,14 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 
 export default function Agenda() {
   const [visualizacao, setVisualizacao] = useState<'dia' | 'semana' | 'mes'>('dia');
-  const { agendamentosFiltrados, loading } = useAgendamentos();
+  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   const hoje = new Date();
-  const agendamentosHoje = agendamentosFiltrados.filter(
+  const agendamentosHoje = todosAgendamentos.filter(
     ag => new Date(ag.data).toDateString() === hoje.toDateString()
   );
 
-  const proximosSete = agendamentosFiltrados.filter(ag => {
+  const proximosSete = todosAgendamentos.filter(ag => {
     const dataAgendamento = new Date(ag.data);
     const diffTime = dataAgendamento.getTime() - hoje.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

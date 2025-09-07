@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils';
 
 export function AgendaDiaria() {
   const [dataSelecionada, setDataSelecionada] = useState(new Date());
-  const { agendamentosFiltrados } = useAgendamentos();
+  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
-  const agendamentosDoDia = agendamentosFiltrados.filter(
+  // Usar todos os agendamentos (incluindo online) para a agenda
+  const agendamentosDoDia = todosAgendamentos.filter(
     ag => new Date(ag.data).toDateString() === dataSelecionada.toDateString()
   ).sort((a, b) => a.hora.localeCompare(b.hora));
 
@@ -33,6 +34,15 @@ export function AgendaDiaria() {
   const anteriorDia = () => setDataSelecionada(prev => subDays(prev, 1));
   const proximoDia = () => setDataSelecionada(prev => addDays(prev, 1));
   const hoje = () => setDataSelecionada(new Date());
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -177,6 +187,11 @@ export function AgendaDiaria() {
                       {agendamento.origem === 'cronograma' && (
                         <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
                           💜 Cronograma
+                        </Badge>
+                      )}
+                      {agendamento.origem === 'online' && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                          🌐 Online
                         </Badge>
                       )}
                       <Badge 

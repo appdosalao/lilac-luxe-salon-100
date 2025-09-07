@@ -10,14 +10,14 @@ import { cn } from '@/lib/utils';
 
 export function AgendaSemanal() {
   const [semanaAtual, setSemanaAtual] = useState(new Date());
-  const { agendamentosFiltrados } = useAgendamentos();
+  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   const inicioSemana = startOfWeek(semanaAtual, { weekStartsOn: 0 });
   const fimSemana = endOfWeek(semanaAtual, { weekStartsOn: 0 });
   const diasDaSemana = eachDayOfInterval({ start: inicioSemana, end: fimSemana });
 
   const getAgendamentosDoDia = (dia: Date) => {
-    return agendamentosFiltrados.filter(ag => 
+    return todosAgendamentos.filter(ag => 
       isSameDay(new Date(ag.data), dia)
     ).sort((a, b) => a.hora.localeCompare(b.hora));
   };
@@ -42,6 +42,15 @@ export function AgendaSemanal() {
   const valorTotalSemana = diasDaSemana.reduce((total, dia) => 
     total + getAgendamentosDoDia(dia).reduce((valor, ag) => valor + Number(ag.valor || 0), 0), 0
   );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -151,7 +160,8 @@ export function AgendaSemanal() {
                       key={agendamento.id}
                       className={cn(
                         "p-2 rounded-md border text-xs space-y-1",
-                        agendamento.origem === 'cronograma' && "border-purple-200 bg-purple-50"
+                        agendamento.origem === 'cronograma' && "border-purple-200 bg-purple-50",
+                        agendamento.origem === 'online' && "border-blue-200 bg-blue-50"
                       )}
                     >
                       <div className="flex items-center gap-1">
@@ -173,6 +183,9 @@ export function AgendaSemanal() {
                         </Badge>
                         {agendamento.origem === 'cronograma' && (
                           <span className="text-purple-600 text-xs">💜</span>
+                        )}
+                        {agendamento.origem === 'online' && (
+                          <span className="text-blue-600 text-xs">🌐</span>
                         )}
                       </div>
                     </div>

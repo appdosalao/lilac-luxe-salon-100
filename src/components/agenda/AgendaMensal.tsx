@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 export function AgendaMensal() {
   const [mesAtual, setMesAtual] = useState(new Date());
-  const { agendamentosFiltrados } = useAgendamentos();
+  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   const inicioMes = startOfMonth(mesAtual);
   const fimMes = endOfMonth(mesAtual);
@@ -21,7 +21,7 @@ export function AgendaMensal() {
   const diasDoCalendario = eachDayOfInterval({ start: inicioCalendario, end: fimCalendario });
 
   const getAgendamentosDoDia = (dia: Date) => {
-    return agendamentosFiltrados.filter(ag => 
+    return todosAgendamentos.filter(ag => 
       isSameDay(new Date(ag.data), dia)
     );
   };
@@ -30,13 +30,22 @@ export function AgendaMensal() {
   const proximoMes = () => setMesAtual(prev => addMonths(prev, 1));
   const mesAtualBtn = () => setMesAtual(new Date());
 
-  const agendamentosDoMes = agendamentosFiltrados.filter(ag => 
+  const agendamentosDoMes = todosAgendamentos.filter(ag => 
     isSameMonth(new Date(ag.data), mesAtual)
   );
 
   const valorTotalMes = agendamentosDoMes.reduce((total, ag) => total + Number(ag.valor || 0), 0);
 
   const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  if (loading) {
+    return (
+      <div className="space-y-4 lg:space-y-6">
+        <div className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -166,12 +175,14 @@ export function AgendaMensal() {
                           agendamento.status === 'agendado' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
                           agendamento.status === 'concluido' && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
                           agendamento.status === 'cancelado' && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-                          agendamento.origem === 'cronograma' && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                          agendamento.origem === 'cronograma' && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+                          agendamento.origem === 'online' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                         )}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-xs">{agendamento.hora}</span>
                           {agendamento.origem === 'cronograma' && <span>💜</span>}
+                          {agendamento.origem === 'online' && <span>🌐</span>}
                         </div>
                         <div className="font-medium">
                           <span className="hidden lg:inline">{agendamento.clienteNome}</span>
