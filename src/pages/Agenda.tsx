@@ -10,7 +10,10 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 
 export default function Agenda() {
   const [visualizacao, setVisualizacao] = useState<'dia' | 'semana' | 'mes'>('dia');
-  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
+  
+  // Verificar se os hooks estão funcionando corretamente
+  const agendamentosHook = useAgendamentos();
+  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = agendamentosHook;
 
   const hoje = new Date();
   const agendamentosHoje = todosAgendamentos.filter(
