@@ -1,5 +1,4 @@
-import * as React from "react"
-import { useState } from 'react';
+import * as React from "react";
 import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign } from 'lucide-react';
@@ -10,7 +9,7 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 import { cn } from '@/lib/utils';
 
 export function AgendaDiaria() {
-  const [dataSelecionada, setDataSelecionada] = useState(new Date());
+  const [dataSelecionada, setDataSelecionada] = React.useState(new Date());
   const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   // Usar todos os agendamentos (incluindo online) para a agenda

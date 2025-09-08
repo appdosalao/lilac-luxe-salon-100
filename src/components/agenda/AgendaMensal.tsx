@@ -1,5 +1,4 @@
-import * as React from "react"
-import { useState } from 'react';
+import * as React from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
@@ -10,7 +9,7 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 import { cn } from '@/lib/utils';
 
 export function AgendaMensal() {
-  const [mesAtual, setMesAtual] = useState(new Date());
+  const [mesAtual, setMesAtual] = React.useState(new Date());
   const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   const inicioMes = startOfMonth(mesAtual);

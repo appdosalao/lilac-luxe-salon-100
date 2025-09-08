@@ -1,5 +1,4 @@
-import * as React from "react"
-import { useState } from 'react';
+import * as React from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';
@@ -10,7 +9,7 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 import { cn } from '@/lib/utils';
 
 export function AgendaSemanal() {
-  const [semanaAtual, setSemanaAtual] = useState(new Date());
+  const [semanaAtual, setSemanaAtual] = React.useState(new Date());
   const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   const inicioSemana = startOfWeek(semanaAtual, { weekStartsOn: 0 });

@@ -1,5 +1,4 @@
-import * as React from "react"
-import { useState } from 'react';
+import * as React from "react";
 import { Calendar, CalendarDays, CalendarRange, Clock, Plus, Filter, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,8 @@ import { AgendaMensal } from '@/components/agenda/AgendaMensal';
 import { useAgendamentos } from '@/hooks/useAgendamentos';
 
 export default function Agenda() {
-  const [visualizacao, setVisualizacao] = useState<'dia' | 'semana' | 'mes'>('dia');
-  const [buscaTexto, setBuscaTexto] = useState('');
+  const [visualizacao, setVisualizacao] = React.useState<'dia' | 'semana' | 'mes'>('dia');
+  const [buscaTexto, setBuscaTexto] = React.useState('');
   const { agendamentos, loading, todosAgendamentos } = useAgendamentos();
 
   // Estatísticas rápidas para o header
