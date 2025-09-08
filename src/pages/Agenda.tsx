@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from "react"
+import { useState } from 'react';
 import { Calendar, CalendarDays, CalendarRange, Clock, Plus, Filter, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
