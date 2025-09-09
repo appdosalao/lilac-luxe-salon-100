@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Clock, RefreshCw } from 'lucide-react';
@@ -33,9 +33,9 @@ export default function ReagendamentoDialog({
   onReagendar,
   verificarConflito,
 }: ReagendamentoDialogProps) {
-  const [novaData, setNovaData] = useState('');
-  const [novaHora, setNovaHora] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [novaData, setNovaData] = React.useState('');
+  const [novaHora, setNovaHora] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
   if (!agendamento) return null;
 

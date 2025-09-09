@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Clock, ArrowLeftRight, User, Scissors } from 'lucide-react';
@@ -39,8 +39,8 @@ export default function TrocaHorarioDialog({
   agendamentosDisponiveis,
   onTrocarHorarios,
 }: TrocaHorarioDialogProps) {
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = React.useState<string>('');
+  const [loading, setLoading] = React.useState(false);
 
   if (!agendamento) return null;
 

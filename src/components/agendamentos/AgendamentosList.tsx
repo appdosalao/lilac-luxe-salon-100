@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -78,7 +78,7 @@ export default function AgendamentosList({
   totalPaginas,
   onPaginaChange,
 }: AgendamentosListProps) {
-  const [agendamentoParaExcluir, setAgendamentoParaExcluir] = useState<string | null>(null);
+  const [agendamentoParaExcluir, setAgendamentoParaExcluir] = React.useState<string | null>(null);
 
   const formatarData = (data: string) => {
     return format(new Date(data + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });
