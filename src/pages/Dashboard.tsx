@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Dashboard() {
   console.log('Dashboard: Iniciando renderização');
-  console.log('React Context disponível:', React.useContext);
   
   try {
-    console.log('Dashboard: Tentando useNavigate');
-    const navigate = useNavigate();
-    console.log('Dashboard: useNavigate success');
+    // Temporary fix: Use window.location instead of useNavigate to avoid context issues
+    const navigate = (path: string) => {
+      window.location.href = path;
+    };
+    console.log('Dashboard: navigate function created');
     
     console.log('Dashboard: Tentando useAgendamentos');
     const { agendamentosFiltrados } = useAgendamentos();

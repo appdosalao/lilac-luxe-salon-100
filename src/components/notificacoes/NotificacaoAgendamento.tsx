@@ -5,11 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useNavigate } from 'react-router-dom';
+
 
 export function NotificacaoAgendamento() {
   const { notifications, removeNotification, clearAllNotifications } = useNotifications();
-  const navigate = useNavigate();
+  
+  // Temporary fix: Use window.location instead of useNavigate to avoid context issues
+  const navigate = (path: string) => {
+    window.location.href = path;
+  };
 
   const getOrigemBadge = (origem: string) => {
     const badges = {
