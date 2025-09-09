@@ -10,17 +10,33 @@ import { cn } from '@/lib/utils';
 
 export function AgendaDiaria() {
   const [dataSelecionada, setDataSelecionada] = React.useState(new Date());
-  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
+  const { todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
 
   // Usar todos os agendamentos (incluindo online) para a agenda
   const agendamentosDoDia = todosAgendamentos.filter(
     ag => new Date(ag.data).toDateString() === dataSelecionada.toDateString()
   ).sort((a, b) => a.hora.localeCompare(b.hora));
 
-  const horarios = Array.from({ length: 24 }, (_, i) => {
-    const hora = i.toString().padStart(2, '0') + ':00';
-    return hora;
-  });
+  // Encontrar próximo agendamento
+  const agora = new Date();
+  const agoraString = `${agora.getHours().toString().padStart(2, '0')}:${agora.getMinutes().toString().padStart(2, '0')}`;
+  const proximoAgendamento = agendamentosDoDia.find(ag => 
+    new Date(ag.data).toDateString() === agora.toDateString() && 
+    ag.hora >= agoraString && 
+    ag.status === 'agendado'
+  );
+
+  // Estatísticas do dia
+  const estatisticasDia = {
+    agendados: agendamentosDoDia.filter(ag => ag.status === 'agendado').length,
+    concluidos: agendamentosDoDia.filter(ag => ag.status === 'concluido').length,
+    cancelados: agendamentosDoDia.filter(ag => ag.status === 'cancelado').length,
+    valorTotal: agendamentosDoDia.reduce((total, ag) => total + Number(ag.valor || 0), 0),
+    valorRecebido: agendamentosDoDia
+      .filter(ag => ag.status === 'concluido')
+      .reduce((total, ag) => total + Number(ag.valorPago || ag.valor || 0), 0),
+    tempoTotalAtendimento: agendamentosDoDia.reduce((total, ag) => total + (ag.duracao || 0), 0)
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,18 +100,54 @@ export function AgendaDiaria() {
         </Button>
       </div>
 
+      {/* Próximo Cliente Destaque */}
+      {proximoAgendamento && new Date(dataSelecionada).toDateString() === new Date().toDateString() && (
+        <Card className="border-0 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-primary">Próximo Cliente</h3>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xl font-bold">{proximoAgendamento.clienteNome}</p>
+                  <p className="text-muted-foreground">{proximoAgendamento.servicoNome}</p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {proximoAgendamento.hora} ({proximoAgendamento.duracao}min)
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      R$ {proximoAgendamento.valor.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center lg:text-right">
+                <div className="text-2xl font-bold text-primary">{proximoAgendamento.hora}</div>
+                <p className="text-sm text-muted-foreground">Horário previsto</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Resumo do Dia Aprimorado */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="group border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-4 text-center">
             <div className="flex flex-col items-center space-y-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
                 <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                {agendamentosDoDia.filter(ag => ag.status === 'agendado').length}
+              <div className="text-xl lg:text-2xl font-bold text-blue-700 dark:text-blue-300">
+                {estatisticasDia.agendados}
               </div>
-              <p className="text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
+              <p className="text-xs lg:text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
             </div>
           </CardContent>
         </Card>
@@ -106,10 +158,10 @@ export function AgendaDiaria() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                 <User className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                {agendamentosDoDia.filter(ag => ag.status === 'concluido').length}
+              <div className="text-xl lg:text-2xl font-bold text-green-700 dark:text-green-300">
+                {estatisticasDia.concluidos}
               </div>
-              <p className="text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
+              <p className="text-xs lg:text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
             </div>
           </CardContent>
         </Card>
@@ -120,10 +172,24 @@ export function AgendaDiaria() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
                 <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                R$ {agendamentosDoDia.reduce((total, ag) => total + Number(ag.valor || 0), 0).toFixed(2)}
+              <div className="text-lg lg:text-xl font-bold text-purple-700 dark:text-purple-300">
+                R$ {estatisticasDia.valorTotal.toFixed(2)}
               </div>
-              <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor Total</p>
+              <p className="text-xs lg:text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">Valor Total</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="group border-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/20 transition-all hover:shadow-lg hover:scale-105">
+          <CardContent className="p-4 text-center">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="text-lg lg:text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                R$ {estatisticasDia.valorRecebido.toFixed(2)}
+              </div>
+              <p className="text-xs lg:text-sm text-emerald-600/70 dark:text-emerald-400/70 font-medium">Recebido</p>
             </div>
           </CardContent>
         </Card>
@@ -132,12 +198,12 @@ export function AgendaDiaria() {
           <CardContent className="p-4 text-center">
             <div className="flex flex-col items-center space-y-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                <Tag className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
-              <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                {agendamentosDoDia.length}
+              <div className="text-lg lg:text-xl font-bold text-orange-700 dark:text-orange-300">
+                {Math.floor(estatisticasDia.tempoTotalAtendimento / 60)}h{estatisticasDia.tempoTotalAtendimento % 60}m
               </div>
-              <p className="text-sm text-orange-600/70 dark:text-orange-400/70 font-medium">Total</p>
+              <p className="text-xs lg:text-sm text-orange-600/70 dark:text-orange-400/70 font-medium">Tempo Total</p>
             </div>
           </CardContent>
         </Card>
@@ -159,57 +225,80 @@ export function AgendaDiaria() {
               <Card 
                 key={agendamento.id} 
                 className={cn(
-                  "group relative overflow-hidden border-0 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02] animate-fade-in",
+                  "group relative overflow-hidden border-0 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02]",
                   agendamento.origem === 'cronograma' && "bg-gradient-to-r from-purple-50/80 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20",
                   agendamento.status === 'concluido' && "bg-gradient-to-r from-green-50/80 to-green-100/30 dark:from-green-950/30 dark:to-green-900/20",
                   agendamento.status === 'cancelado' && "bg-gradient-to-r from-red-50/80 to-red-100/30 dark:from-red-950/30 dark:to-red-900/20"
                 )}
-                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5" />
                 <CardContent className="relative p-5">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex flex-wrap items-center gap-4">
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 dark:bg-primary/20">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="font-mono text-sm font-semibold text-primary">{agendamento.hora}</span>
+                  <div className="space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 dark:bg-primary/20">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span className="font-mono text-sm font-semibold text-primary">{agendamento.hora}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold text-foreground">{agendamento.clienteNome}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{agendamento.servicoNome}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold text-foreground">{agendamento.clienteNome}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{agendamento.servicoNome}</span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {agendamento.origem === 'cronograma' && (
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
+                            💜 Cronograma
+                          </Badge>
+                        )}
+                        {agendamento.origem === 'online' && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                            🌐 Online
+                          </Badge>
+                        )}
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "border-0 font-medium",
+                            agendamento.status === 'agendado' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+                            agendamento.status === 'concluido' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+                            agendamento.status === 'cancelado' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                          )}
+                        >
+                          {agendamento.status}
+                        </Badge>
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
+                          <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                            R$ {agendamento.valor.toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      {agendamento.origem === 'cronograma' && (
-                        <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
-                          💜 Cronograma
-                        </Badge>
-                      )}
-                      {agendamento.origem === 'online' && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
-                          🌐 Online
-                        </Badge>
-                      )}
-                      <Badge 
-                        variant="outline" 
-                        className={cn(
-                          "border-0 font-medium",
-                          agendamento.status === 'agendado' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-                          agendamento.status === 'concluido' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-                          agendamento.status === 'cancelado' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                        )}
-                      >
-                        {agendamento.status}
-                      </Badge>
-                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
-                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
-                          R$ {agendamento.valor.toFixed(2)}
+                    
+                    {/* Informações adicionais do cliente */}
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      {(agendamento as any).clienteTelefone && (
+                        <span className="flex items-center gap-1">
+                          📞 {(agendamento as any).clienteTelefone}
                         </span>
-                      </div>
+                      )}
+                      {(agendamento as any).clienteEmail && (
+                        <span className="flex items-center gap-1">
+                          ✉️ {(agendamento as any).clienteEmail}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        ⏱️ Duração: {agendamento.duracao}min
+                      </span>
+                      {agendamento.valorPago > 0 && (
+                        <span className="flex items-center gap-1 text-green-600">
+                          💰 Pago: R$ {agendamento.valorPago.toFixed(2)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {agendamento.observacoes && (

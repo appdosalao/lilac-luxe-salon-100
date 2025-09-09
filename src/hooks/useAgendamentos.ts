@@ -1,11 +1,54 @@
 import { useSupabaseAgendamentos } from './useSupabaseAgendamentos';
 import { useServicos } from './useServicos';
 import { useSupabaseClientes } from './useSupabaseClientes';
+import { useMemo } from 'react';
 
 export function useAgendamentos() {
   const agendamentosData = useSupabaseAgendamentos();
   const { todosServicos: servicos } = useServicos();
   const { clientes } = useSupabaseClientes();
+
+  // Enriquecer agendamentos com nomes completos de clientes e serviços
+  const todosAgendamentos = useMemo(() => {
+    const agendamentos = agendamentosData.todosAgendamentos || [];
+    return agendamentos.map(agendamento => {
+      const cliente = clientes.find(c => c.id === agendamento.clienteId);
+      const servico = servicos.find(s => s.id === agendamento.servicoId);
+      
+      return {
+        ...agendamento,
+        clienteNome: cliente?.nome || cliente?.nomeCompleto || agendamento.clienteNome || 'Cliente não encontrado',
+        servicoNome: servico?.nome || agendamento.servicoNome || 'Serviço não encontrado',
+        servicoValor: servico?.valor || agendamento.valor || 0,
+        servicoDuracao: servico?.duracao || agendamento.duracao || 30,
+        // Informações adicionais para a agenda
+        clienteEmail: cliente?.email || '',
+        clienteTelefone: cliente?.telefone || '',
+        servicoDescricao: servico?.descricao || ''
+      };
+    });
+  }, [agendamentosData.todosAgendamentos, clientes, servicos]);
+
+  // Agendamentos filtrados também com nomes completos
+  const agendamentosFiltradosEnriquecidos = useMemo(() => {
+    const agendamentos = agendamentosData.agendamentosFiltrados || [];
+    return agendamentos.map(agendamento => {
+      const cliente = clientes.find(c => c.id === agendamento.clienteId);
+      const servico = servicos.find(s => s.id === agendamento.servicoId);
+      
+      return {
+        ...agendamento,
+        clienteNome: cliente?.nome || cliente?.nomeCompleto || agendamento.clienteNome || 'Cliente não encontrado',
+        servicoNome: servico?.nome || agendamento.servicoNome || 'Serviço não encontrado',
+        servicoValor: servico?.valor || agendamento.valor || 0,
+        servicoDuracao: servico?.duracao || agendamento.duracao || 30,
+        // Informações adicionais para a agenda
+        clienteEmail: cliente?.email || '',
+        clienteTelefone: cliente?.telefone || '',
+        servicoDescricao: servico?.descricao || ''
+      };
+    });
+  }, [agendamentosData.agendamentosFiltrados, clientes, servicos]);
 
   // Verificar conflito de horário
   const verificarConflito = (agendamento: any, excluirId?: string) => {
@@ -72,8 +115,13 @@ export function useAgendamentos() {
 
   return {
     ...agendamentosData,
+    // Substituir os dados originais pelos enriquecidos
+    todosAgendamentos,
+    agendamentosFiltrados: agendamentosFiltradosEnriquecidos,
+    // Dados auxiliares
     clientes,
     servicos,
+    // Funções
     verificarConflito,
     criarAgendamento,
     adicionarAgendamentosCronograma,
