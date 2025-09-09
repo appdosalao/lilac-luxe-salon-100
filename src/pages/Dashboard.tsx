@@ -13,10 +13,25 @@ import { ConfiguracaoNotificacoesAvancadas } from "@/components/configuracoes/Co
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { agendamentosFiltrados } = useAgendamentos();
-  const { lancamentos } = useLancamentos();
-  const { usuario } = useSupabaseAuth();
+  console.log('Dashboard: Iniciando renderização');
+  console.log('React Context disponível:', React.useContext);
+  
+  try {
+    console.log('Dashboard: Tentando useNavigate');
+    const navigate = useNavigate();
+    console.log('Dashboard: useNavigate success');
+    
+    console.log('Dashboard: Tentando useAgendamentos');
+    const { agendamentosFiltrados } = useAgendamentos();
+    console.log('Dashboard: useAgendamentos success');
+    
+    console.log('Dashboard: Tentando useLancamentos');
+    const { lancamentos } = useLancamentos();
+    console.log('Dashboard: useLancamentos success');
+    
+    console.log('Dashboard: Tentando useSupabaseAuth');
+    const { usuario } = useSupabaseAuth();
+    console.log('Dashboard: useSupabaseAuth success');
 
   // Data atual
   const hoje = new Date();
@@ -366,4 +381,15 @@ export default function Dashboard() {
       )}
     </div>
   );
+  } catch (error) {
+    console.error('Dashboard: Erro durante renderização:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Erro no Dashboard</h1>
+          <p className="text-muted-foreground">Verifique o console para mais detalhes</p>
+        </div>
+      </div>
+    );
+  }
 }
