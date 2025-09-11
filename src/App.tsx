@@ -20,8 +20,13 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro"; 
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 
-// Ensure React is available before creating QueryClient
+// Ensure React is properly loaded
 if (!React) {
+  throw new Error('React is not available');
+}
+
+// Ensure React is available before creating QueryClient
+if (!React || typeof React.createElement !== 'function') {
   throw new Error('React is not available');
 }
 
@@ -31,7 +36,7 @@ const App = () => {
   // Safety check for React
   if (!React || typeof React.createElement !== 'function') {
     console.error('React is not properly loaded');
-    return <div>React is not properly loaded</div>;
+    return React.createElement('div', null, 'React is not properly loaded');
   }
 
   return (
