@@ -1,8 +1,15 @@
-import React from "react"
+import React from "../reactAvailability"
+import { ensureReactAvailability } from "../reactAvailability"
 
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
+  // Ensure React is available before using hooks
+  if (!ensureReactAvailability()) {
+    console.error('React is not available in useIsMobile');
+    return false; // Safe fallback
+  }
+
   const [isMobile, setIsMobile] = React.useState(false)
 
   React.useEffect(() => {
