@@ -1,15 +1,23 @@
-import React from 'react'
+import React from './reactAvailability';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { ensureReactAvailability } from './reactAvailability';
+
+// Ensure React is available before proceeding
+if (!ensureReactAvailability()) {
+  document.body.innerHTML = '<div style="padding: 20px; font-family: Arial; color: red;">React não está disponível. Por favor, recarregue a página.</div>';
+  throw new Error('React is not properly loaded');
+}
 
 // Debug: Check if React is properly loaded
+console.log('React availability check passed');
 console.log('React:', React);
 console.log('ReactDOM createRoot:', createRoot);
 
-// Ensure React is properly loaded before continuing
-if (!React || !createRoot) {
-  throw new Error('React dependencies are not properly loaded');
+// Final safety check
+if (!createRoot) {
+  throw new Error('ReactDOM createRoot is not available');
 }
 
 // Registrar Service Worker
