@@ -1,36 +1,89 @@
 import React from 'react';
-import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAgendamentos } from '@/hooks/useAgendamentos';
+import { toast } from 'sonner';
+import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
+import { safeToDate, timeToMinutes, overlaps } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
-export function AgendaMensal() {
-  const [mesAtual, setMesAtual] = React.useState(new Date());
-  const { agendamentos: todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
+type AgendaSemanalProps = {
+  buscaTexto?: string;
+};
 
-  const inicioMes = startOfMonth(mesAtual);
-  const fimMes = endOfMonth(mesAtual);
-  
+export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
+  const [semanaAtual, setSemanaAtual] = React.useState(new Date());
+  const { todosAgendamentos, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
+  const { getHorariosDisponiveis } = useHorariosTrabalho();
+  const [detalheAberto, setDetalheAberto] = React.useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = React.useState<any | null>(null);
+  const [diaDialogAberto, setDiaDialogAberto] = React.useState(false);
+  const [diaSelecionado, setDiaSelecionado] = React.useState<Date | null>(null);
 
-  const mesAnterior = () => setMesAtual(prev => subMonths(prev, 1));
-  const proximoMes = () => setMesAtual(prev => addMonths(prev, 1));
-  const mesAtualBtn = () => setMesAtual(new Date());
-
-  const agendamentosDoMes = todosAgendamentos.filter(ag => 
-    isSameMonth(new Date(ag.data), mesAtual)
+  const inicioSemana = startOfWeek(semanaAtual, { weekStartsOn: 0 });
+  const fimSemana = endOfWeek(semanaAtual, { weekStartsOn: 0 });
+  const diasDaSemana = React.useMemo(
+    () => eachDayOfInterval({ start: inicioSemana, end: fimSemana }),
+    [inicioSemana, fimSemana]
   );
 
-  const agendadosMes = agendamentosDoMes.filter(ag => ag.status === 'agendado');
-  const concluidosMes = agendamentosDoMes.filter(ag => ag.status === 'concluido');
-  const valorTotalAReceber = agendadosMes.reduce((total, ag) => total + Number(ag.valor || 0), 0);
+  const termo = buscaTexto.trim().toLowerCase();
+  const getAgendamentosDoDia = (dia: Date) => {
+    return todosAgendamentos
+      .filter(ag => isSameDay(safeToDate(ag.data as any), dia))
+      .filter(ag => {
+        if (!termo) return true;
+        const campos = [
+          ag.clienteNome,
+          ag.servicoNome,
+          ag.status,
+          ag.origem,
+          ag.hora,
+          ag.observacoes || ''
+        ].map(v => String(v || '').toLowerCase());
+        return campos.some(c => c.includes(termo));
+      })
+      .sort((a, b) => a.hora.localeCompare(b.hora));
+  };
 
-  
+
+  const semanaAnterior = () => setSemanaAtual(prev => subWeeks(prev, 1));
+  const proximaSemana = () => setSemanaAtual(prev => addWeeks(prev, 1));
+  const semanaAtualBtn = () => setSemanaAtual(new Date());
+
+  const agendamentosSemana = React.useMemo(() => (
+    diasDaSemana.reduce((agendamentos, dia) => (
+      [...agendamentos, ...getAgendamentosDoDia(dia)]
+    ), [] as typeof todosAgendamentos)
+  ), [diasDaSemana, todosAgendamentos, termo]);
+
+  const agendadosSemana = React.useMemo(() => agendamentosSemana.filter(ag => ag.status === 'agendado'), [agendamentosSemana]);
+  const concluidosSemana = React.useMemo(() => agendamentosSemana.filter(ag => ag.status === 'concluido'), [agendamentosSemana]);
+  const valorTotalAReceber = React.useMemo(() => agendadosSemana.reduce((total, ag) => total + Number(ag.valor ?? 0), 0), [agendadosSemana]);
+
+  const getHorariosDisponiveisDoDia = (dia: Date): string[] => {
+    const diaSemana = dia.getDay();
+    const slots = getHorariosDisponiveis?.(diaSemana, 60) || [];
+    const ags = getAgendamentosDoDia(dia);
+    return slots.filter((slot: string) => {
+      const start = timeToMinutes(slot);
+      const end = start + 60;
+      const conflita = ags.some(ag => {
+        const aStart = timeToMinutes(ag.hora);
+        const aEnd = aStart + (ag.duracao || 60);
+        return overlaps(start, end, aStart, aEnd);
+      });
+      return !conflita;
+    });
+  };
 
   if (loading) {
     return (
-      <div className="space-y-4 lg:space-y-6">
+      <div className="space-y-6">
         <div className="h-32 bg-muted animate-pulse rounded-lg" />
         <div className="h-96 bg-muted animate-pulse rounded-lg" />
       </div>
@@ -38,27 +91,27 @@ export function AgendaMensal() {
   }
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      {/* Navegação do Mês Aprimorada */}
+    <div className="space-y-6">
+      {/* Navegação da Semana Aprimorada */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/10 to-primary/10 border border-border/50">
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={mesAnterior} 
+            onClick={semanaAnterior} 
             className="h-9 w-9 p-0 rounded-full transition-all hover:scale-110 hover:shadow-md"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="text-center min-w-[220px] lg:min-w-[280px]">
+          <div className="text-center min-w-[280px] lg:min-w-[350px]">
             <h2 className="text-lg lg:text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {format(mesAtual, "MMMM 'de' yyyy", { locale: ptBR })}
+              {format(inicioSemana, "dd 'de' MMM", { locale: ptBR })} - {format(fimSemana, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
             </h2>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={proximoMes} 
+            onClick={proximaSemana} 
             className="h-9 w-9 p-0 rounded-full transition-all hover:scale-110 hover:shadow-md"
           >
             <ChevronRight className="h-4 w-4" />
@@ -67,47 +120,276 @@ export function AgendaMensal() {
         <Button 
           variant="default" 
           size="sm" 
-          onClick={mesAtualBtn} 
+          onClick={semanaAtualBtn} 
           className="w-full sm:w-auto transition-all hover:scale-105 shadow-md"
         >
-          Mês Atual
+          Semana Atual
         </Button>
       </div>
 
-      {/* Resumo do Mês */}
+      {/* Resumo da Semana */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="group border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 transition-all hover:shadow-lg hover:scale-105">
+        <Card className="border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 shadow-lg">
           <CardContent className="p-6 text-center">
-            <div className="text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400">
-              {agendadosMes.length}
-            </div>
-            <p className="text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="group border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 transition-all hover:shadow-lg hover:scale-105">
-          <CardContent className="p-6 text-center">
-            <div className="flex flex-col items-center space-y-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-3xl lg:text-4xl font-bold text-purple-600 dark:text-purple-400">
-                R$ {valorTotalAReceber.toFixed(2)}
+              <div>
+                <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                  {agendadosSemana.length}
+                </div>
+                <p className="text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
               </div>
-              <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">A Receber</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group border-0 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/20 dark:to-green-900/20 transition-all hover:shadow-lg hover:scale-105">
+        <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 shadow-lg">
           <CardContent className="p-6 text-center">
-            <div className="text-3xl lg:text-4xl font-bold text-green-600 dark:text-green-400">
-              {concluidosMes.length}
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+                  R$ {valorTotalAReceber.toFixed(2)}
+                </div>
+                <p className="text-sm text-purple-600/70 dark:text-purple-400/70 font-medium">A Receber</p>
+              </div>
             </div>
-            <p className="text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/20 dark:to-green-900/20 shadow-lg">
+          <CardContent className="p-6 text-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                <Clock className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+                  {concluidosSemana.length}
+                </div>
+                <p className="text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Dias da Semana com contagem e horários disponíveis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Dias da semana">
+        {diasDaSemana.map((dia) => {
+          const ags = getAgendamentosDoDia(dia);
+          const disponiveis = getHorariosDisponiveisDoDia(dia);
+          return (
+            <Card key={dia.toISOString()} className="border-0 bg-card/60" role="listitem">
+              <CardContent className="p-4 space-y-3">
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full text-left"
+                  onClick={() => { setDiaSelecionado(dia); setDiaDialogAberto(true); }}
+                  aria-label={`Ver todos os horários de ${format(dia, "EEEE, dd 'de' MMM", { locale: ptBR })}`}
+                >
+                  <div className="font-semibold">
+                    {format(dia, "EEEE, dd 'de' MMM", { locale: ptBR })}
+                  </div>
+                  <Badge variant="outline" className="border-0 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                    {ags.length} agend.
+                  </Badge>
+                </button>
+                {ags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground" role="list" aria-label="Horários do dia">
+                    {ags.slice(0, 6).map(a => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => { setAgendamentoSelecionado(a); setDetalheAberto(true); }}
+                        className="px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                        aria-label={`Ver detalhes de ${a.clienteNome} às ${a.hora}`}
+                        role="listitem"
+                      >
+                        {a.hora}
+                      </button>
+                    ))}
+                    {ags.length > 6 && (
+                      <span className="px-2 py-1 rounded-md bg-muted">+{ags.length - 6}</span>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <div className="text-xs font-medium mb-2 text-muted-foreground">Horários disponíveis</div>
+                  {disponiveis.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">Sem horários disponíveis</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {disponiveis.slice(0, 10).map(h => (
+                        <span key={h} className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/60">
+                          {h}
+                        </span>
+                      ))}
+                      {disponiveis.length > 10 && (
+                        <span className="px-2 py-1 rounded-full text-xs bg-muted">+{disponiveis.length - 10}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Dialog de Detalhes do Agendamento */}
+      <Dialog open={detalheAberto} onOpenChange={setDetalheAberto}>
+        <DialogContent className="max-w-lg">
+          {agendamentoSelecionado && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>{agendamentoSelecionado.clienteNome}</span>
+                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0 capitalize">
+                    {agendamentoSelecionado.status}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription>
+                  {format(new Date(String(agendamentoSelecionado.data)), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Horário</div>
+                  <div className="font-medium">{agendamentoSelecionado.hora} ({agendamentoSelecionado.duracao}min)</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Serviço</div>
+                  <div className="font-medium">{agendamentoSelecionado.servicoNome}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Valor</div>
+                  <div className="font-medium">R$ {Number(agendamentoSelecionado.valor ?? 0).toFixed(2)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Origem</div>
+                  <div className="font-medium capitalize">{agendamentoSelecionado.origem || 'manual'}</div>
+                </div>
+              </div>
+
+              <div className="text-sm space-y-1">
+                {(agendamentoSelecionado as any).clienteTelefone && (
+                  <div className="flex items-center gap-2">
+                    <span>📞</span>
+                    <span>{(agendamentoSelecionado as any).clienteTelefone}</span>
+                  </div>
+                )}
+                {(agendamentoSelecionado as any).clienteEmail && (
+                  <div className="flex items-center gap-2">
+                    <span>✉️</span>
+                    <span>{(agendamentoSelecionado as any).clienteEmail}</span>
+                  </div>
+                )}
+                {agendamentoSelecionado.observacoes && (
+                  <div className="mt-2 p-3 rounded-md bg-muted/60">
+                    <div className="text-muted-foreground mb-1">Observações</div>
+                    <div className="italic">"{agendamentoSelecionado.observacoes}"</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2">
+                {agendamentoSelecionado && String(agendamentoSelecionado.id).startsWith('online_') && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const ok = await converterAgendamentoOnlineParaRegular?.(String(agendamentoSelecionado.id).replace('online_', ''));
+                      if (ok) {
+                        toast.success('Agendamento online convertido com sucesso');
+                      } else {
+                        toast.error('Falha ao converter agendamento online');
+                      }
+                    }}
+                  >
+                    Converter para regular
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setDetalheAberto(false)} autoFocus>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Horários do Dia */}
+      <Dialog open={diaDialogAberto} onOpenChange={setDiaDialogAberto}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {diaSelecionado && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>
+                  {format(diaSelecionado, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </DialogTitle>
+                <DialogDescription>
+                  Todos os horários agendados e disponíveis para o dia.
+                </DialogDescription>
+              </DialogHeader>
+
+              {(() => {
+                const ags = getAgendamentosDoDia(diaSelecionado);
+                const disponiveis = getHorariosDisponiveisDoDia(diaSelecionado);
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="border-0 bg-card/60">
+                      <CardContent className="p-4 space-y-2">
+                        <div className="text-sm font-medium">Agendados ({ags.length})</div>
+                        {ags.length === 0 ? (
+                          <div className="text-sm text-muted-foreground">Nenhum agendamento</div>
+                        ) : (
+                    <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto pr-1" role="list" aria-label="Agendados do dia">
+                            {ags.map(a => (
+                              <button
+                                key={a.id}
+                                type="button"
+                                onClick={() => { setAgendamentoSelecionado(a); setDetalheAberto(true); }}
+                                className="px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-xs transition-colors"
+                          role="listitem"
+                              >
+                                {a.hora}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 bg-card/60">
+                      <CardContent className="p-4 space-y-2">
+                        <div className="text-sm font-medium">Horários disponíveis ({disponiveis.length})</div>
+                        {disponiveis.length === 0 ? (
+                          <div className="text-sm text-muted-foreground">Sem horários disponíveis</div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto pr-1" role="list" aria-label="Horários disponíveis do dia">
+                            {disponiveis.map(h => (
+                              <span key={h} className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/60" role="listitem">
+                                {h}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })()}
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setDiaDialogAberto(false)} autoFocus>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
