@@ -23,6 +23,10 @@ interface LayoutProps {
 }
 
 function LayoutContent({ children }: LayoutProps) {
+  if (!React || !React.useContext) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
   const location = useLocation();
 
   return (
