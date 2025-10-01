@@ -1,4 +1,4 @@
-import React from "./reactAvailability";
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
@@ -19,27 +19,10 @@ import Auditoria from "./pages/Auditoria";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro"; 
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
-import { ensureReactAvailability } from "./reactAvailability";
-
-// Ensure React is properly loaded with comprehensive check
-if (!ensureReactAvailability()) {
-  throw new Error('React is not properly available in App.tsx');
-}
-
-// Ensure React is available before creating QueryClient
-if (!React || typeof React.createElement !== 'function') {
-  throw new Error('React is not available');
-}
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Safety check for React
-  if (!React || typeof React.createElement !== 'function') {
-    console.error('React is not properly loaded');
-    return React.createElement('div', null, 'React is not properly loaded');
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

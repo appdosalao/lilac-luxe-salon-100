@@ -1,4 +1,4 @@
-import React from '@/reactAvailability';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { WifiOff, Wifi } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';

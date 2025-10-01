@@ -1,4 +1,4 @@
-import React from '../../reactAvailability';
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -40,7 +40,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
-import { ensureReactAvailability } from '../../reactAvailability';
 
 interface AgendamentosListProps {
   agendamentos: Agendamento[];
@@ -79,12 +78,6 @@ export default function AgendamentosList({
   totalPaginas,
   onPaginaChange,
 }: AgendamentosListProps) {
-  // Ensure React is available before using hooks
-  if (!ensureReactAvailability()) {
-    console.error('React is not available in AgendamentosList');
-    return React.createElement('div', { style: { padding: '20px', color: 'red' } }, 'React não está disponível');
-  }
-
   const [agendamentoParaExcluir, setAgendamentoParaExcluir] = React.useState<string | null>(null);
 
   const formatarData = (data: string) => {
