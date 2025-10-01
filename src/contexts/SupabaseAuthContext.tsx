@@ -1,9 +1,8 @@
-import React from '../reactAvailability';
+import React from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
-import { ensureReactAvailability } from '../reactAvailability';
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -20,12 +19,6 @@ interface SupabaseAuthContextType {
 const SupabaseAuthContext = React.createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export const SupabaseAuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // Comprehensive React availability check
-  if (!ensureReactAvailability()) {
-    console.error('React is not available in SupabaseAuthContext');
-    return React.createElement('div', { style: { padding: '20px', color: 'red' } }, 'React não está disponível no contexto de autenticação');
-  }
-
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [usuario, setUsuario] = React.useState<Usuario | null>(null);

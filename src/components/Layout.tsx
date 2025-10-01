@@ -1,4 +1,4 @@
-import React from "@/reactAvailability";
+import React from "react";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -23,19 +23,7 @@ interface LayoutProps {
 }
 
 function LayoutContent({ children }: LayoutProps) {
-  // Verificar se React está disponível antes de qualquer hook
-  if (!React || !React.useContext) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
-  // Tentar obter location de forma segura
-  let location;
-  try {
-    location = useLocation();
-  } catch (error) {
-    console.error('Error getting location:', error);
-    return <div className="min-h-screen flex items-center justify-center">Erro ao carregar localização</div>;
-  }
+  const location = useLocation();
 
   return (
     <SidebarProvider>
@@ -81,9 +69,5 @@ function LayoutContent({ children }: LayoutProps) {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  if (!React || !React.useContext) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
   return <LayoutContent>{children}</LayoutContent>;
 }
