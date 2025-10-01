@@ -3,49 +3,88 @@ import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAgendamentos } from '@/hooks/useAgendamentos';
-import { cn } from '@/lib/utils';
+import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
+import { cn, toISODate, timeToMinutes, overlaps } from '@/lib/utils';
+import { getOrigemBadge, getStatusBadgeClass } from '@/components/agenda/utils';
 
-export function AgendaDiaria() {
+type AgendaDiariaProps = {
+  buscaTexto?: string;
+};
+
+export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
   const [dataSelecionada, setDataSelecionada] = React.useState(new Date());
-  const { todosAgendamentos, agendamentosFiltrados, loading } = useAgendamentos();
+  const { todosAgendamentos, agendamentosFiltrados, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
+  const { getHorariosDisponiveis, isAgendamentoValido } = useHorariosTrabalho();
 
   // Usar todos os agendamentos (incluindo online) para a agenda
-  const agendamentosDoDia = todosAgendamentos.filter(
-    ag => new Date(ag.data).toDateString() === dataSelecionada.toDateString()
-  ).sort((a, b) => a.hora.localeCompare(b.hora));
+  const termo = buscaTexto.trim().toLowerCase();
+  const dataSelecionadaStr = toISODate(dataSelecionada);
+  const agendamentosDoDia = React.useMemo(() => {
+    return todosAgendamentos
+      .filter(ag => toISODate(ag.data as any) === dataSelecionadaStr)
+      .filter(ag => {
+        if (!termo) return true;
+        const campos = [
+          ag.clienteNome,
+          ag.servicoNome,
+          ag.status,
+          ag.origem,
+          ag.hora,
+          ag.observacoes || ''
+        ].map(v => String(v || '').toLowerCase());
+        return campos.some(c => c.includes(termo));
+      })
+      .sort((a, b) => a.hora.localeCompare(b.hora));
+  }, [todosAgendamentos, dataSelecionadaStr, termo]);
 
   // Encontrar próximo agendamento
   const agora = new Date();
+  const hojeStr = toISODate(agora);
   const agoraString = `${agora.getHours().toString().padStart(2, '0')}:${agora.getMinutes().toString().padStart(2, '0')}`;
-  const proximoAgendamento = agendamentosDoDia.find(ag => 
-    new Date(ag.data).toDateString() === agora.toDateString() && 
-    ag.hora >= agoraString && 
-    ag.status === 'agendado'
-  );
+  const agoraMinutos = timeToMinutes(agoraString);
+  const proximoAgendamento = React.useMemo(() => {
+    return agendamentosDoDia.find(ag => 
+      toISODate(ag.data as any) === hojeStr && 
+      timeToMinutes(ag.hora) >= agoraMinutos && 
+      ag.status === 'agendado'
+    );
+  }, [agendamentosDoDia, hojeStr, agoraMinutos]);
 
   // Estatísticas do dia
-  const estatisticasDia = {
+  const estatisticasDia = React.useMemo(() => ({
     agendados: agendamentosDoDia.filter(ag => ag.status === 'agendado').length,
     concluidos: agendamentosDoDia.filter(ag => ag.status === 'concluido').length,
     cancelados: agendamentosDoDia.filter(ag => ag.status === 'cancelado').length,
-    valorTotal: agendamentosDoDia.reduce((total, ag) => total + Number(ag.valor || 0), 0),
+    valorTotal: agendamentosDoDia.reduce((total, ag) => total + Number(ag.valor ?? 0), 0),
     valorRecebido: agendamentosDoDia
       .filter(ag => ag.status === 'concluido')
-      .reduce((total, ag) => total + Number(ag.valorPago || ag.valor || 0), 0),
+      .reduce((total, ag) => total + Number((ag as any).valorPago ?? ag.valor ?? 0), 0),
     tempoTotalAtendimento: agendamentosDoDia.reduce((total, ag) => total + (ag.duracao || 0), 0)
-  };
+  }), [agendamentosDoDia]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'agendado': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'concluido': return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelado': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  // Horários disponíveis do dia (com base nas regras de trabalho)
+  const horariosDisponiveis = React.useMemo(() => {
+    const diaSemana = new Date(dataSelecionadaStr + 'T00:00:00').getDay();
+    const slots = getHorariosDisponiveis?.(diaSemana, 60) || [];
+
+    // Remover horários que conflitam com algum agendamento existente
+    return slots.filter((slot: string) => {
+      const start = timeToMinutes(slot);
+      const end = start + 60; // duração padrão exibida
+      const conflita = agendamentosDoDia.some(ag => {
+        const aStart = timeToMinutes(ag.hora);
+        const aEnd = aStart + (ag.duracao || 60);
+        return overlaps(start, end, aStart, aEnd);
+      });
+      return !conflita;
+    });
+  }, [getHorariosDisponiveis, dataSelecionadaStr, agendamentosDoDia]);
+
+  // getStatusColor não é mais necessário; padronizado via util
 
   const anteriorDia = () => setDataSelecionada(prev => subDays(prev, 1));
   const proximoDia = () => setDataSelecionada(prev => addDays(prev, 1));
@@ -122,7 +161,7 @@ export function AgendaDiaria() {
                     </span>
                     <span className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
-                      R$ {proximoAgendamento.valor.toFixed(2)}
+                      R$ {Number(proximoAgendamento.valor ?? 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -210,7 +249,21 @@ export function AgendaDiaria() {
       </div>
 
       {/* Timeline dos Agendamentos Aprimorada */}
-      <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+      <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar" role="region" aria-label="Timeline de agendamentos do dia">
+        {/* Horários Disponíveis */}
+        {horariosDisponiveis.length > 0 && (
+          <Card className="border-0 bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-2">
+                {horariosDisponiveis.map((h) => (
+                  <span key={h} className="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border/50">
+                    {h}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {agendamentosDoDia.length === 0 ? (
           <div className="text-center py-12 rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 border border-dashed border-muted-foreground/20">
             <div className="flex h-16 w-16 items-center justify-center mx-auto mb-4 rounded-full bg-muted/50">
@@ -220,7 +273,7 @@ export function AgendaDiaria() {
             <p className="text-sm text-muted-foreground/70">Nenhum agendamento para este dia</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" role="list" aria-live="polite" aria-busy={false}>
             {agendamentosDoDia.map((agendamento, index) => (
               <Card 
                 key={agendamento.id} 
@@ -230,6 +283,7 @@ export function AgendaDiaria() {
                   agendamento.status === 'concluido' && "bg-gradient-to-r from-green-50/80 to-green-100/30 dark:from-green-950/30 dark:to-green-900/20",
                   agendamento.status === 'cancelado' && "bg-gradient-to-r from-red-50/80 to-red-100/30 dark:from-red-950/30 dark:to-red-900/20"
                 )}
+                role="listitem"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5" />
                 <CardContent className="relative p-5">
@@ -250,30 +304,32 @@ export function AgendaDiaria() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
-                        {agendamento.origem === 'cronograma' && (
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
-                            💜 Cronograma
-                          </Badge>
-                        )}
-                        {agendamento.origem === 'online' && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
-                            🌐 Online
-                          </Badge>
-                        )}
+                        {(() => {
+                          const origem = getOrigemBadge(agendamento.origem);
+                          if (!origem) return null;
+                          return (
+                            <Badge variant="secondary" className={origem.className}>
+                              {origem.emoji} {origem.label}
+                            </Badge>
+                          );
+                        })()}
                         <Badge 
                           variant="outline" 
                           className={cn(
                             "border-0 font-medium",
-                            agendamento.status === 'agendado' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-                            agendamento.status === 'concluido' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-                            agendamento.status === 'cancelado' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            getStatusBadgeClass(agendamento.status)
                           )}
                         >
                           {agendamento.status}
                         </Badge>
+                        {!isAgendamentoValido(toISODate(agendamento.data as any), agendamento.hora, agendamento.duracao) && (
+                          <Badge variant="destructive" className="bg-amber-100 text-amber-800 border-0">
+                            Fora do horário
+                          </Badge>
+                        )}
                         <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
                           <span className="text-sm font-bold text-green-700 dark:text-green-300">
-                            R$ {agendamento.valor.toFixed(2)}
+                          R$ {Number(agendamento.valor ?? 0).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -301,6 +357,24 @@ export function AgendaDiaria() {
                       )}
                     </div>
                   </div>
+                  {String(agendamento.id).startsWith('online_') && (
+                    <div className="mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => { 
+                          const ok = await converterAgendamentoOnlineParaRegular?.(String(agendamento.id).replace('online_', ''));
+                          if (ok) {
+                            toast.success('Agendamento online convertido com sucesso');
+                          } else {
+                            toast.error('Falha ao converter agendamento online');
+                          }
+                        }}
+                      >
+                        Converter para regular
+                      </Button>
+                    </div>
+                  )}
                   {agendamento.observacoes && (
                     <div className="mt-4 pt-3 border-t border-border/50">
                       <p className="text-sm text-muted-foreground italic">
