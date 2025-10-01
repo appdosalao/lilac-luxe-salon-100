@@ -1,9 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useAuditoriaSupabase } from './useAuditoriaSupabase';
 import { useAgendamentos } from './useAgendamentos';
 import { useServicos } from './useServicos';
 import { useLancamentos } from './useLancamentos';
 import { useCronogramas, useRetornos } from './useCronogramas';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface ProblemaAuditoria {
   id: string;
@@ -50,6 +53,9 @@ export function useAuditoria() {
   const { lancamentos } = useLancamentos();
   const { cronogramas } = useCronogramas();
   const { retornos } = useRetornos();
+  const { user } = useSupabaseAuth();
+  const [salvando, setSalvando] = useState(false);
+  const [relatoriosHistorico, setRelatoriosHistorico] = useState<any[]>([]);
 
   const relatorioAuditoria = useMemo((): RelatorioAuditoria => {
     const problemas: ProblemaAuditoria[] = [];
@@ -566,8 +572,91 @@ export function useAuditoria() {
     }
   };
 
+  // Salvar relatório no Supabase
+  const salvarRelatorio = useCallback(async () => {
+    if (!user || salvando) return null;
+    
+    setSalvando(true);
+    try {
+      // 1. Criar relatório na tabela
+      const { data: relatorio, error: relatorioError } = await supabase
+        .from('relatorios_auditoria')
+        .insert({
+          user_id: user.id,
+          data_execucao: new Date().toISOString(),
+          total_problemas: relatorioAuditoria.totalProblemas,
+          problemas_criticos: relatorioAuditoria.problemasCriticos,
+          problemas_altos: relatorioAuditoria.problemasAltos,
+          problemas_medios: relatorioAuditoria.problemasMedios,
+          problemas_baixos: relatorioAuditoria.problemasBaixos,
+          estatisticas: relatorioAuditoria.estatisticas,
+          sugestoes_melhorias: relatorioAuditoria.sugestoesMelhorias
+        })
+        .select()
+        .single();
+
+      if (relatorioError) throw relatorioError;
+
+      // 2. Criar problemas em lote
+      if (relatorioAuditoria.problemas.length > 0) {
+        const problemas = relatorioAuditoria.problemas.map(p => ({
+          relatorio_id: relatorio.id,
+          user_id: user.id,
+          categoria: p.categoria,
+          tipo: p.tipo,
+          descricao: p.descricao,
+          entidade: p.entidade,
+          entidade_id: p.entidadeId,
+          campo: p.campo || null,
+          valor_atual: p.valorAtual || null,
+          valor_esperado: p.valorEsperado || null,
+          sugestao: p.sugestao || null
+        }));
+
+        const { error: problemasError } = await supabase
+          .from('problemas_auditoria')
+          .insert(problemas);
+
+        if (problemasError) throw problemasError;
+      }
+
+      toast.success('Relatório de auditoria salvo com sucesso!');
+      await carregarHistorico();
+      return relatorio;
+    } catch (error) {
+      console.error('Erro ao salvar relatório:', error);
+      toast.error('Erro ao salvar relatório de auditoria');
+      return null;
+    } finally {
+      setSalvando(false);
+    }
+  }, [user, relatorioAuditoria, salvando]);
+
+  // Carregar histórico de relatórios
+  const carregarHistorico = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('relatorios_auditoria')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('data_execucao', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setRelatoriosHistorico(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+    }
+  }, [user]);
+
   return {
     relatorioAuditoria,
     exportarRelatorio,
+    salvarRelatorio,
+    salvando,
+    carregarHistorico,
+    relatoriosHistorico,
   };
 }

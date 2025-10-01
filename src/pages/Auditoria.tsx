@@ -39,7 +39,14 @@ const categoriaIcones = {
 };
 
 export default function Auditoria() {
-  const { relatorioAuditoria, exportarRelatorio } = useAuditoria();
+  const { 
+    relatorioAuditoria, 
+    exportarRelatorio, 
+    salvarRelatorio, 
+    salvando,
+    carregarHistorico,
+    relatoriosHistorico 
+  } = useAuditoria();
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
 
   const problemasFiltrados = filtroCategoria === 'todos' 
@@ -59,12 +66,30 @@ export default function Auditoria() {
         </div>
         <div className="flex gap-2">
           <Button 
+            variant="default"
+            onClick={salvarRelatorio}
+            disabled={salvando}
+            className="flex items-center gap-2"
+          >
+            {salvando ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Salvar Relatório
+              </>
+            )}
+          </Button>
+          <Button 
             variant="outline" 
             onClick={() => exportarRelatorio('csv')}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            Exportar CSV
+            CSV
           </Button>
           <Button 
             variant="outline" 
@@ -72,7 +97,7 @@ export default function Auditoria() {
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            Exportar JSON
+            JSON
           </Button>
         </div>
       </div>
@@ -161,6 +186,10 @@ export default function Auditoria() {
           </TabsTrigger>
           <TabsTrigger value="estatisticas">Estatísticas</TabsTrigger>
           <TabsTrigger value="sugestoes">Sugestões</TabsTrigger>
+          <TabsTrigger value="historico" onClick={carregarHistorico}>
+            <FileText className="h-4 w-4 mr-1" />
+            Histórico
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="problemas" className="space-y-4">
@@ -390,6 +419,52 @@ export default function Auditoria() {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="historico" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Histórico de Auditorias</CardTitle>
+              <CardDescription>
+                Últimos 10 relatórios de auditoria salvos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {relatoriosHistorico.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold">Nenhum relatório salvo</h3>
+                  <p className="text-muted-foreground">
+                    Clique em "Salvar Relatório" para começar a criar um histórico
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {relatoriosHistorico.map((rel) => (
+                    <Card key={rel.id} className="border-0 bg-muted/40">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold">
+                              {new Date(rel.data_execucao).toLocaleString('pt-BR')}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {rel.total_problemas} problemas • {rel.problemas_criticos} críticos • {rel.problemas_altos} altos
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={rel.problemas_criticos > 0 ? 'destructive' : 'default'}>
+                              Saúde: {Math.max(0, 100 - (rel.problemas_criticos * 10 + rel.problemas_altos * 5))}%
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
