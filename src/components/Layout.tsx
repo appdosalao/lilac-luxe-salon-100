@@ -23,11 +23,19 @@ interface LayoutProps {
 }
 
 function LayoutContent({ children }: LayoutProps) {
+  // Verificar se React está disponível antes de qualquer hook
   if (!React || !React.useContext) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
 
-  const location = useLocation();
+  // Tentar obter location de forma segura
+  let location;
+  try {
+    location = useLocation();
+  } catch (error) {
+    console.error('Error getting location:', error);
+    return <div className="min-h-screen flex items-center justify-center">Erro ao carregar localização</div>;
+  }
 
   return (
     <SidebarProvider>
