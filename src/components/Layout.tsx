@@ -1,3 +1,4 @@
+import React from "@/reactAvailability";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -22,6 +23,10 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
+  if (!React || !React.useContext) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
   const location = useLocation();
 
   return (
