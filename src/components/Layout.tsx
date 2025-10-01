@@ -22,11 +22,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export default function Layout({ children }: LayoutProps) {
-  if (!React || !React.useContext) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
+function LayoutContent({ children }: LayoutProps) {
   const location = useLocation();
 
   return (
@@ -70,4 +66,12 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </SidebarProvider>
   );
+}
+
+export default function Layout({ children }: LayoutProps) {
+  if (!React || !React.useContext) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
+  return <LayoutContent>{children}</LayoutContent>;
 }
