@@ -4,3 +4,27 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function toISODate(date: Date | string): string {
+  if (typeof date === 'string') return date;
+  const d = new Date(date);
+  return d.toISOString().split('T')[0];
+}
+
+export function safeToDate(value: any): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') {
+    const [y, m, d] = value.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  }
+  return new Date(value);
+}
+
+export function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+export function overlaps(start1: number, end1: number, start2: number, end2: number): boolean {
+  return start1 < end2 && start2 < end1;
+}
