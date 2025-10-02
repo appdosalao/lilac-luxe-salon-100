@@ -44,26 +44,6 @@ export default function Agenda() {
                     </p>
                   </div>
                 </div>
-                
-                {/* Estatísticas Rápidas */}
-                <div className="flex flex-wrap gap-4 mt-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/80 dark:bg-blue-900/30 backdrop-blur-sm">
-                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                      {agendamentosHoje.length} hoje
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100/80 dark:bg-green-900/30 backdrop-blur-sm">
-                    <Badge variant="outline" className="border-0 bg-transparent text-green-700 dark:text-green-300 font-semibold">
-                      {agendamentosPendentes} pendentes
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100/80 dark:bg-purple-900/30 backdrop-blur-sm">
-                    <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                      {agendamentosTotal} total
-                    </span>
-                  </div>
-                </div>
               </div>
               
               {/* Controles de Visualização e Ações */}
