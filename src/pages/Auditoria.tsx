@@ -45,7 +45,8 @@ export default function Auditoria() {
     salvarRelatorio, 
     salvando,
     carregarHistorico,
-    relatoriosHistorico 
+    relatoriosHistorico,
+    carregandoBackend
   } = useAuditoria();
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
 
@@ -57,6 +58,24 @@ export default function Auditoria() {
 
   return (
     <div className="space-y-6">
+      {carregandoBackend && (
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/30">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
+              <div>
+                <p className="font-semibold text-blue-900 dark:text-blue-100">
+                  Executando Auditoria no Servidor
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Analisando dados e verificando inconsistências...
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Auditoria do Sistema</h1>

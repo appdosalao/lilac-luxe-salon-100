@@ -1,1 +1,4 @@
 project_id = "dfwepnzwktjyhvfmpuxo"
+
+[functions.auditoria-sistema]
+verify_jwt = true

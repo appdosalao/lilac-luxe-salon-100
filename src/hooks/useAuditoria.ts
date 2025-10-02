@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useAuditoriaSupabase } from './useAuditoriaSupabase';
 import { useAgendamentos } from './useAgendamentos';
 import { useServicos } from './useServicos';
@@ -56,6 +56,41 @@ export function useAuditoria() {
   const { user } = useSupabaseAuth();
   const [salvando, setSalvando] = useState(false);
   const [relatoriosHistorico, setRelatoriosHistorico] = useState<any[]>([]);
+  const [relatorioBackend, setRelatorioBackend] = useState<RelatorioAuditoria | null>(null);
+  const [carregandoBackend, setCarregandoBackend] = useState(false);
+  const [useBackend] = useState(true); // Flag para usar backend
+
+  // Carregar auditoria do backend
+  useEffect(() => {
+    const carregarAuditoriaBackend = async () => {
+      if (!user || !useBackend) return;
+
+      try {
+        setCarregandoBackend(true);
+        console.log('Calling backend audit function...');
+
+        const { data, error } = await supabase.functions.invoke('auditoria-sistema', {
+          method: 'POST',
+        });
+
+        if (error) {
+          console.error('Backend audit error:', error);
+          toast.error('Erro ao executar auditoria no servidor');
+          return;
+        }
+
+        console.log('Backend audit completed:', data);
+        setRelatorioBackend(data);
+      } catch (error) {
+        console.error('Error invoking backend audit:', error);
+        toast.error('Erro ao conectar com servidor de auditoria');
+      } finally {
+        setCarregandoBackend(false);
+      }
+    };
+
+    carregarAuditoriaBackend();
+  }, [user, useBackend]);
 
   const relatorioAuditoria = useMemo((): RelatorioAuditoria => {
     const problemas: ProblemaAuditoria[] = [];
@@ -652,11 +687,13 @@ export function useAuditoria() {
   }, [user]);
 
   return {
-    relatorioAuditoria,
+    relatorioAuditoria: relatorioBackend || relatorioAuditoria,
     exportarRelatorio,
     salvarRelatorio,
     salvando,
     carregarHistorico,
     relatoriosHistorico,
+    carregandoBackend,
+    useBackendAudit: useBackend,
   };
 }
