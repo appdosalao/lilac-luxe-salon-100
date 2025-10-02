@@ -234,6 +234,51 @@ export type Database = {
         }
         Relationships: []
       }
+      colors: {
+        Row: {
+          blue: number | null
+          green: number | null
+          hex: string
+          hue: number | null
+          id: number
+          light_hsl: number | null
+          name: string | null
+          red: number | null
+          sat_hsl: number | null
+          sat_hsv: number | null
+          source: Database["public"]["Enums"]["color_source"] | null
+          val_hsv: number | null
+        }
+        Insert: {
+          blue?: number | null
+          green?: number | null
+          hex: string
+          hue?: number | null
+          id?: number
+          light_hsl?: number | null
+          name?: string | null
+          red?: number | null
+          sat_hsl?: number | null
+          sat_hsv?: number | null
+          source?: Database["public"]["Enums"]["color_source"] | null
+          val_hsv?: number | null
+        }
+        Update: {
+          blue?: number | null
+          green?: number | null
+          hex?: string
+          hue?: number | null
+          id?: number
+          light_hsl?: number | null
+          name?: string | null
+          red?: number | null
+          sat_hsl?: number | null
+          sat_hsv?: number | null
+          source?: Database["public"]["Enums"]["color_source"] | null
+          val_hsv?: number | null
+        }
+        Relationships: []
+      }
       configuracoes_backup: {
         Row: {
           backup_automatico: boolean
@@ -1144,7 +1189,50 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      color_source:
+        | "99COLORS_NET"
+        | "ART_PAINTS_YG07S"
+        | "BYRNE"
+        | "CRAYOLA"
+        | "CMYK_COLOR_MODEL"
+        | "COLORCODE_IS"
+        | "COLORHEXA"
+        | "COLORXS"
+        | "CORNELL_UNIVERSITY"
+        | "COLUMBIA_UNIVERSITY"
+        | "DUKE_UNIVERSITY"
+        | "ENCYCOLORPEDIA_COM"
+        | "ETON_COLLEGE"
+        | "FANTETTI_AND_PETRACCHI"
+        | "FINDTHEDATA_COM"
+        | "FERRARIO_1919"
+        | "FEDERAL_STANDARD_595"
+        | "FLAG_OF_INDIA"
+        | "FLAG_OF_SOUTH_AFRICA"
+        | "GLAZEBROOK_AND_BALDRY"
+        | "GOOGLE"
+        | "HEXCOLOR_CO"
+        | "ISCC_NBS"
+        | "KELLY_MOORE"
+        | "MATTEL"
+        | "MAERZ_AND_PAUL"
+        | "MILK_PAINT"
+        | "MUNSELL_COLOR_WHEEL"
+        | "NATURAL_COLOR_SYSTEM"
+        | "PANTONE"
+        | "PLOCHERE"
+        | "POURPRE_COM"
+        | "RAL"
+        | "RESENE"
+        | "RGB_COLOR_MODEL"
+        | "THOM_POOLE"
+        | "UNIVERSITY_OF_ALABAMA"
+        | "UNIVERSITY_OF_CALIFORNIA_DAVIS"
+        | "UNIVERSITY_OF_CAMBRIDGE"
+        | "UNIVERSITY_OF_NORTH_CAROLINA"
+        | "UNIVERSITY_OF_TEXAS_AT_AUSTIN"
+        | "X11_WEB"
+        | "XONA_COM"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1271,6 +1359,52 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      color_source: [
+        "99COLORS_NET",
+        "ART_PAINTS_YG07S",
+        "BYRNE",
+        "CRAYOLA",
+        "CMYK_COLOR_MODEL",
+        "COLORCODE_IS",
+        "COLORHEXA",
+        "COLORXS",
+        "CORNELL_UNIVERSITY",
+        "COLUMBIA_UNIVERSITY",
+        "DUKE_UNIVERSITY",
+        "ENCYCOLORPEDIA_COM",
+        "ETON_COLLEGE",
+        "FANTETTI_AND_PETRACCHI",
+        "FINDTHEDATA_COM",
+        "FERRARIO_1919",
+        "FEDERAL_STANDARD_595",
+        "FLAG_OF_INDIA",
+        "FLAG_OF_SOUTH_AFRICA",
+        "GLAZEBROOK_AND_BALDRY",
+        "GOOGLE",
+        "HEXCOLOR_CO",
+        "ISCC_NBS",
+        "KELLY_MOORE",
+        "MATTEL",
+        "MAERZ_AND_PAUL",
+        "MILK_PAINT",
+        "MUNSELL_COLOR_WHEEL",
+        "NATURAL_COLOR_SYSTEM",
+        "PANTONE",
+        "PLOCHERE",
+        "POURPRE_COM",
+        "RAL",
+        "RESENE",
+        "RGB_COLOR_MODEL",
+        "THOM_POOLE",
+        "UNIVERSITY_OF_ALABAMA",
+        "UNIVERSITY_OF_CALIFORNIA_DAVIS",
+        "UNIVERSITY_OF_CAMBRIDGE",
+        "UNIVERSITY_OF_NORTH_CAROLINA",
+        "UNIVERSITY_OF_TEXAS_AT_AUSTIN",
+        "X11_WEB",
+        "XONA_COM",
+      ],
+    },
   },
 } as const
