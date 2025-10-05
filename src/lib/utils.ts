@@ -20,11 +20,13 @@ export function safeToDate(value: any): Date {
   return new Date(value);
 }
 
+// Time utilities
 export function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
 }
 
+// Check if two time ranges overlap
 export function overlaps(start1: number, end1: number, start2: number, end2: number): boolean {
   return start1 < end2 && start2 < end1;
 }
