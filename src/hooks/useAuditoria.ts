@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useAuditoriaSupabase } from './useAuditoriaSupabase';
 import { useAgendamentos } from './useAgendamentos';
 import { useServicos } from './useServicos';

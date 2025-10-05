@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Cronograma } from '@/types/cronograma';
 import { Agendamento } from '@/types/agendamento';
 import { toast } from 'sonner';

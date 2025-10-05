@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FiltrosRelatorio, DadosRelatorio, PeriodoRelatorio, ServicoVendido, CategoriaLucro, EvolucaoFinanceira } from '@/types/relatorio';
