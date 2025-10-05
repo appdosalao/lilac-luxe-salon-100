@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Award, Megaphone, Zap, BarChart3 } from "lucide-react";
+import { Award, Megaphone, Zap, BarChart3, LayoutDashboard } from "lucide-react";
 import { ProgramasFidelidade } from "@/components/marketing/ProgramasFidelidade";
 import { CampanhasMarketing } from "@/components/marketing/CampanhasMarketing";
 import { AutomacoesMarketing } from "@/components/marketing/AutomacoesMarketing";
 import { AnaliseClientes } from "@/components/marketing/AnaliseClientes";
+import { DashboardMarketing } from "@/components/marketing/DashboardMarketing";
 
 export default function Marketing() {
   return (
@@ -16,8 +17,12 @@ export default function Marketing() {
         </p>
       </div>
 
-      <Tabs defaultValue="fidelidade" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="dashboard" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="dashboard" className="gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="fidelidade" className="gap-2">
             <Award className="h-4 w-4" />
             Fidelidade
@@ -35,6 +40,10 @@ export default function Marketing() {
             Análise
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-4">
+          <DashboardMarketing />
+        </TabsContent>
 
         <TabsContent value="fidelidade" className="space-y-4">
           <ProgramasFidelidade />
