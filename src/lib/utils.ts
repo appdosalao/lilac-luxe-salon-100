@@ -25,7 +25,6 @@ export function timeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
-// Verifica se dois intervalos de tempo se sobrepõem
 export function overlaps(start1: number, end1: number, start2: number, end2: number): boolean {
   return start1 < end2 && start2 < end1;
 }

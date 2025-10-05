@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
 import { useSupabaseAgendamentos } from './useSupabaseAgendamentos';
 import { useServicos } from './useServicos';
 import { useSupabaseClientes } from './useSupabaseClientes';
+import { useMemo } from 'react';
 
 export function useAgendamentos() {
   const agendamentosData = useSupabaseAgendamentos();

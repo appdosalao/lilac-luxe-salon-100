@@ -1,83 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
 import { toast } from 'sonner';
 import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
-
-// Função para adicionar pontos de fidelidade (standalone, sem hooks)
-async function adicionarPontosFidelidade(
-  userId: string, 
-  clienteId: string, 
-  agendamentoId: string, 
-  valorPago: number
-) {
-  try {
-    // Buscar programa ativo
-    const { data: programaAtivo, error: programaError } = await supabase
-      .from('programas_fidelidade')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('ativo', true)
-      .maybeSingle();
-
-    if (programaError || !programaAtivo) {
-      return; // Sem programa ativo, não faz nada
-    }
-
-    // Calcular pontos ganhos
-    const pontosGanhos = Math.floor(valorPago * programaAtivo.pontos_por_real);
-    if (pontosGanhos <= 0) return;
-
-    // Buscar ou criar registro de pontos do cliente
-    const { data: pontosCliente, error: pontosError } = await supabase
-      .from('pontos_fidelidade')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('cliente_id', clienteId)
-      .eq('programa_id', programaAtivo.id)
-      .maybeSingle();
-
-    if (pontosError && pontosError.code !== 'PGRST116') {
-      throw pontosError;
-    }
-
-    if (!pontosCliente) {
-      // Criar novo registro
-      await supabase.from('pontos_fidelidade').insert({
-        user_id: userId,
-        cliente_id: clienteId,
-        programa_id: programaAtivo.id,
-        pontos_totais: pontosGanhos,
-        pontos_disponiveis: pontosGanhos,
-        pontos_resgatados: 0
-      });
-    } else {
-      // Atualizar pontos existentes
-      await supabase
-        .from('pontos_fidelidade')
-        .update({
-          pontos_totais: pontosCliente.pontos_totais + pontosGanhos,
-          pontos_disponiveis: pontosCliente.pontos_disponiveis + pontosGanhos
-        })
-        .eq('id', pontosCliente.id);
-    }
-
-    // Registrar histórico
-    await supabase.from('historico_pontos').insert({
-      user_id: userId,
-      cliente_id: clienteId,
-      programa_id: programaAtivo.id,
-      agendamento_id: agendamentoId,
-      pontos: pontosGanhos,
-      tipo: 'ganho',
-      descricao: `Ganhou ${pontosGanhos} pontos por pagamento de R$ ${valorPago.toFixed(2)}`
-    });
-  } catch (error) {
-    console.error('Erro ao adicionar pontos de fidelidade:', error);
-    // Não propaga o erro para não bloquear o agendamento
-  }
-}
 
 interface AgendamentoOnlineData {
   id: string;
@@ -517,19 +443,6 @@ export function useSupabaseAgendamentos() {
         console.error('Erro ao atualizar agendamento:', error);
         toast.error('Erro ao atualizar agendamento');
         return false;
-      }
-
-      // Adicionar pontos de fidelidade se pagamento foi realizado
-      if (dadosAtualizados.statusPagamento === 'pago' && dadosAtualizados.valorPago && user) {
-        const agendamento = agendamentosCombinados.find(a => a.id === id);
-        if (agendamento && agendamento.clienteId) {
-          try {
-            await adicionarPontosFidelidade(user.id, agendamento.clienteId, id, dadosAtualizados.valorPago);
-          } catch (error) {
-            console.error('Erro ao adicionar pontos:', error);
-            // Não bloquear a atualização se falhar pontos
-          }
-        }
       }
 
       await carregarAgendamentos();
