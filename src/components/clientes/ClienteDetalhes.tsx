@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Phone, MessageCircle, Calendar, FileText, Edit } from "lucide-react";
+import { PontosFidelidade } from "./PontosFidelidade";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Cliente } from "@/types/cliente";
@@ -116,6 +117,9 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
               </div>
             </CardContent>
           </Card>
+
+          {/* Pontos de Fidelidade */}
+          <PontosFidelidade clienteId={cliente.id} />
 
           {/* Histórico de Serviços */}
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">

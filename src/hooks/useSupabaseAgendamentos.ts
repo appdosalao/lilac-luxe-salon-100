@@ -4,6 +4,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
 import { toast } from 'sonner';
 import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
+import { useProgramaFidelidade } from './useProgramaFidelidade';
 
 interface AgendamentoOnlineData {
   id: string;
@@ -24,6 +25,7 @@ interface AgendamentoOnlineData {
 export function useSupabaseAgendamentos() {
   const { user } = useSupabaseAuth();
   const supabaseConfig = useSupabaseConfiguracoes();
+  const { adicionarPontosPorPagamento } = useProgramaFidelidade();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [agendamentosOnline, setAgendamentosOnline] = useState<AgendamentoOnlineData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -443,6 +445,23 @@ export function useSupabaseAgendamentos() {
         console.error('Erro ao atualizar agendamento:', error);
         toast.error('Erro ao atualizar agendamento');
         return false;
+      }
+
+      // Adicionar pontos de fidelidade se pagamento foi realizado
+      if (dadosAtualizados.statusPagamento === 'pago' && dadosAtualizados.valorPago) {
+        const agendamento = agendamentosCombinados.find(a => a.id === id);
+        if (agendamento && agendamento.clienteId) {
+          try {
+            await adicionarPontosPorPagamento.mutateAsync({
+              clienteId: agendamento.clienteId,
+              agendamentoId: id,
+              valorPago: dadosAtualizados.valorPago
+            });
+          } catch (error) {
+            console.error('Erro ao adicionar pontos:', error);
+            // Não bloquear a atualização se falhar pontos
+          }
+        }
       }
 
       await carregarAgendamentos();

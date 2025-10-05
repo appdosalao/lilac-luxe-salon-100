@@ -28,6 +28,7 @@ import { Progress } from "@/components/ui/progress";
 export function ProgramasFidelidade() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [programaToDelete, setProgramaToDelete] = useState<string | null>(null);
+  const [programaToEdit, setProgramaToEdit] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -160,7 +161,10 @@ export function ProgramasFidelidade() {
             <CardTitle>Programas de Fidelidade</CardTitle>
             <CardDescription>Crie e gerencie seus programas de pontos</CardDescription>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => {
+            setProgramaToEdit(null);
+            setDialogOpen(true);
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Programa
           </Button>
@@ -200,6 +204,13 @@ export function ProgramasFidelidade() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setProgramaToEdit(programa);
+                              setDialogOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleAtivo.mutate({ 
                               id: programa.id, 
                               ativo: !programa.ativo 
@@ -281,7 +292,14 @@ export function ProgramasFidelidade() {
         </CardContent>
       </Card>
 
-      <ProgramaFidelidadeDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <ProgramaFidelidadeDialog 
+        open={dialogOpen} 
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setProgramaToEdit(null);
+        }}
+        programa={programaToEdit}
+      />
       
       <AlertDialog open={!!programaToDelete} onOpenChange={() => setProgramaToDelete(null)}>
         <AlertDialogContent>
