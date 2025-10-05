@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Award, Megaphone, Zap } from "lucide-react";
+import { Award, Megaphone, Zap, BarChart3 } from "lucide-react";
 import { ProgramasFidelidade } from "@/components/marketing/ProgramasFidelidade";
 import { CampanhasMarketing } from "@/components/marketing/CampanhasMarketing";
 import { AutomacoesMarketing } from "@/components/marketing/AutomacoesMarketing";
+import { AnaliseClientes } from "@/components/marketing/AnaliseClientes";
 
 export default function Marketing() {
   return (
@@ -16,7 +17,7 @@ export default function Marketing() {
       </div>
 
       <Tabs defaultValue="fidelidade" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="fidelidade" className="gap-2">
             <Award className="h-4 w-4" />
             Fidelidade
@@ -28,6 +29,10 @@ export default function Marketing() {
           <TabsTrigger value="automacoes" className="gap-2">
             <Zap className="h-4 w-4" />
             Automações
+          </TabsTrigger>
+          <TabsTrigger value="analise" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Análise
           </TabsTrigger>
         </TabsList>
 
@@ -41,6 +46,10 @@ export default function Marketing() {
 
         <TabsContent value="automacoes" className="space-y-4">
           <AutomacoesMarketing />
+        </TabsContent>
+
+        <TabsContent value="analise" className="space-y-4">
+          <AnaliseClientes />
         </TabsContent>
       </Tabs>
     </div>
