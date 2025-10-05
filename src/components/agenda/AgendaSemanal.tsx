@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';
@@ -16,17 +16,17 @@ type AgendaSemanalProps = {
 };
 
 export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
-  const [semanaAtual, setSemanaAtual] = React.useState(new Date());
+  const [semanaAtual, setSemanaAtual] = useState(new Date());
   const { todosAgendamentos, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
   const { getHorariosDisponiveis } = useHorariosTrabalho();
-  const [detalheAberto, setDetalheAberto] = React.useState(false);
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = React.useState<any | null>(null);
-  const [diaDialogAberto, setDiaDialogAberto] = React.useState(false);
-  const [diaSelecionado, setDiaSelecionado] = React.useState<Date | null>(null);
+  const [detalheAberto, setDetalheAberto] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<any | null>(null);
+  const [diaDialogAberto, setDiaDialogAberto] = useState(false);
+  const [diaSelecionado, setDiaSelecionado] = useState<Date | null>(null);
 
   const inicioSemana = startOfWeek(semanaAtual, { weekStartsOn: 0 });
   const fimSemana = endOfWeek(semanaAtual, { weekStartsOn: 0 });
-  const diasDaSemana = React.useMemo(
+  const diasDaSemana = useMemo(
     () => eachDayOfInterval({ start: inicioSemana, end: fimSemana }),
     [inicioSemana, fimSemana]
   );
@@ -55,15 +55,15 @@ export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
   const proximaSemana = () => setSemanaAtual(prev => addWeeks(prev, 1));
   const semanaAtualBtn = () => setSemanaAtual(new Date());
 
-  const agendamentosSemana = React.useMemo(() => (
+  const agendamentosSemana = useMemo(() => (
     diasDaSemana.reduce((agendamentos, dia) => (
       [...agendamentos, ...getAgendamentosDoDia(dia)]
     ), [] as typeof todosAgendamentos)
   ), [diasDaSemana, todosAgendamentos, termo]);
 
-  const agendadosSemana = React.useMemo(() => agendamentosSemana.filter(ag => ag.status === 'agendado'), [agendamentosSemana]);
-  const concluidosSemana = React.useMemo(() => agendamentosSemana.filter(ag => ag.status === 'concluido'), [agendamentosSemana]);
-  const valorTotalAReceber = React.useMemo(() => agendadosSemana.reduce((total, ag) => total + Number(ag.valor ?? 0), 0), [agendadosSemana]);
+  const agendadosSemana = useMemo(() => agendamentosSemana.filter(ag => ag.status === 'agendado'), [agendamentosSemana]);
+  const concluidosSemana = useMemo(() => agendamentosSemana.filter(ag => ag.status === 'concluido'), [agendamentosSemana]);
+  const valorTotalAReceber = useMemo(() => agendadosSemana.reduce((total, ag) => total + Number(ag.valor ?? 0), 0), [agendadosSemana]);
 
   const getHorariosDisponiveisDoDia = (dia: Date): string[] => {
     const diaSemana = dia.getDay();

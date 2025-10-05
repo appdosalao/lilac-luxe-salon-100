@@ -33,9 +33,9 @@ export default function ReagendamentoDialog({
   onReagendar,
   verificarConflito,
 }: ReagendamentoDialogProps) {
-  const [novaData, setNovaData] = React.useState('');
-  const [novaHora, setNovaHora] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
+  const [novaData, setNovaData] = useState('');
+  const [novaHora, setNovaHora] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (!agendamento) return null;
 

@@ -39,8 +39,8 @@ export default function TrocaHorarioDialog({
   agendamentosDisponiveis,
   onTrocarHorarios,
 }: TrocaHorarioDialogProps) {
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = React.useState<string>('');
-  const [loading, setLoading] = React.useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
   if (!agendamento) return null;
 

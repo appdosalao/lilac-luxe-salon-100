@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, DollarSign, Calendar as CalendarIcon, Clock } from 'lucide-react';
@@ -18,14 +18,14 @@ type AgendaMensalProps = {
 };
 
 export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
-  const [mesAtual, setMesAtual] = React.useState(new Date());
+  const [mesAtual, setMesAtual] = useState(new Date());
   const { todosAgendamentos, loading, verificarConflito, atualizarAgendamento, cancelarAgendamento, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
   const { user } = useSupabaseAuth();
-  const [diaSelecionado, setDiaSelecionado] = React.useState<Date | null>(null);
-  const [detalheAberto, setDetalheAberto] = React.useState(false);
-  const [reagendarAberto, setReagendarAberto] = React.useState(false);
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = React.useState<any | null>(null);
-  const [detalhesAgendamentoAberto, setDetalhesAgendamentoAberto] = React.useState(false);
+  const [diaSelecionado, setDiaSelecionado] = useState<Date | null>(null);
+  const [detalheAberto, setDetalheAberto] = useState(false);
+  const [reagendarAberto, setReagendarAberto] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<any | null>(null);
+  const [detalhesAgendamentoAberto, setDetalhesAgendamentoAberto] = useState(false);
 
   const inicioMes = startOfMonth(mesAtual);
   const fimMes = endOfMonth(mesAtual);
@@ -36,7 +36,7 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
   const mesAtualBtn = () => setMesAtual(new Date());
 
   const termo = buscaTexto.trim().toLowerCase();
-  const agendamentosDoMes = React.useMemo(() => {
+  const agendamentosDoMes = useMemo(() => {
     const mesChave = toISODate(mesAtual).slice(0, 7); // yyyy-MM
     return todosAgendamentos
       .filter(ag => toISODate(ag.data as any).slice(0, 7) === mesChave)
@@ -54,20 +54,20 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
       });
   }, [todosAgendamentos, mesAtual, termo]);
 
-  const agendadosMes = React.useMemo(() => agendamentosDoMes.filter(ag => ag.status === 'agendado'), [agendamentosDoMes]);
-  const concluidosMes = React.useMemo(() => agendamentosDoMes.filter(ag => ag.status === 'concluido'), [agendamentosDoMes]);
-  const valorTotalAReceber = React.useMemo(() => agendadosMes.reduce((total, ag) => total + Number(ag.valor ?? 0), 0), [agendadosMes]);
+  const agendadosMes = useMemo(() => agendamentosDoMes.filter(ag => ag.status === 'agendado'), [agendamentosDoMes]);
+  const concluidosMes = useMemo(() => agendamentosDoMes.filter(ag => ag.status === 'concluido'), [agendamentosDoMes]);
+  const valorTotalAReceber = useMemo(() => agendadosMes.reduce((total, ag) => total + Number(ag.valor ?? 0), 0), [agendadosMes]);
 
   // Grade do calendário
-  const diasVisiveis = React.useMemo(() => {
+  const diasVisiveis = useMemo(() => {
     const inicio = startOfWeek(startOfMonth(mesAtual), { weekStartsOn: 0 });
     const fim = endOfWeek(endOfMonth(mesAtual), { weekStartsOn: 0 });
     return eachDayOfInterval({ start: inicio, end: fim });
   }, [mesAtual]);
 
-  const [contagemPorDia, setContagemPorDia] = React.useState<Map<string, number>>(new Map());
+  const [contagemPorDia, setContagemPorDia] = useState<Map<string, number>>(new Map());
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelado = false;
     const carregar = async () => {
       try {
@@ -107,7 +107,7 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
     return () => { cancelado = true };
   }, [user, mesAtual, agendamentosDoMes]);
 
-  const getAgendamentosDoDia = React.useCallback((dia: Date) => {
+  const getAgendamentosDoDia = useCallback((dia: Date) => {
     const chaveDia = toISODate(dia);
     return agendamentosDoMes
       .filter(ag => toISODate(ag.data as any) === chaveDia)

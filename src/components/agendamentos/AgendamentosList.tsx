@@ -80,7 +80,7 @@ export default function AgendamentosList({
   totalPaginas,
   onPaginaChange,
 }: AgendamentosListProps) {
-  const [agendamentoParaExcluir, setAgendamentoParaExcluir] = React.useState<string | null>(null);
+  const [agendamentoParaExcluir, setAgendamentoParaExcluir] = useState<string | null>(null);
 
   const formatarData = (data: string) => {
     return format(new Date(data + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR });

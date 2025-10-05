@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { WifiOff, Wifi } from 'lucide-react';
 import { usePWA } from '@/hooks/usePWA';
@@ -9,15 +10,11 @@ interface OfflineIndicatorProps {
 }
 
 export const OfflineIndicator = ({ position = 'top', variant = 'badge' }: OfflineIndicatorProps) => {
-  if (!React || !React.useState || !React.useEffect) {
-    return null;
-  }
-
   const { isOffline } = usePWA();
-  const [showOnlineMessage, setShowOnlineMessage] = React.useState(false);
-  const [wasOffline, setWasOffline] = React.useState(false);
+  const [showOnlineMessage, setShowOnlineMessage] = useState(false);
+  const [wasOffline, setWasOffline] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (wasOffline && !isOffline) {
       setShowOnlineMessage(true);
       const timer = setTimeout(() => {

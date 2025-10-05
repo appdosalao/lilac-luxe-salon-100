@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,14 +12,10 @@ interface InstallPromptProps {
 }
 
 export const InstallPrompt = ({ variant = 'banner', showDismiss = true }: InstallPromptProps) => {
-  if (!React || !React.useState) {
-    return null;
-  }
-
   const { isInstallable, installApp, dismissInstall } = usePWA();
   const { usuario } = useSupabaseAuth();
-  const [isInstalling, setIsInstalling] = React.useState(false);
-  const [isDismissed, setIsDismissed] = React.useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   if (!isInstallable || isDismissed) return null;
 

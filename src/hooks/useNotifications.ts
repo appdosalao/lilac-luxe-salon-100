@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 
@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 
 export const useNotifications = () => {
   const { usuario } = useSupabaseAuth();
-  const [settings, setSettings] = React.useState<NotificationSettings>(() => {
+  const [settings, setSettings] = useState<NotificationSettings>(() => {
     const saved = localStorage.getItem('notification-settings');
     if (saved) {
       const parsedSettings = JSON.parse(saved);
@@ -44,13 +44,13 @@ export const useNotifications = () => {
     return DEFAULT_SETTINGS;
   });
   
-  const [notifications, setNotifications] = React.useState<AgendamentoNotification[]>([]);
-  const [lastChecked, setLastChecked] = React.useState<string>(new Date().toISOString());
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const shownNotificationsRef = React.useRef<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<AgendamentoNotification[]>([]);
+  const [lastChecked, setLastChecked] = useState<string>(new Date().toISOString());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const shownNotificationsRef = useRef<Set<string>>(new Set());
 
   // Inicializar áudio
-  React.useEffect(() => {
+  useEffect(() => {
     if (settings.soundEnabled) {
       // Garantir que soundType existe e tem um valor válido
       const soundType = settings.soundType || 'notification';
@@ -68,12 +68,12 @@ export const useNotifications = () => {
   }, [settings.soundEnabled, settings.soundType]);
 
   // Salvar configurações
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('notification-settings', JSON.stringify(settings));
   }, [settings]);
 
   // Função para tocar som de notificação
-  const playNotificationSound = React.useCallback(async () => {
+  const playNotificationSound = useCallback(async () => {
     if (!settings.soundEnabled || !audioRef.current) return;
 
     try {
@@ -86,7 +86,7 @@ export const useNotifications = () => {
   }, [settings.soundEnabled]);
 
   // Função para adicionar nova notificação
-  const addNotification = React.useCallback((agendamento: Omit<AgendamentoNotification, 'shown'>) => {
+  const addNotification = useCallback((agendamento: Omit<AgendamentoNotification, 'shown'>) => {
     if (!usuario || !settings.visualEnabled) return;
 
     // Verificar se já foi mostrada
@@ -110,22 +110,22 @@ export const useNotifications = () => {
   }, [usuario, settings, playNotificationSound]);
 
   // Função para remover notificação
-  const removeNotification = React.useCallback((id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
 
   // Função para limpar todas as notificações
-  const clearAllNotifications = React.useCallback(() => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
   }, []);
 
   // Função para atualizar configurações
-  const updateSettings = React.useCallback((newSettings: Partial<NotificationSettings>) => {
+  const updateSettings = useCallback((newSettings: Partial<NotificationSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
   }, []);
 
   // Função para verificar novos agendamentos (simula real-time)
-  const checkForNewAgendamentos = React.useCallback((agendamentos: any[]) => {
+  const checkForNewAgendamentos = useCallback((agendamentos: any[]) => {
     if (!usuario) return;
 
     const newAgendamentos = agendamentos.filter(agendamento => {
@@ -162,7 +162,7 @@ export const useNotifications = () => {
   }, [usuario, lastChecked, addNotification]);
 
   // Função para solicitar permissão de notificação
-  const requestNotificationPermission = React.useCallback(async () => {
+  const requestNotificationPermission = useCallback(async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
       return permission === 'granted';

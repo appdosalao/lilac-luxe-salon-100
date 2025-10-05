@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, X } from 'lucide-react';
@@ -9,13 +10,9 @@ interface UpdatePromptProps {
 }
 
 export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: UpdatePromptProps) => {
-  if (!React || !React.useState) {
-    return null;
-  }
-
   const { hasUpdate, updateApp } = usePWA();
-  const [isUpdating, setIsUpdating] = React.useState(false);
-  const [isDismissed, setIsDismissed] = React.useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   if (!hasUpdate || isDismissed) return null;
 

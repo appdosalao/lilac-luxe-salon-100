@@ -10,8 +10,8 @@ import { AgendaMensal } from '@/components/agenda/AgendaMensal';
 import { useAgendamentos } from '@/hooks/useAgendamentos';
 
 export default function Agenda() {
-  const [visualizacao, setVisualizacao] = React.useState<'dia' | 'semana' | 'mes'>('dia');
-  const [buscaTexto, setBuscaTexto] = React.useState('');
+  const [visualizacao, setVisualizacao] = useState<'dia' | 'semana' | 'mes'>('dia');
+  const [buscaTexto, setBuscaTexto] = useState('');
   const { agendamentos, loading, todosAgendamentos } = useAgendamentos();
 
   // Estatísticas rápidas para o header
