@@ -147,6 +147,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agendamentos_online_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_sem_pontos"
+            referencedColumns: ["agendamento_id"]
+          },
+          {
             foreignKeyName: "agendamentos_online_servico_id_fkey"
             columns: ["servico_id"]
             isOneToOne: false
@@ -769,6 +776,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "historico_pontos_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_sem_pontos"
+            referencedColumns: ["agendamento_id"]
+          },
+          {
             foreignKeyName: "historico_pontos_cliente_id_fkey"
             columns: ["cliente_id"]
             isOneToOne: false
@@ -870,6 +884,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agendamentos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_lancamentos_agendamento"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_sem_pontos"
+            referencedColumns: ["agendamento_id"]
           },
           {
             foreignKeyName: "fk_lancamentos_cliente"
@@ -1243,6 +1264,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_retornos_agendamento"
+            columns: ["id_agendamento_retorno"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_sem_pontos"
+            referencedColumns: ["agendamento_id"]
+          },
+          {
             foreignKeyName: "fk_retornos_cliente"
             columns: ["id_cliente"]
             isOneToOne: false
@@ -1333,6 +1361,30 @@ export type Database = {
       }
     }
     Views: {
+      agendamentos_sem_pontos: {
+        Row: {
+          agendamento_id: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          data: string | null
+          nivel_atual: string | null
+          pontos_por_real: number | null
+          programa_id: string | null
+          servico_id: string | null
+          servico_nome: string | null
+          user_id: string | null
+          valor: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_fidelidade"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cronogramas_completos: {
         Row: {
           cliente_email: string | null
@@ -1397,9 +1449,11 @@ export type Database = {
           cliente_id: string | null
           cliente_nome: string | null
           cliente_telefone: string | null
+          created_at: string | null
           id: string | null
           nivel: string | null
           pontos_disponiveis: number | null
+          pontos_resgatados: number | null
           pontos_totais: number | null
           posicao_ranking: number | null
           programa_id: string | null
@@ -1449,6 +1503,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agendamentos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_retornos_agendamento"
+            columns: ["id_agendamento_retorno"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_sem_pontos"
+            referencedColumns: ["agendamento_id"]
           },
           {
             foreignKeyName: "fk_retornos_cliente"
@@ -1520,6 +1581,10 @@ export type Database = {
       calcular_nivel_cliente: {
         Args: { p_pontos_totais: number; p_programa_id: string }
         Returns: string
+      }
+      calcular_pontos_com_nivel: {
+        Args: { p_nivel: string; p_pontos_por_real: number; p_valor: number }
+        Returns: number
       }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
