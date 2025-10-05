@@ -1,7 +1,4 @@
-import { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-
-console.log('PWAProvider: React importado, useContext type:', typeof useContext);
+import { createContext, useContext, type ReactNode } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import { InstallPrompt } from './InstallPrompt';
 import { UpdatePrompt } from './UpdatePrompt';
@@ -40,22 +37,14 @@ export const PWAProvider = ({
   showUpdatePrompt = true, 
   showOfflineIndicator = true 
 }: PWAProviderProps) => {
-  console.log('PWAProvider: Iniciando provider, chamando usePWA...');
+  const pwaState = usePWA();
   
-  try {
-    const pwaState = usePWA();
-    console.log('PWAProvider: usePWA executado com sucesso');
-    
-    return (
-      <PWAContext.Provider value={pwaState}>
-        {children}
-        {showInstallPrompt && <InstallPrompt variant="floating" />}
-        {showUpdatePrompt && <UpdatePrompt />}
-        {showOfflineIndicator && <OfflineIndicator variant="banner" />}
-      </PWAContext.Provider>
-    );
-  } catch (error) {
-    console.error('PWAProvider: Erro ao usar usePWA:', error);
-    return <div>{children}</div>;
-  }
+  return (
+    <PWAContext.Provider value={pwaState}>
+      {children}
+      {showInstallPrompt && <InstallPrompt variant="floating" />}
+      {showUpdatePrompt && <UpdatePrompt />}
+      {showOfflineIndicator && <OfflineIndicator variant="banner" />}
+    </PWAContext.Provider>
+  );
 };
