@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,10 +16,6 @@ import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/ag
 import { supabase } from '@/integrations/supabase/client';
 
 export function AgendamentoOnlineForm() {
-  // Safety check for React hooks
-  if (!React || !useState || !useEffect) {
-    return React?.createElement?.('div', null, 'Carregando...') || null;
-  }
   const {
     loading,
     servicos,
