@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Clock, ArrowLeftRight, User, Scissors } from 'lucide-react';

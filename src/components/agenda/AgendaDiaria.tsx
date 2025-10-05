@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useMemo } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign } from 'lucide-react';
@@ -16,14 +16,14 @@ type AgendaDiariaProps = {
 };
 
 export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
-  const [dataSelecionada, setDataSelecionada] = React.useState(new Date());
+  const [dataSelecionada, setDataSelecionada] = useState(new Date());
   const { todosAgendamentos, agendamentosFiltrados, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
   const { getHorariosDisponiveis, isAgendamentoValido } = useHorariosTrabalho();
 
   // Usar todos os agendamentos (incluindo online) para a agenda
   const termo = buscaTexto.trim().toLowerCase();
   const dataSelecionadaStr = toISODate(dataSelecionada);
-  const agendamentosDoDia = React.useMemo(() => {
+  const agendamentosDoDia = useMemo(() => {
     return todosAgendamentos
       .filter(ag => toISODate(ag.data as any) === dataSelecionadaStr)
       .filter(ag => {
@@ -46,7 +46,7 @@ export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
   const hojeStr = toISODate(agora);
   const agoraString = `${agora.getHours().toString().padStart(2, '0')}:${agora.getMinutes().toString().padStart(2, '0')}`;
   const agoraMinutos = timeToMinutes(agoraString);
-  const proximoAgendamento = React.useMemo(() => {
+  const proximoAgendamento = useMemo(() => {
     return agendamentosDoDia.find(ag => 
       toISODate(ag.data as any) === hojeStr && 
       timeToMinutes(ag.hora) >= agoraMinutos && 
@@ -55,7 +55,7 @@ export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
   }, [agendamentosDoDia, hojeStr, agoraMinutos]);
 
   // Estatísticas do dia
-  const estatisticasDia = React.useMemo(() => ({
+  const estatisticasDia = useMemo(() => ({
     agendados: agendamentosDoDia.filter(ag => ag.status === 'agendado').length,
     concluidos: agendamentosDoDia.filter(ag => ag.status === 'concluido').length,
     cancelados: agendamentosDoDia.filter(ag => ag.status === 'cancelado').length,
@@ -67,7 +67,7 @@ export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
   }), [agendamentosDoDia]);
 
   // Horários disponíveis do dia (com base nas regras de trabalho)
-  const horariosDisponiveis = React.useMemo(() => {
+  const horariosDisponiveis = useMemo(() => {
     const diaSemana = new Date(dataSelecionadaStr + 'T00:00:00').getDay();
     const slots = getHorariosDisponiveis?.(diaSemana, 60) || [];
 

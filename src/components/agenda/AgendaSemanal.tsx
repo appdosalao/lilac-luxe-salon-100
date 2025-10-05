@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 

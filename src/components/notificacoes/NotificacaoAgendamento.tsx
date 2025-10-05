@@ -1,4 +1,3 @@
-import React from 'react';
 import { Bell, X, Calendar, User, Scissors, Clock, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
