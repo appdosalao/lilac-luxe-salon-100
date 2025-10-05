@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSupabaseAgendamentos } from './useSupabaseAgendamentos';
 import { useServicos } from './useServicos';
 import { useSupabaseClientes } from './useSupabaseClientes';
