@@ -162,6 +162,111 @@ export type Database = {
           },
         ]
       }
+      automacoes_marketing: {
+        Row: {
+          acoes: Json
+          ativo: boolean
+          condicoes: Json | null
+          created_at: string
+          descricao: string | null
+          gatilho: string
+          id: string
+          nome: string
+          total_execucoes: number | null
+          ultima_execucao: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acoes: Json
+          ativo?: boolean
+          condicoes?: Json | null
+          created_at?: string
+          descricao?: string | null
+          gatilho: string
+          id?: string
+          nome: string
+          total_execucoes?: number | null
+          ultima_execucao?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acoes?: Json
+          ativo?: boolean
+          condicoes?: Json | null
+          created_at?: string
+          descricao?: string | null
+          gatilho?: string
+          id?: string
+          nome?: string
+          total_execucoes?: number | null
+          ultima_execucao?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      campanhas_marketing: {
+        Row: {
+          created_at: string
+          data_agendamento: string | null
+          data_envio: string | null
+          descricao: string | null
+          filtros: Json | null
+          id: string
+          mensagem: string
+          metricas: Json | null
+          nome: string
+          segmento_clientes: string
+          status: string
+          tipo: string
+          total_destinatarios: number | null
+          total_enviados: number | null
+          total_erros: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_agendamento?: string | null
+          data_envio?: string | null
+          descricao?: string | null
+          filtros?: Json | null
+          id?: string
+          mensagem: string
+          metricas?: Json | null
+          nome: string
+          segmento_clientes: string
+          status?: string
+          tipo: string
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_erros?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_agendamento?: string | null
+          data_envio?: string | null
+          descricao?: string | null
+          filtros?: Json | null
+          id?: string
+          mensagem?: string
+          metricas?: Json | null
+          nome?: string
+          segmento_clientes?: string
+          status?: string
+          tipo?: string
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_erros?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categorias_financeiras: {
         Row: {
           cor: string | null
@@ -564,6 +669,115 @@ export type Database = {
           },
         ]
       }
+      destinatarios_campanha: {
+        Row: {
+          campanha_id: string
+          cliente_id: string
+          created_at: string
+          data_abertura: string | null
+          data_clique: string | null
+          data_envio: string | null
+          erro_mensagem: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          campanha_id: string
+          cliente_id: string
+          created_at?: string
+          data_abertura?: string | null
+          data_clique?: string | null
+          data_envio?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          campanha_id?: string
+          cliente_id?: string
+          created_at?: string
+          data_abertura?: string | null
+          data_clique?: string | null
+          data_envio?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destinatarios_campanha_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas_marketing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "destinatarios_campanha_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_pontos: {
+        Row: {
+          agendamento_id: string | null
+          cliente_id: string
+          created_at: string
+          descricao: string
+          id: string
+          pontos: number
+          programa_id: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          agendamento_id?: string | null
+          cliente_id: string
+          created_at?: string
+          descricao: string
+          id?: string
+          pontos: number
+          programa_id: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          agendamento_id?: string | null
+          cliente_id?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          pontos?: number
+          programa_id?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_pontos_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_pontos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_pontos_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_fidelidade"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intervalos_trabalho: {
         Row: {
           ativo: boolean
@@ -660,6 +874,51 @@ export type Database = {
           },
         ]
       }
+      log_automacoes: {
+        Row: {
+          automacao_id: string
+          cliente_id: string | null
+          created_at: string
+          dados: Json | null
+          id: string
+          mensagem: string | null
+          status: string
+        }
+        Insert: {
+          automacao_id: string
+          cliente_id?: string | null
+          created_at?: string
+          dados?: Json | null
+          id?: string
+          mensagem?: string | null
+          status: string
+        }
+        Update: {
+          automacao_id?: string
+          cliente_id?: string | null
+          created_at?: string
+          dados?: Json | null
+          id?: string
+          mensagem?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_automacoes_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes_marketing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_automacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logs_sistema: {
         Row: {
           acao: string
@@ -704,6 +963,60 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      pontos_fidelidade: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          nivel: string | null
+          pontos_disponiveis: number
+          pontos_resgatados: number
+          pontos_totais: number
+          programa_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          nivel?: string | null
+          pontos_disponiveis?: number
+          pontos_resgatados?: number
+          pontos_totais?: number
+          programa_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          nivel?: string | null
+          pontos_disponiveis?: number
+          pontos_resgatados?: number
+          pontos_totais?: number
+          programa_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_fidelidade"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       problemas_auditoria: {
         Row: {
@@ -769,6 +1082,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      programas_fidelidade: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          id: string
+          nome: string
+          pontos_minimos_resgate: number
+          pontos_por_real: number
+          regras: Json | null
+          updated_at: string
+          user_id: string
+          valor_ponto: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          pontos_minimos_resgate?: number
+          pontos_por_real?: number
+          regras?: Json | null
+          updated_at?: string
+          user_id: string
+          valor_ponto?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          pontos_minimos_resgate?: number
+          pontos_por_real?: number
+          regras?: Json | null
+          updated_at?: string
+          user_id?: string
+          valor_ponto?: number
+        }
+        Relationships: []
       }
       relatorios_auditoria: {
         Row: {

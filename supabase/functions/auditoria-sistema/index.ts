@@ -497,10 +497,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in audit function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.stack
+        error: errorMessage,
+        details: errorStack
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

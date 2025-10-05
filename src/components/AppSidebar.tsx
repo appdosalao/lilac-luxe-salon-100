@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Megaphone
 } from "lucide-react";
 import {
   Sidebar,
@@ -65,6 +66,11 @@ const navigationItems = [
     title: "Financeiro",
     href: "/financeiro",
     icon: DollarSign,
+  },
+  {
+    title: "Marketing",
+    href: "/marketing",
+    icon: Megaphone,
   },
   {
     title: "Auditoria",
