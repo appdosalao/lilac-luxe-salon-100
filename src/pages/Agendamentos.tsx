@@ -9,6 +9,7 @@ import AgendamentoForm from "@/components/agendamentos/AgendamentoForm";
 import AgendamentoDetalhes from "@/components/agendamentos/AgendamentoDetalhes";
 import ReagendamentoDialog from "@/components/agendamentos/ReagendamentoDialog";
 import TrocaHorarioDialog from "@/components/agendamentos/TrocaHorarioDialog";
+import PagamentoDialog from "@/components/agendamentos/PagamentoDialog";
 import { Agendamento } from "@/types/agendamento";
 
 type VisualizacaoAtual = 'lista' | 'formulario' | 'detalhes';
@@ -38,6 +39,8 @@ export default function Agendamentos() {
   const [agendamentoParaReagendar, setAgendamentoParaReagendar] = useState<Agendamento | null>(null);
   const [dialogTrocaHorarioOpen, setDialogTrocaHorarioOpen] = useState(false);
   const [agendamentoParaTrocar, setAgendamentoParaTrocar] = useState<Agendamento | null>(null);
+  const [dialogPagamentoOpen, setDialogPagamentoOpen] = useState(false);
+  const [agendamentoParaPagar, setAgendamentoParaPagar] = useState<Agendamento | null>(null);
 
   // Estatísticas rápidas baseadas nos dados reais
   const hoje = new Date().toISOString().split('T')[0];
@@ -198,6 +201,55 @@ export default function Agendamentos() {
     }
   };
 
+  const handleMarcarPagamento = (agendamento: Agendamento) => {
+    setAgendamentoParaPagar(agendamento);
+    setDialogPagamentoOpen(true);
+  };
+
+  const handleConfirmarPagamento = async (agendamentoId: string, valorPago: number, formaPagamento: string) => {
+    const agendamento = todosAgendamentos.find(ag => ag.id === agendamentoId);
+    if (!agendamento) return false;
+
+    const novoValorPago = agendamento.valorPago + valorPago;
+    const novoValorDevido = agendamento.valor - novoValorPago;
+    
+    let novoStatusPagamento: 'pago' | 'parcial' | 'em_aberto';
+    let novoStatus = agendamento.status;
+    
+    if (novoValorDevido <= 0) {
+      novoStatusPagamento = 'pago';
+      novoStatus = 'concluido';
+    } else if (novoValorPago > 0) {
+      novoStatusPagamento = 'parcial';
+    } else {
+      novoStatusPagamento = 'em_aberto';
+    }
+
+    const sucesso = await atualizarAgendamento(agendamentoId, {
+      valorPago: novoValorPago,
+      valorDevido: Math.max(0, novoValorDevido),
+      statusPagamento: novoStatusPagamento,
+      status: novoStatus,
+      formaPagamento: formaPagamento as any,
+    });
+
+    if (sucesso) {
+      toast({
+        title: "Pagamento registrado",
+        description: novoStatusPagamento === 'pago' 
+          ? "Pagamento completo registrado com sucesso!" 
+          : `Pagamento parcial de R$ ${valorPago.toFixed(2)} registrado.`,
+      });
+      setDialogPagamentoOpen(false);
+      setAgendamentoParaPagar(null);
+      if (visualizacaoAtual === 'detalhes') {
+        setVisualizacaoAtual('lista');
+      }
+    }
+
+    return sucesso;
+  };
+
   if (visualizacaoAtual === 'formulario') {
     return (
       <div className="space-y-8">
@@ -226,6 +278,7 @@ export default function Agendamentos() {
           onEdit={() => setVisualizacaoAtual('formulario')}
           onBack={handleVoltarParaLista}
           onCancel={handleCancelarAgendamento}
+          onMarcarPagamento={() => agendamentoSelecionado && handleMarcarPagamento(agendamentoSelecionado)}
         />
       </div>
     );
@@ -323,6 +376,7 @@ export default function Agendamentos() {
         onViewDetails={handleVerDetalhes}
         onReagendar={handleReagendar}
         onTrocarHorario={handleTrocarHorario}
+        onMarcarPagamento={handleMarcarPagamento}
         clientes={clientes.map(c => ({ id: c.id, nome: c.nomeCompleto }))}
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
@@ -344,6 +398,13 @@ export default function Agendamentos() {
         agendamento={agendamentoParaTrocar}
         agendamentosDisponiveis={todosAgendamentos}
         onTrocarHorarios={handleConfirmarTrocaHorario}
+      />
+
+      <PagamentoDialog
+        open={dialogPagamentoOpen}
+        onOpenChange={setDialogPagamentoOpen}
+        agendamento={agendamentoParaPagar}
+        onConfirmar={handleConfirmarPagamento}
       />
     </div>
   );

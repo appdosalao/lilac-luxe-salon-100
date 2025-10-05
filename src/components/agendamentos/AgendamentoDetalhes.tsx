@@ -36,6 +36,7 @@ interface AgendamentoDetalhesProps {
   onEdit: () => void;
   onBack: () => void;
   onCancel: () => void;
+  onMarcarPagamento?: () => void;
 }
 
 const statusConfig = {
@@ -66,6 +67,7 @@ export default function AgendamentoDetalhes({
   onEdit,
   onBack,
   onCancel,
+  onMarcarPagamento,
 }: AgendamentoDetalhesProps) {
   const formatarData = (data: string) => {
     // Garantir que a data seja interpretada como local, não UTC
@@ -116,7 +118,17 @@ export default function AgendamentoDetalhes({
           Voltar para lista
         </Button>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {agendamento.status === 'agendado' && agendamento.statusPagamento !== 'pago' && onMarcarPagamento && (
+            <Button 
+              variant="default" 
+              onClick={onMarcarPagamento}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Marcar Pagamento
+            </Button>
+          )}
           {agendamento.status === 'agendado' && (
             <Button variant="outline" onClick={onCancel}>
               <X className="h-4 w-4 mr-2" />

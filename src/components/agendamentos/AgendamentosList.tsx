@@ -51,6 +51,7 @@ interface AgendamentosListProps {
   onViewDetails: (agendamento: Agendamento) => void;
   onReagendar?: (agendamento: Agendamento) => void;
   onTrocarHorario?: (agendamento: Agendamento) => void;
+  onMarcarPagamento?: (agendamento: Agendamento) => void;
   clientes: Array<{id: string, nome: string}>;
   paginaAtual: number;
   totalPaginas: number;
@@ -73,6 +74,7 @@ export default function AgendamentosList({
   onViewDetails,
   onReagendar,
   onTrocarHorario,
+  onMarcarPagamento,
   clientes,
   paginaAtual,
   totalPaginas,
@@ -278,6 +280,16 @@ export default function AgendamentosList({
                               }}>
                                 <ArrowLeftRight className="h-4 w-4 mr-2" />
                                 Trocar Horário
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {agendamento.status === 'agendado' && agendamento.statusPagamento !== 'pago' && onMarcarPagamento && (
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                onMarcarPagamento(agendamento);
+                              }}>
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Marcar Pagamento
                               </DropdownMenuItem>
                             )}
                             
