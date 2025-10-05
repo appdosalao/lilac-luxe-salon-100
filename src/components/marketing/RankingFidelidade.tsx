@@ -14,9 +14,13 @@ export function RankingFidelidade({ programaId }: RankingClienteProps) {
   const { data: ranking, isLoading } = useQuery({
     queryKey: ['ranking-fidelidade', programaId],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       let query = supabase
         .from('ranking_fidelidade')
         .select('*')
+        .eq('user_id', user.id)
         .order('pontos_totais', { ascending: false })
         .limit(10);
       

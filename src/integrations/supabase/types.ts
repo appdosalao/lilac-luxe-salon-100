@@ -1403,6 +1403,7 @@ export type Database = {
           pontos_totais: number | null
           posicao_ranking: number | null
           programa_id: string | null
+          user_id: string | null
         }
         Relationships: [
           {
