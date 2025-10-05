@@ -727,6 +727,8 @@ export type Database = {
           created_at: string
           descricao: string
           id: string
+          multiplicador_aplicado: number | null
+          nivel_cliente: string | null
           pontos: number
           programa_id: string
           tipo: string
@@ -738,6 +740,8 @@ export type Database = {
           created_at?: string
           descricao: string
           id?: string
+          multiplicador_aplicado?: number | null
+          nivel_cliente?: string | null
           pontos: number
           programa_id: string
           tipo: string
@@ -749,6 +753,8 @@ export type Database = {
           created_at?: string
           descricao?: string
           id?: string
+          multiplicador_aplicado?: number | null
+          nivel_cliente?: string | null
           pontos?: number
           programa_id?: string
           tipo?: string
@@ -968,6 +974,7 @@ export type Database = {
         Row: {
           cliente_id: string
           created_at: string
+          data_expiracao: string | null
           id: string
           nivel: string | null
           pontos_disponiveis: number
@@ -980,6 +987,7 @@ export type Database = {
         Insert: {
           cliente_id: string
           created_at?: string
+          data_expiracao?: string | null
           id?: string
           nivel?: string | null
           pontos_disponiveis?: number
@@ -992,6 +1000,7 @@ export type Database = {
         Update: {
           cliente_id?: string
           created_at?: string
+          data_expiracao?: string | null
           id?: string
           nivel?: string | null
           pontos_disponiveis?: number
@@ -1086,14 +1095,19 @@ export type Database = {
       programas_fidelidade: {
         Row: {
           ativo: boolean
+          bonus_aniversario: number | null
+          bonus_indicacao: number | null
           created_at: string
           data_fim: string | null
           data_inicio: string
           descricao: string | null
+          expiracao_pontos_dias: number | null
           id: string
+          niveis_config: Json | null
           nome: string
           pontos_minimos_resgate: number
           pontos_por_real: number
+          recompensas: Json | null
           regras: Json | null
           updated_at: string
           user_id: string
@@ -1101,14 +1115,19 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          bonus_aniversario?: number | null
+          bonus_indicacao?: number | null
           created_at?: string
           data_fim?: string | null
           data_inicio: string
           descricao?: string | null
+          expiracao_pontos_dias?: number | null
           id?: string
+          niveis_config?: Json | null
           nome: string
           pontos_minimos_resgate?: number
           pontos_por_real?: number
+          recompensas?: Json | null
           regras?: Json | null
           updated_at?: string
           user_id: string
@@ -1116,14 +1135,19 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          bonus_aniversario?: number | null
+          bonus_indicacao?: number | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string
           descricao?: string | null
+          expiracao_pontos_dias?: number | null
           id?: string
+          niveis_config?: Json | null
           nome?: string
           pontos_minimos_resgate?: number
           pontos_por_real?: number
+          recompensas?: Json | null
           regras?: Json | null
           updated_at?: string
           user_id?: string
@@ -1367,6 +1391,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ranking_fidelidade: {
+        Row: {
+          cliente_email: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          cliente_telefone: string | null
+          id: string | null
+          nivel: string | null
+          pontos_disponiveis: number | null
+          pontos_totais: number | null
+          posicao_ranking: number | null
+          programa_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_fidelidade"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retornos_completos: {
         Row: {
           agendamento_data: string | null
@@ -1420,6 +1474,10 @@ export type Database = {
       }
     }
     Functions: {
+      aplicar_expiracao_pontos: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       associar_clientes_agendamento_online: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -1457,6 +1515,10 @@ export type Database = {
           horario: string
           status: string
         }[]
+      }
+      calcular_nivel_cliente: {
+        Args: { p_pontos_totais: number; p_programa_id: string }
+        Returns: string
       }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
