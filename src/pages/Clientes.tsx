@@ -3,13 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, TrendingUp } from "lucide-react";
 import { Cliente, ClienteFormData } from "@/types/cliente";
-import { useClientes } from "@/hooks/useClientes";
+import { useSupabaseClientes } from "@/hooks/useSupabaseClientes";
 import ClienteForm from "@/components/clientes/ClienteForm";
 import ClientesList from "@/components/clientes/ClientesList";
 import ClienteDetalhes from "@/components/clientes/ClienteDetalhes";
 
 export default function Clientes() {
-  const { clientes, criarCliente, atualizarCliente, excluirCliente, loading } = useClientes();
+  const { clientes, criarCliente, atualizarCliente, excluirCliente, loading } = useSupabaseClientes();
   const [clienteSelecionada, setClienteSelecionada] = useState<Cliente | null>(null);
   const [detalhesOpen, setDetalhesOpen] = useState(false);
 

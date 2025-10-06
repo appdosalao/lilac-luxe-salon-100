@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Receipt, AlertTriangle, FileText, Users, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLancamentos } from "@/hooks/useLancamentos";
-import { useDatabase } from "@/hooks/useDatabase";
 import { useContasFixas } from "@/hooks/useContasFixas";
 import { Lancamento, NovoLancamento } from "@/types/lancamento";
 import { ContaFixa, NovaContaFixa } from "@/types/contaFixa";
@@ -40,7 +39,9 @@ export default function Financeiro() {
     removerLancamento,
   } = useLancamentos();
 
-  const { agendamentos } = useDatabase();
+  // TODO: Integrar com useSupabaseAgendamentos quando necessário
+  const agendamentos: any[] = [];
+  
   const { 
     contasFixas, 
     categorias: categoriasContasFixas, 

@@ -3,7 +3,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useEnhancedNotifications } from '@/hooks/useEnhancedNotifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useDatabase } from '@/hooks/useDatabase';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import { NotificacaoAgendamento } from './NotificacaoAgendamento';
 
@@ -45,31 +44,7 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
     handleServiceCompleted,
     handleExpenseReminder
   } = useEnhancedNotifications();
-  const { agendamentos, contasFixas } = useDatabase();
   const { configuracoes } = useConfiguracoes();
-
-  // Monitorar mudanças nos agendamentos
-  useEffect(() => {
-    if (agendamentos.length > 0) {
-      checkForNewAgendamentos(agendamentos);
-      
-      // Agendar lembretes para novos agendamentos
-      agendamentos.forEach(agendamento => {
-        if (configuracoes?.notificacoes?.lembretesAgendamento?.ativo) {
-          const minutosAntes = configuracoes.notificacoes.lembretesAgendamento.antecedencia;
-          scheduleAppointmentReminder(agendamento, minutosAntes);
-        }
-      });
-    }
-  }, [agendamentos, checkForNewAgendamentos, scheduleAppointmentReminder, configuracoes]);
-
-  // Monitorar despesas fixas e agendar lembretes
-  useEffect(() => {
-    if (contasFixas.length > 0 && configuracoes?.notificacoes?.despesasFixas?.ativo) {
-      // Lógica para agendar lembretes de despesas fixas
-      // Implementar baseado na data de vencimento
-    }
-  }, [contasFixas, configuracoes]);
 
   // Verificação periódica de notificações pendentes
   useEffect(() => {
@@ -79,17 +54,6 @@ export const NotificationProviderAvancado = ({ children }: NotificationProviderP
 
     return () => clearInterval(interval);
   }, [checkPendingNotifications]);
-
-  // Simular verificação periódica de novos agendamentos
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (agendamentos.length > 0) {
-        checkForNewAgendamentos(agendamentos);
-      }
-    }, 30000); // Verificar a cada 30 segundos
-
-    return () => clearInterval(interval);
-  }, [agendamentos, checkForNewAgendamentos]);
 
   const contextValue: NotificationContextType = {
     checkForNewAgendamentos,
