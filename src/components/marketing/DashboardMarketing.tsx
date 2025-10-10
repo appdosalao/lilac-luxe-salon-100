@@ -7,58 +7,37 @@ import { RankingFidelidade } from "./RankingFidelidade";
 import { SincronizacaoPontos } from "./SincronizacaoPontos";
 
 export function DashboardMarketing() {
-  // Estatísticas gerais
+  // Estatísticas gerais - OTIMIZADO com view única
   const { data: stats } = useQuery({
     queryKey: ['marketing-stats'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Total de clientes
-      const { count: totalClientes } = await supabase
-        .from('clientes')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
-
-      // Programas de fidelidade ativos
-      const { count: programasAtivos } = await supabase
-        .from('programas_fidelidade')
-        .select('*', { count: 'exact' })
+      // Buscar todas as estatísticas de uma vez usando a view otimizada
+      const { data: estatisticas, error } = await supabase
+        .from('estatisticas_marketing')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('ativo', true);
+        .maybeSingle();
 
-      // Total de pontos distribuídos
-      const { data: pontosData } = await supabase
-        .from('pontos_fidelidade')
-        .select('pontos_totais')
-        .eq('user_id', user.id);
+      if (error) throw error;
 
-      const totalPontos = pontosData?.reduce((sum, p) => sum + p.pontos_totais, 0) || 0;
-
-      // Clientes com pontos
-      const { count: clientesComPontos } = await supabase
-        .from('pontos_fidelidade')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
-        .gt('pontos_totais', 0);
-
-      // Distribuição por níveis
-      const { data: niveis } = await supabase
-        .from('pontos_fidelidade')
-        .select('nivel')
-        .eq('user_id', user.id);
-
-      const distribuicaoNiveis = niveis?.reduce((acc: any, item) => {
-        acc[item.nivel] = (acc[item.nivel] || 0) + 1;
-        return acc;
-      }, {});
+      // Montar distribuição de níveis
+      const distribuicaoNiveis: Record<string, number> = {};
+      if (estatisticas) {
+        if (estatisticas.clientes_bronze > 0) distribuicaoNiveis.bronze = estatisticas.clientes_bronze;
+        if (estatisticas.clientes_prata > 0) distribuicaoNiveis.prata = estatisticas.clientes_prata;
+        if (estatisticas.clientes_ouro > 0) distribuicaoNiveis.ouro = estatisticas.clientes_ouro;
+        if (estatisticas.clientes_platina > 0) distribuicaoNiveis.platina = estatisticas.clientes_platina;
+      }
 
       return {
-        totalClientes: totalClientes || 0,
-        programasAtivos: programasAtivos || 0,
-        totalPontos,
-        clientesComPontos: clientesComPontos || 0,
-        distribuicaoNiveis: distribuicaoNiveis || {}
+        totalClientes: estatisticas?.total_clientes || 0,
+        programasAtivos: estatisticas?.programas_ativos || 0,
+        totalPontos: estatisticas?.total_pontos_distribuidos || 0,
+        clientesComPontos: estatisticas?.clientes_com_pontos || 0,
+        distribuicaoNiveis
       };
     }
   });

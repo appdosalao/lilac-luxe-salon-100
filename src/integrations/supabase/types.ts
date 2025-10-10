@@ -1443,6 +1443,48 @@ export type Database = {
         }
         Relationships: []
       }
+      estatisticas_marketing: {
+        Row: {
+          clientes_bronze: number | null
+          clientes_com_pontos: number | null
+          clientes_ouro: number | null
+          clientes_platina: number | null
+          clientes_prata: number | null
+          pontos_disponiveis: number | null
+          pontos_resgatados: number | null
+          programas_ativos: number | null
+          total_clientes: number | null
+          total_pontos_distribuidos: number | null
+          user_id: string | null
+        }
+        Insert: {
+          clientes_bronze?: never
+          clientes_com_pontos?: never
+          clientes_ouro?: never
+          clientes_platina?: never
+          clientes_prata?: never
+          pontos_disponiveis?: never
+          pontos_resgatados?: never
+          programas_ativos?: never
+          total_clientes?: never
+          total_pontos_distribuidos?: never
+          user_id?: string | null
+        }
+        Update: {
+          clientes_bronze?: never
+          clientes_com_pontos?: never
+          clientes_ouro?: never
+          clientes_platina?: never
+          clientes_prata?: never
+          pontos_disponiveis?: never
+          pontos_resgatados?: never
+          programas_ativos?: never
+          total_clientes?: never
+          total_pontos_distribuidos?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ranking_fidelidade: {
         Row: {
           cliente_email: string | null
