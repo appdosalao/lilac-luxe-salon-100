@@ -90,22 +90,45 @@ export default defineConfig(({ mode }) => ({
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
     dedupe: ['react', 'react-dom'],
+    conditions: ['development', 'browser'],
+  },
+  ssr: {
+    noExternal: ['@tanstack/react-query', '@supabase/supabase-js'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react/jsx-runtime'],
+    include: [
+      'react', 
+      'react-dom', 
+      'react/jsx-runtime',
+      '@tanstack/react-query',
+      '@supabase/supabase-js',
+      'sonner'
+    ],
+    exclude: [],
     esbuildOptions: {
       target: 'esnext',
+      define: {
+        global: 'globalThis',
+      },
     },
   },
   build: {
+    target: 'esnext',
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
+        manualChunks(id) {
+          // Agrupar React e React-DOM em um único chunk
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
+          // Agrupar @tanstack/react-query separadamente
+          if (id.includes('@tanstack/react-query')) {
+            return 'react-query';
+          }
         },
       },
     },
