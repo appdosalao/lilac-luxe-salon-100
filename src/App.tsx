@@ -4,7 +4,6 @@ import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import { Toaster } from "sonner";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PWAProvider } from "./components/pwa/PWAProvider";
-import { ReactDiagnostic } from "./components/ReactDiagnostic";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
@@ -25,15 +24,13 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <>
-      <ReactDiagnostic />
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <SupabaseAuthProvider>
-            <PWAProvider>
-              <NotificationProviderAvancado>
-                <div id="app-container">
-                  <Toaster position="top-right" />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <SupabaseAuthProvider>
+          <PWAProvider>
+            <NotificationProviderAvancado>
+              <div id="app-container">
+                <Toaster position="top-right" />
                   <Routes>
                     {/* Rotas públicas */}
                     <Route path="/login" element={<Login />} />
@@ -132,7 +129,6 @@ const App = () => {
         </SupabaseAuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
-    </>
   );
 };
 
