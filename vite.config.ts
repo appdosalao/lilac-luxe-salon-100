@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
+// Force rebuild: 2025-01-10-fix-react-v3
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
