@@ -1,5 +1,5 @@
-import { useState, useEffect, useContext, createContext } from '@/lib/react';
-import type { ReactNode } from '@/lib/react';
+import { useState, useEffect, useContext, createContext } from 'react';
+import type { ReactNode } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useEnhancedNotifications } from '@/hooks/useEnhancedNotifications';

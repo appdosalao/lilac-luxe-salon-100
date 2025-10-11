@@ -1,5 +1,5 @@
-import { createContext, useContext } from '@/lib/react';
-import type { ReactNode } from '@/lib/react';
+import { createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import { InstallPrompt } from './InstallPrompt';
 import { UpdatePrompt } from './UpdatePrompt';
