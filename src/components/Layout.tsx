@@ -12,7 +12,9 @@ const navigationItems = [
   { title: "Clientes", href: "/clientes" },
   { title: "Serviços", href: "/servicos" },
   { title: "Cronogramas", href: "/cronogramas" },
+  { title: "Agenda", href: "/agenda" },
   { title: "Financeiro", href: "/financeiro" },
+  { title: "Marketing", href: "/marketing" },
   { title: "Auditoria", href: "/auditoria" },
   { title: "Configurações", href: "/configuracoes" },
 ];
