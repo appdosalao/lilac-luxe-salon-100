@@ -2,18 +2,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Registrar Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registrado: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW falhou: ', registrationError);
-      });
-  });
-}
+// Service Worker is managed by Vite PWA plugin - no manual registration needed
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error('Failed to find the root element');
