@@ -147,13 +147,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "agendamentos_online_agendamento_id_fkey"
-            columns: ["agendamento_id"]
-            isOneToOne: false
-            referencedRelation: "agendamentos_sem_pontos"
-            referencedColumns: ["agendamento_id"]
-          },
-          {
             foreignKeyName: "agendamentos_online_servico_id_fkey"
             columns: ["servico_id"]
             isOneToOne: false
@@ -168,111 +161,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      automacoes_marketing: {
-        Row: {
-          acoes: Json
-          ativo: boolean
-          condicoes: Json | null
-          created_at: string
-          descricao: string | null
-          gatilho: string
-          id: string
-          nome: string
-          total_execucoes: number | null
-          ultima_execucao: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          acoes: Json
-          ativo?: boolean
-          condicoes?: Json | null
-          created_at?: string
-          descricao?: string | null
-          gatilho: string
-          id?: string
-          nome: string
-          total_execucoes?: number | null
-          ultima_execucao?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          acoes?: Json
-          ativo?: boolean
-          condicoes?: Json | null
-          created_at?: string
-          descricao?: string | null
-          gatilho?: string
-          id?: string
-          nome?: string
-          total_execucoes?: number | null
-          ultima_execucao?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      campanhas_marketing: {
-        Row: {
-          created_at: string
-          data_agendamento: string | null
-          data_envio: string | null
-          descricao: string | null
-          filtros: Json | null
-          id: string
-          mensagem: string
-          metricas: Json | null
-          nome: string
-          segmento_clientes: string
-          status: string
-          tipo: string
-          total_destinatarios: number | null
-          total_enviados: number | null
-          total_erros: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data_agendamento?: string | null
-          data_envio?: string | null
-          descricao?: string | null
-          filtros?: Json | null
-          id?: string
-          mensagem: string
-          metricas?: Json | null
-          nome: string
-          segmento_clientes: string
-          status?: string
-          tipo: string
-          total_destinatarios?: number | null
-          total_enviados?: number | null
-          total_erros?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data_agendamento?: string | null
-          data_envio?: string | null
-          descricao?: string | null
-          filtros?: Json | null
-          id?: string
-          mensagem?: string
-          metricas?: Json | null
-          nome?: string
-          segmento_clientes?: string
-          status?: string
-          tipo?: string
-          total_destinatarios?: number | null
-          total_enviados?: number | null
-          total_erros?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       categorias_financeiras: {
         Row: {
@@ -676,128 +564,6 @@ export type Database = {
           },
         ]
       }
-      destinatarios_campanha: {
-        Row: {
-          campanha_id: string
-          cliente_id: string
-          created_at: string
-          data_abertura: string | null
-          data_clique: string | null
-          data_envio: string | null
-          erro_mensagem: string | null
-          id: string
-          status: string
-        }
-        Insert: {
-          campanha_id: string
-          cliente_id: string
-          created_at?: string
-          data_abertura?: string | null
-          data_clique?: string | null
-          data_envio?: string | null
-          erro_mensagem?: string | null
-          id?: string
-          status?: string
-        }
-        Update: {
-          campanha_id?: string
-          cliente_id?: string
-          created_at?: string
-          data_abertura?: string | null
-          data_clique?: string | null
-          data_envio?: string | null
-          erro_mensagem?: string | null
-          id?: string
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "destinatarios_campanha_campanha_id_fkey"
-            columns: ["campanha_id"]
-            isOneToOne: false
-            referencedRelation: "campanhas_marketing"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "destinatarios_campanha_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      historico_pontos: {
-        Row: {
-          agendamento_id: string | null
-          cliente_id: string
-          created_at: string
-          descricao: string
-          id: string
-          multiplicador_aplicado: number | null
-          nivel_cliente: string | null
-          pontos: number
-          programa_id: string
-          tipo: string
-          user_id: string
-        }
-        Insert: {
-          agendamento_id?: string | null
-          cliente_id: string
-          created_at?: string
-          descricao: string
-          id?: string
-          multiplicador_aplicado?: number | null
-          nivel_cliente?: string | null
-          pontos: number
-          programa_id: string
-          tipo: string
-          user_id: string
-        }
-        Update: {
-          agendamento_id?: string | null
-          cliente_id?: string
-          created_at?: string
-          descricao?: string
-          id?: string
-          multiplicador_aplicado?: number | null
-          nivel_cliente?: string | null
-          pontos?: number
-          programa_id?: string
-          tipo?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "historico_pontos_agendamento_id_fkey"
-            columns: ["agendamento_id"]
-            isOneToOne: false
-            referencedRelation: "agendamentos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "historico_pontos_agendamento_id_fkey"
-            columns: ["agendamento_id"]
-            isOneToOne: false
-            referencedRelation: "agendamentos_sem_pontos"
-            referencedColumns: ["agendamento_id"]
-          },
-          {
-            foreignKeyName: "historico_pontos_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "historico_pontos_programa_id_fkey"
-            columns: ["programa_id"]
-            isOneToOne: false
-            referencedRelation: "programas_fidelidade"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       intervalos_trabalho: {
         Row: {
           ativo: boolean
@@ -886,59 +652,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_lancamentos_agendamento"
-            columns: ["origem_id"]
-            isOneToOne: false
-            referencedRelation: "agendamentos_sem_pontos"
-            referencedColumns: ["agendamento_id"]
-          },
-          {
             foreignKeyName: "fk_lancamentos_cliente"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      log_automacoes: {
-        Row: {
-          automacao_id: string
-          cliente_id: string | null
-          created_at: string
-          dados: Json | null
-          id: string
-          mensagem: string | null
-          status: string
-        }
-        Insert: {
-          automacao_id: string
-          cliente_id?: string | null
-          created_at?: string
-          dados?: Json | null
-          id?: string
-          mensagem?: string | null
-          status: string
-        }
-        Update: {
-          automacao_id?: string
-          cliente_id?: string | null
-          created_at?: string
-          dados?: Json | null
-          id?: string
-          mensagem?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "log_automacoes_automacao_id_fkey"
-            columns: ["automacao_id"]
-            isOneToOne: false
-            referencedRelation: "automacoes_marketing"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "log_automacoes_cliente_id_fkey"
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
@@ -990,63 +704,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      pontos_fidelidade: {
-        Row: {
-          cliente_id: string
-          created_at: string
-          data_expiracao: string | null
-          id: string
-          nivel: string | null
-          pontos_disponiveis: number
-          pontos_resgatados: number
-          pontos_totais: number
-          programa_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          cliente_id: string
-          created_at?: string
-          data_expiracao?: string | null
-          id?: string
-          nivel?: string | null
-          pontos_disponiveis?: number
-          pontos_resgatados?: number
-          pontos_totais?: number
-          programa_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          cliente_id?: string
-          created_at?: string
-          data_expiracao?: string | null
-          id?: string
-          nivel?: string | null
-          pontos_disponiveis?: number
-          pontos_resgatados?: number
-          pontos_totais?: number
-          programa_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
-            columns: ["programa_id"]
-            isOneToOne: false
-            referencedRelation: "programas_fidelidade"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       problemas_auditoria: {
         Row: {
@@ -1112,69 +769,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      programas_fidelidade: {
-        Row: {
-          ativo: boolean
-          bonus_aniversario: number | null
-          bonus_indicacao: number | null
-          created_at: string
-          data_fim: string | null
-          data_inicio: string
-          descricao: string | null
-          expiracao_pontos_dias: number | null
-          id: string
-          niveis_config: Json | null
-          nome: string
-          pontos_minimos_resgate: number
-          pontos_por_real: number
-          recompensas: Json | null
-          regras: Json | null
-          updated_at: string
-          user_id: string
-          valor_ponto: number
-        }
-        Insert: {
-          ativo?: boolean
-          bonus_aniversario?: number | null
-          bonus_indicacao?: number | null
-          created_at?: string
-          data_fim?: string | null
-          data_inicio: string
-          descricao?: string | null
-          expiracao_pontos_dias?: number | null
-          id?: string
-          niveis_config?: Json | null
-          nome: string
-          pontos_minimos_resgate?: number
-          pontos_por_real?: number
-          recompensas?: Json | null
-          regras?: Json | null
-          updated_at?: string
-          user_id: string
-          valor_ponto?: number
-        }
-        Update: {
-          ativo?: boolean
-          bonus_aniversario?: number | null
-          bonus_indicacao?: number | null
-          created_at?: string
-          data_fim?: string | null
-          data_inicio?: string
-          descricao?: string | null
-          expiracao_pontos_dias?: number | null
-          id?: string
-          niveis_config?: Json | null
-          nome?: string
-          pontos_minimos_resgate?: number
-          pontos_por_real?: number
-          recompensas?: Json | null
-          regras?: Json | null
-          updated_at?: string
-          user_id?: string
-          valor_ponto?: number
-        }
-        Relationships: []
       }
       relatorios_auditoria: {
         Row: {
@@ -1262,13 +856,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agendamentos"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_retornos_agendamento"
-            columns: ["id_agendamento_retorno"]
-            isOneToOne: false
-            referencedRelation: "agendamentos_sem_pontos"
-            referencedColumns: ["agendamento_id"]
           },
           {
             foreignKeyName: "fk_retornos_cliente"
@@ -1361,30 +948,6 @@ export type Database = {
       }
     }
     Views: {
-      agendamentos_sem_pontos: {
-        Row: {
-          agendamento_id: string | null
-          cliente_id: string | null
-          cliente_nome: string | null
-          data: string | null
-          nivel_atual: string | null
-          pontos_por_real: number | null
-          programa_id: string | null
-          servico_id: string | null
-          servico_nome: string | null
-          user_id: string | null
-          valor: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
-            columns: ["programa_id"]
-            isOneToOne: false
-            referencedRelation: "programas_fidelidade"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       cronogramas_completos: {
         Row: {
           cliente_email: string | null
@@ -1443,81 +1006,6 @@ export type Database = {
         }
         Relationships: []
       }
-      estatisticas_marketing: {
-        Row: {
-          clientes_bronze: number | null
-          clientes_com_pontos: number | null
-          clientes_ouro: number | null
-          clientes_platina: number | null
-          clientes_prata: number | null
-          pontos_disponiveis: number | null
-          pontos_resgatados: number | null
-          programas_ativos: number | null
-          total_clientes: number | null
-          total_pontos_distribuidos: number | null
-          user_id: string | null
-        }
-        Insert: {
-          clientes_bronze?: never
-          clientes_com_pontos?: never
-          clientes_ouro?: never
-          clientes_platina?: never
-          clientes_prata?: never
-          pontos_disponiveis?: never
-          pontos_resgatados?: never
-          programas_ativos?: never
-          total_clientes?: never
-          total_pontos_distribuidos?: never
-          user_id?: string | null
-        }
-        Update: {
-          clientes_bronze?: never
-          clientes_com_pontos?: never
-          clientes_ouro?: never
-          clientes_platina?: never
-          clientes_prata?: never
-          pontos_disponiveis?: never
-          pontos_resgatados?: never
-          programas_ativos?: never
-          total_clientes?: never
-          total_pontos_distribuidos?: never
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      ranking_fidelidade: {
-        Row: {
-          cliente_email: string | null
-          cliente_id: string | null
-          cliente_nome: string | null
-          cliente_telefone: string | null
-          created_at: string | null
-          id: string | null
-          nivel: string | null
-          pontos_disponiveis: number | null
-          pontos_resgatados: number | null
-          pontos_totais: number | null
-          posicao_ranking: number | null
-          programa_id: string | null
-          user_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pontos_fidelidade_programa_id_fkey"
-            columns: ["programa_id"]
-            isOneToOne: false
-            referencedRelation: "programas_fidelidade"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       retornos_completos: {
         Row: {
           agendamento_data: string | null
@@ -1547,13 +1035,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_retornos_agendamento"
-            columns: ["id_agendamento_retorno"]
-            isOneToOne: false
-            referencedRelation: "agendamentos_sem_pontos"
-            referencedColumns: ["agendamento_id"]
-          },
-          {
             foreignKeyName: "fk_retornos_cliente"
             columns: ["id_cliente"]
             isOneToOne: false
@@ -1578,10 +1059,6 @@ export type Database = {
       }
     }
     Functions: {
-      aplicar_expiracao_pontos: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       associar_clientes_agendamento_online: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -1613,24 +1090,12 @@ export type Database = {
           motivo: string
         }[]
       }
-      cadastrar_clientes_programa_fidelidade: {
-        Args: { p_programa_id: string }
-        Returns: number
-      }
       calcular_disponibilidade: {
         Args: { p_data: string; p_user_id: string }
         Returns: {
           horario: string
           status: string
         }[]
-      }
-      calcular_nivel_cliente: {
-        Args: { p_pontos_totais: number; p_programa_id: string }
-        Returns: string
-      }
-      calcular_pontos_com_nivel: {
-        Args: { p_nivel: string; p_pontos_por_real: number; p_valor: number }
-        Returns: number
       }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
