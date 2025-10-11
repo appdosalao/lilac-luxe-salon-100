@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-// Force rebuild: 2025-01-10-fix-react-v3
+// Force rebuild: 2025-01-10-fix-react-v4
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -88,13 +88,20 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime'],
     force: true,
+    exclude: [],
     esbuildOptions: {
       target: 'esnext',
+    },
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
     },
   },
 }));
