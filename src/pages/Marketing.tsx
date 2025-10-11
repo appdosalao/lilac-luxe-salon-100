@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, BarChart3, LayoutDashboard } from "lucide-react";
+import { Award, BarChart3, LayoutDashboard, Users } from "lucide-react";
 import { ProgramasFidelidade } from "@/components/marketing/ProgramasFidelidade";
 import { AnaliseClientes } from "@/components/marketing/AnaliseClientes";
 import { DashboardMarketing } from "@/components/marketing/DashboardMarketing";
+import { SistemaReferencias } from "@/components/marketing/SistemaReferencias";
 
 export default function Marketing() {
   return (
@@ -15,7 +16,7 @@ export default function Marketing() {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
@@ -23,6 +24,10 @@ export default function Marketing() {
           <TabsTrigger value="fidelidade" className="gap-2">
             <Award className="h-4 w-4" />
             Fidelidade
+          </TabsTrigger>
+          <TabsTrigger value="referencias" className="gap-2">
+            <Users className="h-4 w-4" />
+            Indicações
           </TabsTrigger>
           <TabsTrigger value="analise" className="gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -36,6 +41,10 @@ export default function Marketing() {
 
         <TabsContent value="fidelidade" className="space-y-4">
           <ProgramasFidelidade />
+        </TabsContent>
+
+        <TabsContent value="referencias" className="space-y-4">
+          <SistemaReferencias />
         </TabsContent>
 
         <TabsContent value="analise" className="space-y-4">
