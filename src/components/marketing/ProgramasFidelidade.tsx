@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgramaFidelidadeDialog } from "./ProgramaFidelidadeDialog";
 import { RankingFidelidade } from "./RankingFidelidade";
+import { SincronizacaoAutomatica } from "./SincronizacaoAutomatica";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -118,6 +119,8 @@ export function ProgramasFidelidade() {
 
   return (
     <div className="space-y-6">
+      <SincronizacaoAutomatica />
+      
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

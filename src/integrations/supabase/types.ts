@@ -1613,6 +1613,10 @@ export type Database = {
           motivo: string
         }[]
       }
+      cadastrar_clientes_programa_fidelidade: {
+        Args: { p_programa_id: string }
+        Returns: number
+      }
       calcular_disponibilidade: {
         Args: { p_data: string; p_user_id: string }
         Returns: {

@@ -35,7 +35,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { error } = await supabase.from('programas_fidelidade').insert({
+      const { data, error } = await supabase.from('programas_fidelidade').insert({
         user_id: user.id,
         nome,
         descricao,
@@ -47,16 +47,31 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
         bonus_aniversario: parseInt(bonusAniversario),
         bonus_indicacao: parseInt(bonusIndicacao),
         ativo: true
-      });
+      }).select().single();
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: async (programa) => {
+      // Aguardar um momento para o trigger processar
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Buscar quantos clientes foram cadastrados
+      const { count } = await supabase
+        .from('pontos_fidelidade')
+        .select('*', { count: 'exact', head: true })
+        .eq('programa_id', programa.id);
+      
       queryClient.invalidateQueries({ queryKey: ['programas-fidelidade'] });
+      queryClient.invalidateQueries({ queryKey: ['estatisticas-fidelidade'] });
+      
       toast({
-        title: "Programa criado",
-        description: "Programa de fidelidade criado com sucesso",
+        title: "Programa criado com sucesso!",
+        description: count 
+          ? `${count} cliente${count > 1 ? 's' : ''} ${count > 1 ? 'foram cadastrados' : 'foi cadastrado'} automaticamente com pontos retroativos baseados no histórico de gastos.`
+          : "O programa foi criado. Clientes serão cadastrados automaticamente conforme realizarem pagamentos.",
       });
+      
       onOpenChange(false);
       resetForm();
     },
@@ -244,23 +259,29 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
                   onChange={(e) => setBonusIndicacao(e.target.value)}
                   placeholder="0"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Pontos ganhos ao indicar um novo cliente
-                </p>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pontos ganhos ao indicar um novo cliente
+            </p>
+          </div>
+        </div>
 
-            <div className="bg-primary/10 p-4 rounded-lg">
-              <div className="flex items-start gap-2">
-                <Zap className="h-5 w-5 text-primary mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Gamificação Automática</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    O sistema registra automaticamente mudanças de nível e distribui recompensas quando configuradas
-                  </p>
-                </div>
-              </div>
+        <div className="bg-primary/10 p-4 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Zap className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">🚀 Automação Total</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                • Clientes são cadastrados automaticamente com pontos retroativos baseados no histórico de gastos
+              </p>
+              <p className="text-xs text-muted-foreground">
+                • Pontos são atribuídos automaticamente quando pagamentos são registrados
+              </p>
+              <p className="text-xs text-muted-foreground">
+                • Níveis são atualizados automaticamente conforme os clientes acumulam pontos
+              </p>
             </div>
+          </div>
+        </div>
           </TabsContent>
         </Tabs>
         
