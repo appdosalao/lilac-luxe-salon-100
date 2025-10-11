@@ -9,7 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Gift, Trophy, Zap } from "lucide-react";
+import { Gift, Trophy, Zap, Plus, Trash2 } from "lucide-react";
 
 interface ProgramaFidelidadeDialogProps {
   open: boolean;
@@ -28,10 +28,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
   const [bonusAniversario, setBonusAniversario] = useState("0");
   const [bonusIndicacao, setBonusIndicacao] = useState("0");
   const [niveis, setNiveis] = useState([
-    { nivel: 'bronze', nome: 'Bronze', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#CD7F32' },
-    { nivel: 'prata', nome: 'Prata', pontos_minimos: 500, multiplicador_pontos: 1.2, desconto_percentual: 5, cor: '#C0C0C0' },
-    { nivel: 'ouro', nome: 'Ouro', pontos_minimos: 1500, multiplicador_pontos: 1.5, desconto_percentual: 10, cor: '#FFD700' },
-    { nivel: 'platina', nome: 'Platina', pontos_minimos: 3000, multiplicador_pontos: 2.0, desconto_percentual: 15, cor: '#E5E4E2' }
+    { nivel: 'iniciante', nome: 'Iniciante', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#9CA3AF', beneficios: ['Acúmulo padrão de pontos'] }
   ]);
 
   const { toast } = useToast();
@@ -143,6 +140,25 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
     }
   });
 
+  const adicionarNivel = () => {
+    const novoNivel = {
+      nivel: `nivel_${Date.now()}`,
+      nome: `Nível ${niveis.length + 1}`,
+      pontos_minimos: niveis[niveis.length - 1].pontos_minimos + 500,
+      multiplicador_pontos: 1.0,
+      desconto_percentual: 0,
+      cor: '#3B82F6',
+      beneficios: []
+    };
+    setNiveis([...niveis, novoNivel]);
+  };
+
+  const removerNivel = (index: number) => {
+    if (niveis.length > 1) {
+      setNiveis(niveis.filter((_, i) => i !== index));
+    }
+  };
+
   const resetForm = () => {
     setNome("");
     setDescricao("");
@@ -154,10 +170,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
     setBonusAniversario("0");
     setBonusIndicacao("0");
     setNiveis([
-      { nivel: 'bronze', nome: 'Bronze', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#CD7F32' },
-      { nivel: 'prata', nome: 'Prata', pontos_minimos: 500, multiplicador_pontos: 1.2, desconto_percentual: 5, cor: '#C0C0C0' },
-      { nivel: 'ouro', nome: 'Ouro', pontos_minimos: 1500, multiplicador_pontos: 1.5, desconto_percentual: 10, cor: '#FFD700' },
-      { nivel: 'platina', nome: 'Platina', pontos_minimos: 3000, multiplicador_pontos: 2.0, desconto_percentual: 15, cor: '#E5E4E2' }
+      { nivel: 'iniciante', nome: 'Iniciante', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#9CA3AF', beneficios: ['Acúmulo padrão de pontos'] }
     ]);
   };
 
@@ -237,19 +250,78 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
 
           <TabsContent value="niveis" className="space-y-4 mt-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Configure os Níveis de Fidelidade</h3>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">Configure os Níveis de Fidelidade</h3>
+                </div>
+                <Button onClick={adicionarNivel} size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar Nível
+                </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                Personalize os pontos mínimos, multiplicadores e descontos para cada nível
+                Crie e personalize seus próprios níveis de fidelidade
               </p>
               
               <div className="space-y-3">
                 {niveis.map((nivel, index) => (
                   <div key={nivel.nivel} className="bg-muted p-4 rounded-lg space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Badge style={{ backgroundColor: nivel.cor }}>{nivel.nome}</Badge>
+                    <div className="flex items-center justify-between">
+                      <Badge style={{ backgroundColor: nivel.cor, color: '#fff' }}>{nivel.nome}</Badge>
+                      {niveis.length > 1 && (
+                        <Button
+                          onClick={() => removerNivel(index)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor={`nome-${nivel.nivel}`}>Nome do Nível</Label>
+                        <Input
+                          id={`nome-${nivel.nivel}`}
+                          value={nivel.nome}
+                          onChange={(e) => {
+                            const novosNiveis = [...niveis];
+                            novosNiveis[index].nome = e.target.value;
+                            setNiveis(novosNiveis);
+                          }}
+                          placeholder="Ex: VIP, Premium..."
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`cor-${nivel.nivel}`}>Cor</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`cor-${nivel.nivel}`}
+                            type="color"
+                            value={nivel.cor}
+                            onChange={(e) => {
+                              const novosNiveis = [...niveis];
+                              novosNiveis[index].cor = e.target.value;
+                              setNiveis(novosNiveis);
+                            }}
+                            className="w-20 h-10"
+                          />
+                          <Input
+                            value={nivel.cor}
+                            onChange={(e) => {
+                              const novosNiveis = [...niveis];
+                              novosNiveis[index].cor = e.target.value;
+                              setNiveis(novosNiveis);
+                            }}
+                            placeholder="#000000"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-3">
@@ -266,6 +338,9 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
                           }}
                           disabled={index === 0}
                         />
+                        {index === 0 && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Nível inicial</p>
+                        )}
                       </div>
                       
                       <div>
