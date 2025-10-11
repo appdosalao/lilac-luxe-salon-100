@@ -27,6 +27,12 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
   const [expiracaoPontos, setExpiracaoPontos] = useState("");
   const [bonusAniversario, setBonusAniversario] = useState("0");
   const [bonusIndicacao, setBonusIndicacao] = useState("0");
+  const [niveis, setNiveis] = useState([
+    { nivel: 'bronze', nome: 'Bronze', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#CD7F32' },
+    { nivel: 'prata', nome: 'Prata', pontos_minimos: 500, multiplicador_pontos: 1.2, desconto_percentual: 5, cor: '#C0C0C0' },
+    { nivel: 'ouro', nome: 'Ouro', pontos_minimos: 1500, multiplicador_pontos: 1.5, desconto_percentual: 10, cor: '#FFD700' },
+    { nivel: 'platina', nome: 'Platina', pontos_minimos: 3000, multiplicador_pontos: 2.0, desconto_percentual: 15, cor: '#E5E4E2' }
+  ]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -43,6 +49,11 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
       setExpiracaoPontos(programaEdit.expiracao_pontos_dias?.toString() || "");
       setBonusAniversario(programaEdit.bonus_aniversario?.toString() || "0");
       setBonusIndicacao(programaEdit.bonus_indicacao?.toString() || "0");
+      
+      // Carregar configuração de níveis se existir
+      if (programaEdit.niveis_config) {
+        setNiveis(programaEdit.niveis_config);
+      }
     } else if (!programaEdit && open) {
       resetForm();
     }
@@ -63,6 +74,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
         expiracao_pontos_dias: expiracaoPontos ? parseInt(expiracaoPontos) : null,
         bonus_aniversario: parseInt(bonusAniversario),
         bonus_indicacao: parseInt(bonusIndicacao),
+        niveis_config: niveis,
       };
 
       if (programaEdit) {
@@ -141,6 +153,12 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
     setExpiracaoPontos("");
     setBonusAniversario("0");
     setBonusIndicacao("0");
+    setNiveis([
+      { nivel: 'bronze', nome: 'Bronze', pontos_minimos: 0, multiplicador_pontos: 1.0, desconto_percentual: 0, cor: '#CD7F32' },
+      { nivel: 'prata', nome: 'Prata', pontos_minimos: 500, multiplicador_pontos: 1.2, desconto_percentual: 5, cor: '#C0C0C0' },
+      { nivel: 'ouro', nome: 'Ouro', pontos_minimos: 1500, multiplicador_pontos: 1.5, desconto_percentual: 10, cor: '#FFD700' },
+      { nivel: 'platina', nome: 'Platina', pontos_minimos: 3000, multiplicador_pontos: 2.0, desconto_percentual: 15, cor: '#E5E4E2' }
+    ]);
   };
 
   return (
@@ -218,47 +236,77 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: P
           </TabsContent>
 
           <TabsContent value="niveis" className="space-y-4 mt-4">
-            <div className="bg-muted p-4 rounded-lg space-y-3">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Sistema de Níveis Padrão</h3>
+                <h3 className="font-semibold">Configure os Níveis de Fidelidade</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                O sistema inclui 4 níveis progressivos com benefícios crescentes:
+                Personalize os pontos mínimos, multiplicadores e descontos para cada nível
               </p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-background rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge style={{ backgroundColor: '#CD7F32' }}>Bronze</Badge>
-                    <span className="text-sm">0+ pontos</span>
+              
+              <div className="space-y-3">
+                {niveis.map((nivel, index) => (
+                  <div key={nivel.nivel} className="bg-muted p-4 rounded-lg space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge style={{ backgroundColor: nivel.cor }}>{nivel.nome}</Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label htmlFor={`pontos-${nivel.nivel}`}>Pontos Mínimos</Label>
+                        <Input
+                          id={`pontos-${nivel.nivel}`}
+                          type="number"
+                          value={nivel.pontos_minimos}
+                          onChange={(e) => {
+                            const novosNiveis = [...niveis];
+                            novosNiveis[index].pontos_minimos = parseInt(e.target.value) || 0;
+                            setNiveis(novosNiveis);
+                          }}
+                          disabled={index === 0}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`mult-${nivel.nivel}`}>Multiplicador</Label>
+                        <Input
+                          id={`mult-${nivel.nivel}`}
+                          type="number"
+                          step="0.1"
+                          value={nivel.multiplicador_pontos}
+                          onChange={(e) => {
+                            const novosNiveis = [...niveis];
+                            novosNiveis[index].multiplicador_pontos = parseFloat(e.target.value) || 1.0;
+                            setNiveis(novosNiveis);
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground mt-0.5">{nivel.multiplicador_pontos}x pontos</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`desc-${nivel.nivel}`}>Desconto (%)</Label>
+                        <Input
+                          id={`desc-${nivel.nivel}`}
+                          type="number"
+                          value={nivel.desconto_percentual}
+                          onChange={(e) => {
+                            const novosNiveis = [...niveis];
+                            novosNiveis[index].desconto_percentual = parseInt(e.target.value) || 0;
+                            setNiveis(novosNiveis);
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sm">1x pontos</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-background rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge style={{ backgroundColor: '#C0C0C0' }}>Prata</Badge>
-                    <span className="text-sm">500+ pontos</span>
-                  </div>
-                  <span className="text-sm">1.2x pontos + 5% desconto</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-background rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge style={{ backgroundColor: '#FFD700' }}>Ouro</Badge>
-                    <span className="text-sm">1500+ pontos</span>
-                  </div>
-                  <span className="text-sm">1.5x pontos + 10% desconto</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-background rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge style={{ backgroundColor: '#E5E4E2' }}>Platina</Badge>
-                    <span className="text-sm">3000+ pontos</span>
-                  </div>
-                  <span className="text-sm">2x pontos + 15% desconto</span>
-                </div>
+                ))}
               </div>
-              <p className="text-xs text-muted-foreground italic">
-                Os níveis são atualizados automaticamente conforme o cliente acumula pontos
-              </p>
+              
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  💡 Os níveis são atualizados automaticamente quando o cliente atinge os pontos mínimos configurados
+                </p>
+              </div>
             </div>
           </TabsContent>
 
