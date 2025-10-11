@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,10 @@ import { Gift, Trophy, Zap } from "lucide-react";
 interface ProgramaFidelidadeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  programaEdit?: any;
 }
 
-export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelidadeDialogProps) {
+export function ProgramaFidelidadeDialog({ open, onOpenChange, programaEdit }: ProgramaFidelidadeDialogProps) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [pontosPorReal, setPontosPorReal] = useState("1.00");
@@ -30,13 +31,29 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const criarPrograma = useMutation({
+  // Carregar dados do programa ao editar
+  useEffect(() => {
+    if (programaEdit && open) {
+      setNome(programaEdit.nome || "");
+      setDescricao(programaEdit.descricao || "");
+      setPontosPorReal(programaEdit.pontos_por_real?.toString() || "1.00");
+      setValorPonto(programaEdit.valor_ponto?.toString() || "0.10");
+      setPontosMinimosResgate(programaEdit.pontos_minimos_resgate?.toString() || "100");
+      setDataInicio(programaEdit.data_inicio || new Date().toISOString().split('T')[0]);
+      setExpiracaoPontos(programaEdit.expiracao_pontos_dias?.toString() || "");
+      setBonusAniversario(programaEdit.bonus_aniversario?.toString() || "0");
+      setBonusIndicacao(programaEdit.bonus_indicacao?.toString() || "0");
+    } else if (!programaEdit && open) {
+      resetForm();
+    }
+  }, [programaEdit, open]);
+
+  const salvarPrograma = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase.from('programas_fidelidade').insert({
-        user_id: user.id,
+      const programaData = {
         nome,
         descricao,
         pontos_por_real: parseFloat(pontosPorReal),
@@ -46,31 +63,61 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
         expiracao_pontos_dias: expiracaoPontos ? parseInt(expiracaoPontos) : null,
         bonus_aniversario: parseInt(bonusAniversario),
         bonus_indicacao: parseInt(bonusIndicacao),
-        ativo: true
-      }).select().single();
+      };
 
-      if (error) throw error;
-      return data;
+      if (programaEdit) {
+        // Atualizar programa existente
+        const { data, error } = await supabase
+          .from('programas_fidelidade')
+          .update(programaData)
+          .eq('id', programaEdit.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Criar novo programa
+        const { data, error } = await supabase
+          .from('programas_fidelidade')
+          .insert({
+            ...programaData,
+            user_id: user.id,
+            ativo: true
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: async (programa) => {
-      // Aguardar um momento para o trigger processar
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Buscar quantos clientes foram cadastrados
-      const { count } = await supabase
-        .from('pontos_fidelidade')
-        .select('*', { count: 'exact', head: true })
-        .eq('programa_id', programa.id);
-      
       queryClient.invalidateQueries({ queryKey: ['programas-fidelidade'] });
       queryClient.invalidateQueries({ queryKey: ['estatisticas-fidelidade'] });
       
-      toast({
-        title: "Programa criado com sucesso!",
-        description: count 
-          ? `${count} cliente${count > 1 ? 's' : ''} ${count > 1 ? 'foram cadastrados' : 'foi cadastrado'} automaticamente com pontos retroativos baseados no histórico de gastos.`
-          : "O programa foi criado. Clientes serão cadastrados automaticamente conforme realizarem pagamentos.",
-      });
+      if (programaEdit) {
+        toast({
+          title: "Programa atualizado!",
+          description: "As alterações foram salvas com sucesso.",
+        });
+      } else {
+        // Aguardar um momento para o trigger processar
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Buscar quantos clientes foram cadastrados
+        const { count } = await supabase
+          .from('pontos_fidelidade')
+          .select('*', { count: 'exact', head: true })
+          .eq('programa_id', programa.id);
+        
+        toast({
+          title: "Programa criado com sucesso!",
+          description: count 
+            ? `${count} cliente${count > 1 ? 's' : ''} ${count > 1 ? 'foram cadastrados' : 'foi cadastrado'} automaticamente com pontos retroativos baseados no histórico de gastos.`
+            : "O programa foi criado. Clientes serão cadastrados automaticamente conforme realizarem pagamentos.",
+        });
+      }
       
       onOpenChange(false);
       resetForm();
@@ -78,7 +125,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
     onError: (error) => {
       toast({
         title: "Erro",
-        description: "Não foi possível criar o programa",
+        description: programaEdit ? "Não foi possível atualizar o programa" : "Não foi possível criar o programa",
         variant: "destructive",
       });
     }
@@ -100,7 +147,7 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Programa de Fidelidade</DialogTitle>
+          <DialogTitle>{programaEdit ? 'Editar Programa de Fidelidade' : 'Novo Programa de Fidelidade'}</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="basico" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -289,8 +336,8 @@ export function ProgramaFidelidadeDialog({ open, onOpenChange }: ProgramaFidelid
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={() => criarPrograma.mutate()} disabled={!nome || criarPrograma.isPending}>
-            {criarPrograma.isPending ? "Criando..." : "Criar Programa"}
+          <Button onClick={() => salvarPrograma.mutate()} disabled={!nome || salvarPrograma.isPending}>
+            {salvarPrograma.isPending ? "Salvando..." : programaEdit ? "Salvar Alterações" : "Criar Programa"}
           </Button>
         </div>
       </DialogContent>
