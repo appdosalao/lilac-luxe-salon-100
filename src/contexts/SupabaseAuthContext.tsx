@@ -29,37 +29,46 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Buscar dados do usuário da tabela usuarios
-          setTimeout(async () => {
-            try {
-              const { data: userData, error } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+          try {
+            const { data: userData, error } = await supabase
+              .from('usuarios')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-              if (error && error.code !== 'PGRST116') {
-                console.error('Erro ao buscar dados do usuário:', error);
-                return;
-              }
-
-              if (userData) {
-                setUsuario(userData as Usuario);
-                // Aplicar tema
-                const tema = (userData as Usuario).tema_preferencia || 'feminino';
-                document.documentElement.setAttribute('data-theme', tema);
-              }
-            } catch (error) {
-              console.error('Erro ao buscar perfil do usuário:', error);
+            if (error && error.code !== 'PGRST116') {
+              console.error('Erro ao buscar dados do usuário:', error);
+              setIsLoading(false);
+              return;
             }
-          }, 0);
+
+            if (userData) {
+              const usuario = userData as Usuario;
+              setUsuario(usuario);
+              
+              // Aplicar tema
+              const tema = usuario.tema_preferencia || 'feminino';
+              console.log('Aplicando tema:', tema);
+              document.documentElement.setAttribute('data-theme', tema);
+            } else {
+              // Se não encontrou dados, aplicar tema padrão
+              console.log('Usuário não encontrado, aplicando tema padrão');
+              document.documentElement.setAttribute('data-theme', 'feminino');
+            }
+          } catch (error) {
+            console.error('Erro ao buscar perfil do usuário:', error);
+            document.documentElement.setAttribute('data-theme', 'feminino');
+          }
         } else {
           setUsuario(null);
           // Reset para tema padrão
+          console.log('Sem sessão, aplicando tema padrão');
           document.documentElement.setAttribute('data-theme', 'feminino');
         }
 
