@@ -680,12 +680,12 @@ export function ConfiguracaoBackup() {
                 <Input
                   type="email"
                   placeholder="seu@email.com"
-                  value={configuracaoBackup?.email_backup || ''}
+                  value={localConfig.email_backup || ''}
                   onChange={(e) => {
                     const newConfig = { ...localConfig, email_backup: e.target.value };
                     setLocalConfig(newConfig);
+                    salvarBackup(newConfig);
                   }}
-                  onBlur={() => salvarBackup(localConfig)}
                   className="input-responsive"
                 />
                 <p className="text-responsive-xs text-muted-foreground">
