@@ -91,6 +91,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/`;
       
+      console.log('SignUp - Tema selecionado:', userData.tema_preferencia);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -124,6 +126,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (profileError) {
           console.error('Erro ao criar perfil:', profileError);
+        } else {
+          console.log('Perfil criado com tema:', userData.tema_preferencia);
         }
 
         toast.success('Conta criada com sucesso! Verifique seu email.');
@@ -194,7 +198,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      setUsuario(data as Usuario);
+      const updatedUsuario = data as Usuario;
+      setUsuario(updatedUsuario);
+      
+      // Aplicar tema se foi atualizado
+      if (updates.tema_preferencia) {
+        console.log('Aplicando novo tema:', updates.tema_preferencia);
+        document.documentElement.setAttribute('data-theme', updates.tema_preferencia);
+      }
+      
       toast.success('Perfil atualizado com sucesso!');
       return { error: null };
     } catch (error) {
