@@ -1116,6 +1116,20 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "referencias_clientes_referenciado_fkey"
+            columns: ["cliente_referenciado_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referencias_clientes_referenciador_fkey"
+            columns: ["cliente_referenciador_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       relatorios_auditoria: {
@@ -1366,6 +1380,8 @@ export type Database = {
       }
       ranking_fidelidade: {
         Row: {
+          classe_cor: string | null
+          classe_nome: string | null
           cliente_id: string | null
           cliente_nome: string | null
           nivel: string | null
