@@ -187,7 +187,7 @@ export const useSupabaseConfiguracoes = () => {
         .upsert({
           ...backup,
           user_id: user.id,
-        })
+        }, { onConflict: 'user_id' })
         .select();
 
       if (error) throw error;
