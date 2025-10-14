@@ -28,7 +28,7 @@ export const OfflineIndicator = ({ position = 'top', variant = 'badge' }: Offlin
   if (variant === 'banner') {
     if (isOffline) {
       return (
-        <div className={`fixed left-0 right-0 z-40 bg-yellow-500 text-yellow-900 p-2 ${
+        <div className={`fixed left-0 right-0 z-40 bg-warning text-warning-foreground p-2 ${
           position === 'top' ? 'top-0' : 'bottom-0'
         }`}>
           <div className="container mx-auto flex items-center justify-center gap-2 text-sm font-medium">
@@ -41,7 +41,7 @@ export const OfflineIndicator = ({ position = 'top', variant = 'badge' }: Offlin
 
     if (showOnlineMessage) {
       return (
-        <div className={`fixed left-0 right-0 z-40 bg-green-500 text-white p-2 ${
+        <div className={`fixed left-0 right-0 z-40 bg-success text-success-foreground p-2 ${
           position === 'top' ? 'top-0' : 'bottom-0'
         }`}>
           <div className="container mx-auto flex items-center justify-center gap-2 text-sm font-medium">
@@ -67,7 +67,7 @@ export const OfflineIndicator = ({ position = 'top', variant = 'badge' }: Offlin
 
   if (showOnlineMessage) {
     return (
-      <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+      <Badge className="flex items-center gap-1 bg-success text-success-foreground">
         <Wifi className="h-3 w-3" />
         Online
       </Badge>

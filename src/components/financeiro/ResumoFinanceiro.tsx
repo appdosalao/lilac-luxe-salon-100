@@ -18,11 +18,11 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
     <div className="grid-responsive-5">
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive">
         <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex-shrink-0">
-            <TrendingUp className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success flex-shrink-0">
+            <TrendingUp className="h-6 w-6 text-success-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-green-600 truncate">
+            <p className="text-responsive-lg font-bold text-success truncate">
               {formatarValor(resumo.totalEntradas)}
             </p>
             <p className="text-responsive-sm text-muted-foreground">Entradas do Mês</p>
@@ -32,11 +32,11 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
       
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive">
         <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-shrink-0">
-            <TrendingDown className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive flex-shrink-0">
+            <TrendingDown className="h-6 w-6 text-destructive-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-red-600 truncate">
+            <p className="text-responsive-lg font-bold text-destructive truncate">
               {formatarValor(resumo.totalSaidas)}
             </p>
             <p className="text-responsive-sm text-muted-foreground">Saídas do Mês</p>
@@ -46,20 +46,20 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
       
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive">
         <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br flex-shrink-0 ${
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl flex-shrink-0 ${
             resumo.lucro >= 0 
-              ? 'from-primary to-lilac-primary' 
-              : 'from-red-500 to-red-600'
+              ? 'bg-primary' 
+              : 'bg-destructive'
           }`}>
             {resumo.lucro >= 0 ? (
-              <PiggyBank className="h-6 w-6 text-white" />
+              <PiggyBank className="h-6 w-6 text-primary-foreground" />
             ) : (
-              <DollarSign className="h-6 w-6 text-white" />
+              <DollarSign className="h-6 w-6 text-destructive-foreground" />
             )}
           </div>
           <div className="min-w-0 flex-1">
             <p className={`text-responsive-lg font-bold truncate ${
-              resumo.lucro >= 0 ? 'text-primary' : 'text-red-600'
+              resumo.lucro >= 0 ? 'text-primary' : 'text-destructive'
             }`}>
               {formatarValor(resumo.lucro)}
             </p>
@@ -73,11 +73,11 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
       {/* Valor em Aberto */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive">
         <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex-shrink-0">
-            <Clock className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning flex-shrink-0">
+            <Clock className="h-6 w-6 text-warning-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-orange-600 truncate">
+            <p className="text-responsive-lg font-bold text-warning truncate">
               {formatarValor(resumo.valorEmAberto)}
             </p>
             <p className="text-responsive-sm text-muted-foreground">Valor em Aberto</p>
@@ -88,11 +88,11 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
       {/* Contas a Pagar */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive">
         <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-shrink-0">
-            <AlertCircle className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive flex-shrink-0">
+            <AlertCircle className="h-6 w-6 text-destructive-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-red-600 truncate">
+            <p className="text-responsive-lg font-bold text-destructive truncate">
               {formatarValor(resumo.contasAPagar)}
             </p>
             <p className="text-responsive-sm text-muted-foreground">Contas a Pagar</p>

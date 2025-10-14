@@ -8,18 +8,18 @@ export const RankingClientes = () => {
 
   const getNivelBadge = (nivel: string) => {
     const niveis: Record<string, { color: string; label: string }> = {
-      bronze: { color: 'bg-orange-700 text-white', label: 'Bronze' },
-      prata: { color: 'bg-gray-400 text-white', label: 'Prata' },
-      ouro: { color: 'bg-yellow-500 text-white', label: 'Ouro' },
-      platina: { color: 'bg-purple-600 text-white', label: 'Platina' }
+      bronze: { color: 'bg-warning text-warning-foreground', label: 'Bronze' },
+      prata: { color: 'bg-muted text-muted-foreground', label: 'Prata' },
+      ouro: { color: 'bg-accent text-accent-foreground', label: 'Ouro' },
+      platina: { color: 'bg-primary text-primary-foreground', label: 'Platina' }
     };
     return niveis[nivel] || niveis.bronze;
   };
 
   const getRankingIcon = (pos: number) => {
-    if (pos === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (pos === 2) return <Medal className="h-5 w-5 text-gray-400" />;
-    if (pos === 3) return <Award className="h-5 w-5 text-orange-700" />;
+    if (pos === 1) return <Trophy className="h-5 w-5 text-accent" />;
+    if (pos === 2) return <Medal className="h-5 w-5 text-muted-foreground" />;
+    if (pos === 3) return <Award className="h-5 w-5 text-warning" />;
     return <span className="text-sm font-medium text-muted-foreground">#{pos}</span>;
   };
 

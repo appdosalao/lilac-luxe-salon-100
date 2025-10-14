@@ -274,10 +274,10 @@ Você receberá uma confirmação em breve.
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-green-600" />
+            <div className="mx-auto mb-4 w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-success" />
             </div>
-            <CardTitle className="text-2xl text-green-700">Agendamento Confirmado!</CardTitle>
+            <CardTitle className="text-2xl text-success">Agendamento Confirmado!</CardTitle>
             <CardDescription>
               Seu agendamento foi realizado com sucesso. Você receberá uma confirmação em breve.
             </CardDescription>
@@ -295,7 +295,7 @@ Você receberá uma confirmação em breve.
               <Button 
                 onClick={compartilharComprovante}
                 disabled={isSharing}
-                className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                className="w-full flex items-center gap-2 bg-success hover:bg-success/90"
               >
                 <Share2 className="w-4 h-4" />
                 {isSharing ? 'Compartilhando...' : 'Compartilhar Comprovante'}
@@ -350,10 +350,10 @@ Você receberá uma confirmação em breve.
                     value={formData.nome_completo}
                     onChange={(e) => handleInputChange('nome_completo', e.target.value)}
                     placeholder="Seu nome completo"
-                    className={errors.nome_completo ? 'border-red-500' : ''}
+                    className={errors.nome_completo ? 'border-destructive' : ''}
                   />
                   {errors.nome_completo && (
-                    <span className="text-sm text-red-500">{errors.nome_completo}</span>
+                    <span className="text-sm text-destructive">{errors.nome_completo}</span>
                   )}
                 </div>
 
@@ -365,10 +365,10 @@ Você receberá uma confirmação em breve.
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="seu@email.com"
-                    className={errors.email ? 'border-red-500' : ''}
+                    className={errors.email ? 'border-destructive' : ''}
                   />
                   {errors.email && (
-                    <span className="text-sm text-red-500">{errors.email}</span>
+                    <span className="text-sm text-destructive">{errors.email}</span>
                   )}
                 </div>
 
@@ -379,10 +379,10 @@ Você receberá uma confirmação em breve.
                     value={formData.telefone}
                     onChange={(e) => handleInputChange('telefone', e.target.value)}
                     placeholder="(11) 99999-9999"
-                    className={errors.telefone ? 'border-red-500' : ''}
+                    className={errors.telefone ? 'border-destructive' : ''}
                   />
                   {errors.telefone && (
-                    <span className="text-sm text-red-500">{errors.telefone}</span>
+                    <span className="text-sm text-destructive">{errors.telefone}</span>
                   )}
                 </div>
               </div>
@@ -397,7 +397,7 @@ Você receberá uma confirmação em breve.
                 <div>
                   <Label htmlFor="servico_id">Serviço *</Label>
                   <Select onValueChange={(value) => handleInputChange('servico_id', value)}>
-                    <SelectTrigger className={errors.servico_id ? 'border-red-500' : ''}>
+                    <SelectTrigger className={errors.servico_id ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
@@ -409,7 +409,7 @@ Você receberá uma confirmação em breve.
                     </SelectContent>
                   </Select>
                   {errors.servico_id && (
-                    <span className="text-sm text-red-500">{errors.servico_id}</span>
+                    <span className="text-sm text-destructive">{errors.servico_id}</span>
                   )}
                 </div>
 
@@ -422,10 +422,10 @@ Você receberá uma confirmação em breve.
                     max={dataMaxima}
                     value={formData.data}
                     onChange={(e) => handleInputChange('data', e.target.value)}
-                    className={errors.data ? 'border-red-500' : ''}
+                    className={errors.data ? 'border-destructive' : ''}
                   />
                   {errors.data && (
-                    <span className="text-sm text-red-500">{errors.data}</span>
+                    <span className="text-sm text-destructive">{errors.data}</span>
                   )}
                   {formData.data && !isDataDisponivel(formData.data) && (
                     <Alert className="mt-2">
@@ -443,7 +443,7 @@ Você receberá uma confirmação em breve.
                     onValueChange={(value) => handleInputChange('horario', value)}
                     disabled={!formData.servico_id || !formData.data || !isDataDisponivel(formData.data)}
                   >
-                    <SelectTrigger className={errors.horario ? 'border-red-500' : ''}>
+                    <SelectTrigger className={errors.horario ? 'border-destructive' : ''}>
                       <SelectValue placeholder={
                         !formData.servico_id || !formData.data 
                           ? "Selecione um serviço e data primeiro" 
@@ -465,23 +465,20 @@ Você receberá uma confirmação em breve.
                             <div className="flex items-center justify-between w-full">
                               <span>{horario.horario}</span>
                               {!horario.disponivel && (
-                                <span className="text-muted-foreground text-xs ml-2">(Ocupado)</span>
+                                <span className="text-xs text-muted-foreground ml-2">(Ocupado)</span>
                               )}
                             </div>
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-horarios" disabled>
-                          {!formData.data || !isDataDisponivel(formData.data) 
-                            ? "Selecione uma data válida" 
-                            : "Nenhum horário disponível para esta data"
-                          }
+                        <SelectItem value="none" disabled>
+                          Nenhum horário disponível
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   {errors.horario && (
-                    <span className="text-sm text-red-500">{errors.horario}</span>
+                    <span className="text-sm text-destructive">{errors.horario}</span>
                   )}
                   {servicoSelecionado && (
                     <p className="text-sm text-muted-foreground mt-1">

@@ -67,11 +67,11 @@ export default function RelatoriosAvancados() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600">
-              <TrendingUp className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success">
+              <TrendingUp className="h-6 w-6 text-success-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-success">
                 {formatarValor(dadosRelatorio.totalEntradas)}
               </p>
               <p className="text-sm text-muted-foreground">Total de Entradas</p>
@@ -81,11 +81,11 @@ export default function RelatoriosAvancados() {
 
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600">
-              <TrendingDown className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive">
+              <TrendingDown className="h-6 w-6 text-destructive-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-destructive">
                 {formatarValor(dadosRelatorio.totalSaidas)}
               </p>
               <p className="text-sm text-muted-foreground">Total de Saídas</p>
@@ -95,16 +95,16 @@ export default function RelatoriosAvancados() {
 
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
               dadosRelatorio.lucroLiquido >= 0 
-                ? 'from-blue-500 to-blue-600' 
-                : 'from-red-500 to-red-600'
+                ? 'bg-info' 
+                : 'bg-destructive'
             }`}>
-              <DollarSign className="h-6 w-6 text-white" />
+              <DollarSign className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <p className={`text-2xl font-bold ${
-                dadosRelatorio.lucroLiquido >= 0 ? 'text-blue-600' : 'text-red-600'
+                dadosRelatorio.lucroLiquido >= 0 ? 'text-info' : 'text-destructive'
               }`}>
                 {formatarValor(dadosRelatorio.lucroLiquido)}
               </p>
@@ -117,11 +117,11 @@ export default function RelatoriosAvancados() {
 
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600">
-              <FileText className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning">
+              <FileText className="h-6 w-6 text-warning-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-2xl font-bold text-orange-600">
+              <p className="text-2xl font-bold text-warning">
                 {formatarValor(dadosRelatorio.contasAPagar)}
               </p>
               <p className="text-sm text-muted-foreground">Contas a Pagar</p>
@@ -203,7 +203,7 @@ export default function RelatoriosAvancados() {
                           <span className="font-medium">{categoria.categoria}</span>
                         </div>
                         <div className="text-right">
-                          <div className={`font-semibold ${categoria.lucro >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`font-semibold ${categoria.lucro >= 0 ? 'text-success' : 'text-destructive'}`}>
                             {formatarValor(categoria.lucro)}
                           </div>
                           <div className="text-xs text-muted-foreground">
@@ -230,7 +230,7 @@ export default function RelatoriosAvancados() {
                           <span className="font-medium">{servico.nome}</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-green-600">
+                          <div className="font-semibold text-success">
                             {formatarValor(servico.valorTotal)}
                           </div>
                           <div className="text-xs text-muted-foreground">

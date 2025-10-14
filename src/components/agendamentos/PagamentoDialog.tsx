@@ -76,13 +76,13 @@ export default function PagamentoDialog({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Já Pago:</span>
-              <span className="font-semibold text-green-600">
+              <span className="font-semibold text-success">
                 {formatarValor(agendamento?.valorPago || 0)}
               </span>
             </div>
             <div className="flex justify-between text-sm pt-2 border-t border-border">
               <span className="text-muted-foreground font-medium">Valor Devido:</span>
-              <span className="font-bold text-red-500">{formatarValor(valorDevido)}</span>
+              <span className="font-bold text-destructive">{formatarValor(valorDevido)}</span>
             </div>
           </div>
 

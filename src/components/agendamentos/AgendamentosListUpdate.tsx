@@ -15,7 +15,7 @@ export const AgendamentoVisuals = ({ agendamento, children }: AgendamentoVisuals
       {children}
       {agendamento.origem === 'cronograma' && (
         <div className="absolute top-2 right-2">
-          <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+          <Badge variant="secondary" className="text-xs">
             💜 Cronograma
           </Badge>
         </div>
@@ -35,8 +35,8 @@ export const AgendamentoVisuals = ({ agendamento, children }: AgendamentoVisuals
 export const getOrigemStyles = (origem?: string) => {
   if (origem === 'cronograma') {
     return {
-      cardStyle: 'border-purple-200 bg-purple-50/30',
-      iconColor: 'text-purple-600',
+      cardStyle: 'border-primary/20 bg-primary/5',
+      iconColor: 'text-primary',
     };
   }
   return {

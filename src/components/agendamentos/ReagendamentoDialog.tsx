@@ -119,7 +119,7 @@ export default function ReagendamentoDialog({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-foreground">{agendamento.clienteNome}</h4>
-                  <Badge className="bg-blue-500 text-white">
+                  <Badge className="bg-info text-info-foreground">
                     <Calendar className="h-3 w-3 mr-1" />
                     Agendado
                   </Badge>
@@ -176,13 +176,13 @@ export default function ReagendamentoDialog({
 
           {/* Preview da nova data/hora */}
           {novaData && novaHora && (
-            <Card className="bg-green-50 border-green-200">
+            <Card className="bg-success/10 border-success/20">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-green-700">
+                <div className="flex items-center gap-2 text-success">
                   <RefreshCw className="h-4 w-4" />
                   <span className="font-medium">Novo agendamento:</span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-green-600">
+                <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-success">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>{formatarData(novaData)}</span>

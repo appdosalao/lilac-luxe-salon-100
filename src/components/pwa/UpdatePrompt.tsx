@@ -27,7 +27,7 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
 
   if (variant === 'banner') {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white p-3 shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-info text-info-foreground p-3 shadow-lg">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <RefreshCw className="h-5 w-5" />
@@ -50,7 +50,7 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
                 onClick={handleDismiss}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/20"
+                className="hover:bg-primary/20"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -64,25 +64,25 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
   if (variant === 'floating') {
     return (
       <div className="fixed bottom-4 left-4 z-50">
-        <Card className="w-80 shadow-xl border-blue-200 bg-blue-50">
+        <Card className="w-80 shadow-xl border-info/20 bg-info/5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <RefreshCw className="h-5 w-5 text-blue-600" />
-                <CardTitle className="text-lg text-blue-900">Atualização</CardTitle>
+                <RefreshCw className="h-5 w-5 text-info" />
+                <CardTitle className="text-lg">Atualização</CardTitle>
               </div>
               {showDismiss && (
                 <Button
                   onClick={handleDismiss}
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
+                  className="h-8 w-8 p-0"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
-            <CardDescription className="text-blue-700">
+            <CardDescription>
               Nova versão disponível com melhorias e correções
             </CardDescription>
           </CardHeader>
@@ -90,7 +90,7 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
             <Button
               onClick={handleUpdate}
               disabled={isUpdating}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full"
             >
               {isUpdating ? 'Atualizando...' : 'Atualizar Agora'}
             </Button>
@@ -102,16 +102,16 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
 
   // Card variant
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-info/20 bg-info/5">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <RefreshCw className="h-5 w-5 text-blue-600" />
+            <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-info" />
             </div>
             <div>
-              <CardTitle className="text-lg text-blue-900">Nova Versão Disponível</CardTitle>
-              <CardDescription className="text-blue-700">
+              <CardTitle className="text-lg">Nova Versão Disponível</CardTitle>
+              <CardDescription>
                 Atualize para ter acesso às últimas melhorias
               </CardDescription>
             </div>
@@ -121,7 +121,7 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
               onClick={handleDismiss}
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
+              className="h-8 w-8 p-0"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -134,7 +134,6 @@ export const UpdatePrompt = ({ variant = 'floating', showDismiss = true }: Updat
             onClick={handleUpdate}
             disabled={isUpdating}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
           >
             {isUpdating ? 'Atualizando...' : 'Atualizar'}
           </Button>

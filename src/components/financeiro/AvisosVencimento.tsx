@@ -95,13 +95,13 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
   const getSituacaoColor = (situacao: string) => {
     switch (situacao) {
       case 'vencido':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-destructive/10 text-destructive';
       case 'venceHoje':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        return 'bg-warning/10 text-warning';
       case 'venceEmBreve':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-warning/10 text-warning';
       default:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-info/10 text-info';
     }
   };
 
@@ -122,15 +122,15 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-600">
+          <CardTitle className="flex items-center gap-2 text-success">
             <Bell className="h-5 w-5" />
             Avisos de Vencimento
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <Calendar className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <p className="text-green-600 font-medium">Parabéns!</p>
+            <Calendar className="h-12 w-12 text-success mx-auto mb-4" />
+            <p className="text-success font-medium">Parabéns!</p>
             <p className="text-muted-foreground">Não há contas vencendo nos próximos 7 dias.</p>
           </div>
         </CardContent>
@@ -142,9 +142,9 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
     <div className="space-y-4">
       {/* Alertas Críticos */}
       {(contasVencidas.length > 0 || contasVenceHoje.length > 0) && (
-        <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800 dark:text-red-200">
+        <Alert className="border-destructive/20 bg-destructive/10">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="text-destructive">
             <strong>Atenção:</strong> Você tem {contasVencidas.length + contasVenceHoje.length} conta(s) 
             que requer(em) pagamento imediato!
           </AlertDescription>
@@ -153,9 +153,9 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
 
       {/* Alerta de Contas Vencendo em Breve */}
       {contasVenceEmBreve.length > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
-          <Bell className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+        <Alert className="border-warning/20 bg-warning/10">
+          <Bell className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-warning">
             Você tem {contasVenceEmBreve.length} conta(s) vencendo nos próximos dias.
           </AlertDescription>
         </Alert>
@@ -196,8 +196,8 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
                   onClick={() => onPagarConta(conta.id)}
                   className={
                     conta.situacao === 'vencido' || conta.situacao === 'venceHoje'
-                      ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-green-600 hover:bg-green-700'
+                      ? 'bg-destructive hover:bg-destructive/90'
+                      : 'bg-success hover:bg-success/90'
                   }
                 >
                   Pagar Agora
