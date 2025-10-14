@@ -1522,7 +1522,9 @@ export type Database = {
         }[]
       }
       calcular_nivel_cliente: {
-        Args: { pontos_totais: number }
+        Args:
+          | { p_user_id: string; pontos_totais: number }
+          | { pontos_totais: number }
         Returns: string
       }
       converter_agendamento_online: {
