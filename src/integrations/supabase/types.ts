@@ -1378,6 +1378,48 @@ export type Database = {
         }
         Relationships: []
       }
+      horarios_disponiveis_publicos: {
+        Row: {
+          data: string | null
+          duracao: number | null
+          horario: string | null
+          servico_id: string | null
+          status: string | null
+          valor: number | null
+        }
+        Insert: {
+          data?: string | null
+          duracao?: number | null
+          horario?: string | null
+          servico_id?: string | null
+          status?: string | null
+          valor?: number | null
+        }
+        Update: {
+          data?: string | null
+          duracao?: number | null
+          horario?: string | null
+          servico_id?: string | null
+          status?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_online_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ranking_fidelidade: {
         Row: {
           classe_cor: string | null
