@@ -44,6 +44,11 @@ export function ConfiguracaoBackup() {
     incluir_servicos: true,
     incluir_financeiro: true,
     incluir_cronogramas: true,
+    backup_automatico: false,
+    frequencia_backup: 'semanal' as 'diario' | 'semanal' | 'mensal',
+    dia_backup: 1,
+    hora_backup: '02:00',
+    email_backup: '',
   });
 
   useEffect(() => {
@@ -54,6 +59,11 @@ export function ConfiguracaoBackup() {
         incluir_servicos: configuracaoBackup.incluir_servicos,
         incluir_financeiro: configuracaoBackup.incluir_financeiro,
         incluir_cronogramas: configuracaoBackup.incluir_cronogramas,
+        backup_automatico: configuracaoBackup.backup_automatico,
+        frequencia_backup: configuracaoBackup.frequencia_backup,
+        dia_backup: configuracaoBackup.dia_backup || 1,
+        hora_backup: configuracaoBackup.hora_backup,
+        email_backup: configuracaoBackup.email_backup || '',
       });
     }
   }, [configuracaoBackup]);
@@ -468,6 +478,15 @@ export function ConfiguracaoBackup() {
           </div>
 
           <Button 
+            onClick={() => salvarBackup(localConfig)} 
+            variant="outline"
+            className="w-full"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Salvar Preferências de Backup
+          </Button>
+
+          <Button 
             onClick={exportarDados} 
             disabled={realizandoBackup}
             className="w-full"
@@ -538,6 +557,148 @@ export function ConfiguracaoBackup() {
               )}
             </label>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Backup Automático */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Backup Automático Programado
+          </CardTitle>
+          <CardDescription>
+            Configure backups automáticos periódicos dos seus dados
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <Label className="text-base font-medium">Ativar Backup Automático</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quando ativado, você será notificado para fazer backup
+              </p>
+            </div>
+            <Switch
+              checked={localConfig.backup_automatico || false}
+              onCheckedChange={(checked) => {
+                const newConfig = { ...localConfig, backup_automatico: checked };
+                setLocalConfig(newConfig);
+                salvarBackup(newConfig);
+              }}
+            />
+          </div>
+
+          {localConfig.backup_automatico && (
+            <>
+              <div className="space-y-3">
+                <Label>Frequência do Backup:</Label>
+                <Select
+                  value={configuracaoBackup?.frequencia_backup || 'semanal'}
+                  onValueChange={(value) => {
+                    const newConfig = { ...localConfig, frequencia_backup: value as 'diario' | 'semanal' | 'mensal' };
+                    setLocalConfig(newConfig);
+                    salvarBackup(newConfig);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diario">Diariamente</SelectItem>
+                    <SelectItem value="semanal">Semanalmente</SelectItem>
+                    <SelectItem value="mensal">Mensalmente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {configuracaoBackup?.frequencia_backup === 'semanal' && (
+                <div className="space-y-3">
+                  <Label>Dia da Semana:</Label>
+                  <Select
+                    value={configuracaoBackup?.dia_backup?.toString() || '0'}
+                    onValueChange={(value) => {
+                      const newConfig = { ...localConfig, dia_backup: parseInt(value) };
+                      setLocalConfig(newConfig);
+                      salvarBackup(newConfig);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Domingo</SelectItem>
+                      <SelectItem value="1">Segunda-feira</SelectItem>
+                      <SelectItem value="2">Terça-feira</SelectItem>
+                      <SelectItem value="3">Quarta-feira</SelectItem>
+                      <SelectItem value="4">Quinta-feira</SelectItem>
+                      <SelectItem value="5">Sexta-feira</SelectItem>
+                      <SelectItem value="6">Sábado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {configuracaoBackup?.frequencia_backup === 'mensal' && (
+                <div className="space-y-3">
+                  <Label>Dia do Mês:</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="28"
+                    value={configuracaoBackup?.dia_backup || 1}
+                    onChange={(e) => {
+                      const newConfig = { ...localConfig, dia_backup: parseInt(e.target.value) };
+                      setLocalConfig(newConfig);
+                    }}
+                    onBlur={() => salvarBackup(localConfig)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Escolha entre 1 e 28 (evita problemas com meses diferentes)
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <Label>Horário do Backup:</Label>
+                <Input
+                  type="time"
+                  value={configuracaoBackup?.hora_backup || '02:00'}
+                  onChange={(e) => {
+                    const newConfig = { ...localConfig, hora_backup: e.target.value };
+                    setLocalConfig(newConfig);
+                  }}
+                  onBlur={() => salvarBackup(localConfig)}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Email para Notificação (opcional):</Label>
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={configuracaoBackup?.email_backup || ''}
+                  onChange={(e) => {
+                    const newConfig = { ...localConfig, email_backup: e.target.value };
+                    setLocalConfig(newConfig);
+                  }}
+                  onBlur={() => salvarBackup(localConfig)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Receba lembretes por email quando for hora de fazer backup
+                </p>
+              </div>
+
+              {configuracaoBackup?.ultimo_backup && (
+                <Alert>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>
+                    Último backup realizado em: {new Date(configuracaoBackup.ultimo_backup).toLocaleString('pt-BR')}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

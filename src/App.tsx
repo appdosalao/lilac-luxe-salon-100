@@ -19,6 +19,7 @@ import Marketing from "./pages/Marketing";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro"; 
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
+import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => {
           <PWAProvider>
             <NotificationProviderAvancado>
               <div id="app-container">
+                <BackupPrompt />
                 <Toaster position="top-right" />
                   <Routes>
                     {/* Rotas públicas */}
