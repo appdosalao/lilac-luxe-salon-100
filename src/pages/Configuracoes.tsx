@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConfiguracaoHorarios } from '@/components/configuracoes/ConfiguracaoHorarios-Simple';
 import { ConfiguracaoNotificacoesAvancadas } from '@/components/configuracoes/ConfiguracaoNotificacoesAvancadas';
+import { ConfiguracaoBackup } from '@/components/configuracoes/ConfiguracaoBackup';
 import { Clock, Bell, Download, Settings } from 'lucide-react';
 
 export default function Configuracoes() {
@@ -71,27 +72,7 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                <span>Backup e Segurança</span>
-              </CardTitle>
-              <CardDescription>
-                Configure o backup automático dos seus dados para maior segurança.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Funcionalidade de backup em desenvolvimento.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Em breve você poderá configurar backups automáticos dos seus dados.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <ConfiguracaoBackup />
         </TabsContent>
       </Tabs>
     </div>
