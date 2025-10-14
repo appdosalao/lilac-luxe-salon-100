@@ -410,40 +410,40 @@ export function ConfiguracaoBackup() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Exportar Dados */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+        <CardHeader className="p-responsive">
+          <CardTitle className="flex items-center gap-2 text-responsive-lg">
+            <Download className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Exportar Dados
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-responsive-sm">
             Faça backup de todos os seus dados em diferentes formatos
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-responsive">
           {/* Seleção de formato */}
           <div className="space-y-3">
-            <Label className="text-base font-medium">Formato de Exportação:</Label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Label className="text-responsive-base font-medium">Formato de Exportação:</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               {FORMATOS_EXPORT.map((formato) => {
                 const Icon = formato.icon;
                 return (
                   <button
                     key={formato.value}
                     onClick={() => setFormatoExport(formato.value as ExportFormat)}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    className={`p-3 sm:p-4 border-2 rounded-lg text-left transition-all touch-manipulation ${
                       formatoExport === formato.value
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="flex items-center gap-3 mb-2">
-                      <Icon className="h-5 w-5" />
-                      <span className="font-semibold">{formato.label}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      <span className="font-semibold text-responsive-sm">{formato.label}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{formato.description}</p>
+                    <p className="text-responsive-xs text-muted-foreground">{formato.description}</p>
                   </button>
                 );
               })}
@@ -452,8 +452,8 @@ export function ConfiguracaoBackup() {
 
           {/* Seleção de dados */}
           <div className="space-y-3">
-            <Label className="text-base font-medium">Dados para incluir:</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <Label className="text-responsive-base font-medium">Dados para incluir:</Label>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {[
                 { key: 'incluir_clientes', label: 'Clientes', icon: '👥' },
                 { key: 'incluir_servicos', label: 'Serviços', icon: '✂️' },
@@ -461,7 +461,7 @@ export function ConfiguracaoBackup() {
                 { key: 'incluir_cronogramas', label: 'Cronogramas', icon: '🔄' },
                 { key: 'incluir_financeiro', label: 'Financeiro', icon: '💰' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center space-x-2 p-3 border rounded-lg">
+                <div key={item.key} className="flex items-center space-x-2 p-2 sm:p-3 border rounded-lg touch-manipulation">
                   <Switch
                     id={item.key}
                     checked={localConfig[item.key as keyof typeof localConfig] as boolean}
@@ -469,7 +469,7 @@ export function ConfiguracaoBackup() {
                       setLocalConfig(prev => ({ ...prev, [item.key]: checked }))
                     }
                   />
-                  <Label htmlFor={item.key} className="text-sm cursor-pointer flex-1">
+                  <Label htmlFor={item.key} className="text-responsive-xs cursor-pointer flex-1 select-none">
                     {item.icon} {item.label}
                   </Label>
                 </div>
@@ -480,27 +480,27 @@ export function ConfiguracaoBackup() {
           <Button 
             onClick={() => salvarBackup(localConfig)} 
             variant="outline"
-            className="w-full"
+            className="w-full btn-touch"
           >
             <Save className="h-4 w-4 mr-2" />
-            Salvar Preferências de Backup
+            <span className="text-responsive-sm">Salvar Preferências de Backup</span>
           </Button>
 
           <Button 
             onClick={exportarDados} 
             disabled={realizandoBackup}
-            className="w-full"
+            className="w-full btn-touch"
             size="lg"
           >
             {realizandoBackup ? (
               <>
                 <Download className="h-4 w-4 mr-2 animate-pulse" />
-                Preparando backup...
+                <span className="text-responsive-sm">Preparando backup...</span>
               </>
             ) : (
               <>
                 <Download className="h-4 w-4 mr-2" />
-                Exportar em {formatoExport.toUpperCase()}
+                <span className="text-responsive-sm">Exportar em {formatoExport.toUpperCase()}</span>
               </>
             )}
           </Button>
@@ -509,25 +509,25 @@ export function ConfiguracaoBackup() {
 
       {/* Importar Dados */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
+        <CardHeader className="p-responsive">
+          <CardTitle className="flex items-center gap-2 text-responsive-lg">
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Importar Dados
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-responsive-sm">
             Restaure seus dados a partir de um arquivo de backup
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-responsive">
           <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            <AlertDescription className="text-responsive-xs">
               A importação irá adicionar os dados do backup ao sistema. Dados duplicados serão atualizados.
               Atualmente suportamos apenas importação de arquivos JSON.
             </AlertDescription>
           </Alert>
 
-          <div className="border-2 border-dashed rounded-lg p-8 text-center">
+          <div className="border-2 border-dashed rounded-lg p-6 sm:p-8 text-center touch-manipulation">
             <input
               type="file"
               id="file-upload"
@@ -542,15 +542,15 @@ export function ConfiguracaoBackup() {
             >
               {importando ? (
                 <>
-                  <Upload className="h-12 w-12 text-primary animate-pulse" />
-                  <p className="font-medium">Importando dados...</p>
-                  <p className="text-sm text-muted-foreground">Aguarde, isso pode levar alguns instantes</p>
+                  <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-primary animate-pulse" />
+                  <p className="font-medium text-responsive-base">Importando dados...</p>
+                  <p className="text-responsive-sm text-muted-foreground">Aguarde, isso pode levar alguns instantes</p>
                 </>
               ) : (
                 <>
-                  <File className="h-12 w-12 text-muted-foreground" />
-                  <p className="font-medium">Clique para selecionar arquivo</p>
-                  <p className="text-sm text-muted-foreground">
+                  <File className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+                  <p className="font-medium text-responsive-base">Clique para selecionar arquivo</p>
+                  <p className="text-responsive-sm text-muted-foreground">
                     Suporta: JSON, CSV, SQL (máx. 10MB)
                   </p>
                 </>
@@ -562,20 +562,20 @@ export function ConfiguracaoBackup() {
 
       {/* Backup Automático */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
+        <CardHeader className="p-responsive">
+          <CardTitle className="flex items-center gap-2 text-responsive-lg">
+            <Database className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Backup Automático Programado
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-responsive-sm">
             Configure backups automáticos periódicos dos seus dados
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="flex-1">
-              <Label className="text-base font-medium">Ativar Backup Automático</Label>
-              <p className="text-sm text-muted-foreground mt-1">
+        <CardContent className="space-y-4 p-responsive">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg">
+            <div className="flex-1 min-w-0">
+              <Label className="text-responsive-base font-medium">Ativar Backup Automático</Label>
+              <p className="text-responsive-xs text-muted-foreground mt-1">
                 Quando ativado, você será notificado para fazer backup
               </p>
             </div>
@@ -586,13 +586,14 @@ export function ConfiguracaoBackup() {
                 setLocalConfig(newConfig);
                 salvarBackup(newConfig);
               }}
+              className="flex-shrink-0"
             />
           </div>
 
           {localConfig.backup_automatico && (
             <>
               <div className="space-y-3">
-                <Label>Frequência do Backup:</Label>
+                <Label className="text-responsive-sm">Frequência do Backup:</Label>
                 <Select
                   value={configuracaoBackup?.frequencia_backup || 'semanal'}
                   onValueChange={(value) => {
@@ -601,7 +602,7 @@ export function ConfiguracaoBackup() {
                     salvarBackup(newConfig);
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="select-responsive">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -614,7 +615,7 @@ export function ConfiguracaoBackup() {
 
               {configuracaoBackup?.frequencia_backup === 'semanal' && (
                 <div className="space-y-3">
-                  <Label>Dia da Semana:</Label>
+                  <Label className="text-responsive-sm">Dia da Semana:</Label>
                   <Select
                     value={configuracaoBackup?.dia_backup?.toString() || '0'}
                     onValueChange={(value) => {
@@ -623,7 +624,7 @@ export function ConfiguracaoBackup() {
                       salvarBackup(newConfig);
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="select-responsive">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -641,7 +642,7 @@ export function ConfiguracaoBackup() {
 
               {configuracaoBackup?.frequencia_backup === 'mensal' && (
                 <div className="space-y-3">
-                  <Label>Dia do Mês:</Label>
+                  <Label className="text-responsive-sm">Dia do Mês:</Label>
                   <Input
                     type="number"
                     min="1"
@@ -652,15 +653,16 @@ export function ConfiguracaoBackup() {
                       setLocalConfig(newConfig);
                     }}
                     onBlur={() => salvarBackup(localConfig)}
+                    className="input-responsive"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-responsive-xs text-muted-foreground">
                     Escolha entre 1 e 28 (evita problemas com meses diferentes)
                   </p>
                 </div>
               )}
 
               <div className="space-y-3">
-                <Label>Horário do Backup:</Label>
+                <Label className="text-responsive-sm">Horário do Backup:</Label>
                 <Input
                   type="time"
                   value={configuracaoBackup?.hora_backup || '02:00'}
@@ -669,11 +671,12 @@ export function ConfiguracaoBackup() {
                     setLocalConfig(newConfig);
                   }}
                   onBlur={() => salvarBackup(localConfig)}
+                  className="input-responsive"
                 />
               </div>
 
               <div className="space-y-3">
-                <Label>Email para Notificação (opcional):</Label>
+                <Label className="text-responsive-sm">Email para Notificação (opcional):</Label>
                 <Input
                   type="email"
                   placeholder="seu@email.com"
@@ -683,16 +686,17 @@ export function ConfiguracaoBackup() {
                     setLocalConfig(newConfig);
                   }}
                   onBlur={() => salvarBackup(localConfig)}
+                  className="input-responsive"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-responsive-xs text-muted-foreground">
                   Receba lembretes por email quando for hora de fazer backup
                 </p>
               </div>
 
               {configuracaoBackup?.ultimo_backup && (
                 <Alert>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertDescription>
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                  <AlertDescription className="text-responsive-xs">
                     Último backup realizado em: {new Date(configuracaoBackup.ultimo_backup).toLocaleString('pt-BR')}
                   </AlertDescription>
                 </Alert>
@@ -704,18 +708,18 @@ export function ConfiguracaoBackup() {
 
       {/* Informações de Segurança */}
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-            <CheckCircle2 className="h-5 w-5" />
+        <CardHeader className="p-responsive">
+          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-responsive-lg">
+            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             Informações Importantes
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
-          <p>✅ <strong>Segurança:</strong> Os backups são gerados localmente no seu dispositivo</p>
-          <p>✅ <strong>Privacidade:</strong> Nenhum dado é enviado para servidores externos</p>
-          <p>✅ <strong>Formatos:</strong> JSON é recomendado para backup completo, CSV para análise em planilhas</p>
-          <p>✅ <strong>Frequência:</strong> Recomendamos fazer backups semanalmente</p>
-          <p>⚠️ <strong>Atenção:</strong> Guarde seus backups em local seguro</p>
+        <CardContent className="space-y-2 p-responsive">
+          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Segurança:</strong> Os backups são gerados localmente no seu dispositivo</p>
+          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Privacidade:</strong> Nenhum dado é enviado para servidores externos</p>
+          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Formatos:</strong> JSON é recomendado para backup completo, CSV para análise em planilhas</p>
+          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Frequência:</strong> Recomendamos fazer backups semanalmente</p>
+          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">⚠️ <strong>Atenção:</strong> Guarde seus backups em local seguro</p>
         </CardContent>
       </Card>
     </div>
