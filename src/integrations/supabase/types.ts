@@ -564,6 +564,67 @@ export type Database = {
           },
         ]
       }
+      historico_resgates: {
+        Row: {
+          agendamento_id: string | null
+          cliente_id: string
+          data_expiracao: string | null
+          data_resgate: string | null
+          data_utilizacao: string | null
+          id: string
+          pontos_gastos: number
+          recompensa_id: string
+          user_id: string
+          utilizado: boolean | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          cliente_id: string
+          data_expiracao?: string | null
+          data_resgate?: string | null
+          data_utilizacao?: string | null
+          id?: string
+          pontos_gastos: number
+          recompensa_id: string
+          user_id: string
+          utilizado?: boolean | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          cliente_id?: string
+          data_expiracao?: string | null
+          data_resgate?: string | null
+          data_utilizacao?: string | null
+          id?: string
+          pontos_gastos?: number
+          recompensa_id?: string
+          user_id?: string
+          utilizado?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_resgates_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_resgates_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_resgates_recompensa_id_fkey"
+            columns: ["recompensa_id"]
+            isOneToOne: false
+            referencedRelation: "recompensas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intervalos_trabalho: {
         Row: {
           ativo: boolean
@@ -705,6 +766,97 @@ export type Database = {
         }
         Relationships: []
       }
+      niveis_fidelidade: {
+        Row: {
+          cliente_id: string
+          data_atualizacao: string | null
+          id: string
+          nivel: string | null
+          pontos_disponiveis: number | null
+          pontos_totais: number | null
+          total_resgates: number | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          data_atualizacao?: string | null
+          id?: string
+          nivel?: string | null
+          pontos_disponiveis?: number | null
+          pontos_totais?: number | null
+          total_resgates?: number | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          data_atualizacao?: string | null
+          id?: string
+          nivel?: string | null
+          pontos_disponiveis?: number | null
+          pontos_totais?: number | null
+          total_resgates?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "niveis_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pontos_fidelidade: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          data_expiracao: string | null
+          data_ganho: string | null
+          descricao: string | null
+          expirado: boolean | null
+          id: string
+          origem: string
+          origem_id: string | null
+          pontos: number
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          data_expiracao?: string | null
+          data_ganho?: string | null
+          descricao?: string | null
+          expirado?: boolean | null
+          id?: string
+          origem: string
+          origem_id?: string | null
+          pontos: number
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          data_expiracao?: string | null
+          data_ganho?: string | null
+          descricao?: string | null
+          expirado?: boolean | null
+          id?: string
+          origem?: string
+          origem_id?: string | null
+          pontos?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       problemas_auditoria: {
         Row: {
           campo: string | null
@@ -766,6 +918,150 @@ export type Database = {
             columns: ["relatorio_id"]
             isOneToOne: false
             referencedRelation: "relatorios_auditoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programas_fidelidade: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          expiracao_pontos_dias: number | null
+          id: string
+          nome: string
+          pontos_por_real: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          expiracao_pontos_dias?: number | null
+          id?: string
+          nome?: string
+          pontos_por_real?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          expiracao_pontos_dias?: number | null
+          id?: string
+          nome?: string
+          pontos_por_real?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recompensas: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          pontos_necessarios: number
+          servico_id: string | null
+          tipo: string
+          updated_at: string | null
+          user_id: string
+          validade_dias: number | null
+          valor_desconto: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          pontos_necessarios: number
+          servico_id?: string | null
+          tipo: string
+          updated_at?: string | null
+          user_id: string
+          validade_dias?: number | null
+          valor_desconto?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          pontos_necessarios?: number
+          servico_id?: string | null
+          tipo?: string
+          updated_at?: string | null
+          user_id?: string
+          validade_dias?: number | null
+          valor_desconto?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recompensas_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referencias_clientes: {
+        Row: {
+          agendamento_id: string | null
+          cliente_referenciado_id: string | null
+          cliente_referenciador_id: string
+          codigo_referencia: string
+          created_at: string | null
+          id: string
+          pontos_ganhos: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          agendamento_id?: string | null
+          cliente_referenciado_id?: string | null
+          cliente_referenciador_id: string
+          codigo_referencia: string
+          created_at?: string | null
+          id?: string
+          pontos_ganhos?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          agendamento_id?: string | null
+          cliente_referenciado_id?: string | null
+          cliente_referenciador_id?: string
+          codigo_referencia?: string
+          created_at?: string | null
+          id?: string
+          pontos_ganhos?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referencias_clientes_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referencias_clientes_cliente_referenciado_id_fkey"
+            columns: ["cliente_referenciado_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referencias_clientes_cliente_referenciador_id_fkey"
+            columns: ["cliente_referenciador_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
@@ -1006,6 +1302,38 @@ export type Database = {
         }
         Relationships: []
       }
+      estatisticas_fidelidade: {
+        Row: {
+          clientes_ativos_30d: number | null
+          total_clientes_programa: number | null
+          total_pontos_distribuidos: number | null
+          total_pontos_resgatados: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      ranking_fidelidade: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string | null
+          nivel: string | null
+          pontos_disponiveis: number | null
+          pontos_totais: number | null
+          ranking: number | null
+          telefone: string | null
+          total_resgates: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "niveis_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retornos_completos: {
         Row: {
           agendamento_data: string | null
@@ -1057,8 +1385,32 @@ export type Database = {
           },
         ]
       }
+      saldo_pontos: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string | null
+          pontos_disponiveis: number | null
+          pontos_ganhos: number | null
+          pontos_gastos: number | null
+          total_transacoes: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pontos_fidelidade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      aplicar_expiracao_pontos: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       associar_clientes_agendamento_online: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -1090,12 +1442,20 @@ export type Database = {
           motivo: string
         }[]
       }
+      cadastrar_clientes_programa_fidelidade: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       calcular_disponibilidade: {
         Args: { p_data: string; p_user_id: string }
         Returns: {
           horario: string
           status: string
         }[]
+      }
+      calcular_nivel_cliente: {
+        Args: { pontos_totais: number }
+        Returns: string
       }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
