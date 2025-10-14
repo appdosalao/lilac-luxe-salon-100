@@ -5,6 +5,20 @@ export interface ProgramaFidelidade {
   ativo: boolean;
   pontos_por_real: number;
   expiracao_pontos_dias: number;
+  data_inicio: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClasseFidelidade {
+  id: string;
+  user_id: string;
+  nome: string;
+  pontos_minimos: number;
+  cor: string;
+  beneficios?: string;
+  ordem: number;
+  ativo: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +46,7 @@ export interface Recompensa {
   tipo: 'desconto_percentual' | 'desconto_valor' | 'servico_gratis';
   valor_desconto: number;
   servico_id?: string;
+  classe_id?: string;
   ativo: boolean;
   validade_dias: number;
   created_at: string;
@@ -111,6 +126,7 @@ export interface RecompensaFormData {
   tipo: 'desconto_percentual' | 'desconto_valor' | 'servico_gratis';
   valor_desconto: number;
   servico_id?: string;
+  classe_id?: string;
   validade_dias: number;
 }
 
@@ -118,4 +134,13 @@ export interface ProgramaFidelidadeFormData {
   nome: string;
   pontos_por_real: number;
   expiracao_pontos_dias: number;
+  data_inicio: string;
+}
+
+export interface ClasseFidelidadeFormData {
+  nome: string;
+  pontos_minimos: number;
+  cor: string;
+  beneficios?: string;
+  ordem: number;
 }

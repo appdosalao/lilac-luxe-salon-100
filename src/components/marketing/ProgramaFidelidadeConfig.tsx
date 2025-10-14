@@ -14,7 +14,8 @@ export const ProgramaFidelidadeConfig = () => {
   const [formData, setFormData] = useState<ProgramaFidelidadeFormData>({
     nome: programa?.nome || 'Programa de Fidelidade',
     pontos_por_real: programa?.pontos_por_real || 0.1,
-    expiracao_pontos_dias: programa?.expiracao_pontos_dias || 365
+    expiracao_pontos_dias: programa?.expiracao_pontos_dias || 365,
+    data_inicio: programa?.data_inicio || new Date().toISOString().split('T')[0]
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +31,8 @@ export const ProgramaFidelidadeConfig = () => {
       setFormData({
         nome: programa.nome,
         pontos_por_real: programa.pontos_por_real,
-        expiracao_pontos_dias: programa.expiracao_pontos_dias
+        expiracao_pontos_dias: programa.expiracao_pontos_dias,
+        data_inicio: programa.data_inicio
       });
     }
     setEditando(true);
@@ -127,6 +129,20 @@ export const ProgramaFidelidadeConfig = () => {
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="data_inicio">Data de Início</Label>
+              <Input
+                id="data_inicio"
+                type="date"
+                value={formData.data_inicio}
+                onChange={(e) => setFormData({ ...formData, data_inicio: e.target.value })}
+                required
+              />
+              <p className="text-sm text-muted-foreground">
+                Data em que o programa começa a valer
+              </p>
+            </div>
+
             <div className="flex gap-2">
               <Button type="submit" disabled={loading}>
                 <Save className="h-4 w-4 mr-2" />
@@ -162,6 +178,12 @@ export const ProgramaFidelidadeConfig = () => {
                   ? 'Pontos não expiram' 
                   : `${programa!.expiracao_pontos_dias} dias`
                 }
+              </p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Data de Início</Label>
+              <p className="text-lg font-medium">
+                {new Date(programa!.data_inicio).toLocaleDateString('pt-BR')}
               </p>
             </div>
           </div>

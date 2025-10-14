@@ -10,9 +10,10 @@ import type {
   RankingFidelidade,
   NivelFidelidade,
   PontoFidelidade,
-  HistoricoResgate,
+  ClasseFidelidade,
   RecompensaFormData,
-  ProgramaFidelidadeFormData
+  ProgramaFidelidadeFormData,
+  ClasseFidelidadeFormData
 } from '@/types/fidelidade';
 
 export const useSupabaseFidelidade = () => {
@@ -22,6 +23,7 @@ export const useSupabaseFidelidade = () => {
   const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
   const [estatisticas, setEstatisticas] = useState<EstatisticasFidelidade | null>(null);
   const [ranking, setRanking] = useState<RankingFidelidade[]>([]);
+  const [classes, setClasses] = useState<ClasseFidelidade[]>([]);
 
   // Carregar programa de fidelidade
   const carregarPrograma = async () => {
@@ -93,6 +95,24 @@ export const useSupabaseFidelidade = () => {
       setRanking((data || []) as RankingFidelidade[]);
     } catch (error: any) {
       console.error('Erro ao carregar ranking:', error);
+    }
+  };
+
+  // Carregar classes
+  const carregarClasses = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('classes_fidelidade')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('ordem', { ascending: true });
+
+      if (error) throw error;
+      setClasses((data || []) as ClasseFidelidade[]);
+    } catch (error: any) {
+      console.error('Erro ao carregar classes:', error);
     }
   };
 
@@ -244,6 +264,87 @@ export const useSupabaseFidelidade = () => {
     }
   };
 
+  // Criar classe
+  const criarClasse = async (dados: ClasseFidelidadeFormData) => {
+    if (!user) return null;
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('classes_fidelidade')
+        .insert({
+          ...dados,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await carregarClasses();
+      toast.success('Classe criada com sucesso!');
+      return data;
+    } catch (error: any) {
+      console.error('Erro ao criar classe:', error);
+      toast.error('Erro ao criar classe');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Atualizar classe
+  const atualizarClasse = async (id: string, dados: Partial<ClasseFidelidadeFormData>) => {
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from('classes_fidelidade')
+        .update({
+          ...dados,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await carregarClasses();
+      toast.success('Classe atualizada!');
+      return data;
+    } catch (error: any) {
+      console.error('Erro ao atualizar classe:', error);
+      toast.error('Erro ao atualizar classe');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Excluir classe
+  const excluirClasse = async (id: string) => {
+    try {
+      setLoading(true);
+
+      const { error } = await supabase
+        .from('classes_fidelidade')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await carregarClasses();
+      toast.success('Classe excluída!');
+    } catch (error: any) {
+      console.error('Erro ao excluir classe:', error);
+      toast.error('Erro ao excluir classe');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Buscar saldo de pontos de um cliente
   const buscarSaldoCliente = async (clienteId: string): Promise<SaldoPontos | null> => {
     if (!user) return null;
@@ -375,6 +476,18 @@ export const useSupabaseFidelidade = () => {
           carregarRecompensas();
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'classes_fidelidade',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          carregarClasses();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -389,6 +502,7 @@ export const useSupabaseFidelidade = () => {
       carregarRecompensas();
       carregarEstatisticas();
       carregarRanking();
+      carregarClasses();
     }
   }, [user]);
 
@@ -398,11 +512,15 @@ export const useSupabaseFidelidade = () => {
     recompensas,
     estatisticas,
     ranking,
+    classes,
     salvarPrograma,
     togglePrograma,
     criarRecompensa,
     atualizarRecompensa,
     excluirRecompensa,
+    criarClasse,
+    atualizarClasse,
+    excluirClasse,
     buscarSaldoCliente,
     buscarNivelCliente,
     buscarHistoricoPontos,
@@ -412,6 +530,7 @@ export const useSupabaseFidelidade = () => {
       carregarRecompensas();
       carregarEstatisticas();
       carregarRanking();
+      carregarClasses();
     }
   };
 };

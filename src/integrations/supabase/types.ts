@@ -192,6 +192,45 @@ export type Database = {
         }
         Relationships: []
       }
+      classes_fidelidade: {
+        Row: {
+          ativo: boolean | null
+          beneficios: string | null
+          cor: string | null
+          created_at: string | null
+          id: string
+          nome: string
+          ordem: number
+          pontos_minimos: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          beneficios?: string | null
+          cor?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          pontos_minimos?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          beneficios?: string | null
+          cor?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          pontos_minimos?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           created_at: string
@@ -926,6 +965,7 @@ export type Database = {
         Row: {
           ativo: boolean | null
           created_at: string | null
+          data_inicio: string | null
           expiracao_pontos_dias: number | null
           id: string
           nome: string
@@ -936,6 +976,7 @@ export type Database = {
         Insert: {
           ativo?: boolean | null
           created_at?: string | null
+          data_inicio?: string | null
           expiracao_pontos_dias?: number | null
           id?: string
           nome?: string
@@ -946,6 +987,7 @@ export type Database = {
         Update: {
           ativo?: boolean | null
           created_at?: string | null
+          data_inicio?: string | null
           expiracao_pontos_dias?: number | null
           id?: string
           nome?: string
@@ -958,6 +1000,7 @@ export type Database = {
       recompensas: {
         Row: {
           ativo: boolean | null
+          classe_id: string | null
           created_at: string | null
           descricao: string | null
           id: string
@@ -972,6 +1015,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean | null
+          classe_id?: string | null
           created_at?: string | null
           descricao?: string | null
           id?: string
@@ -986,6 +1030,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean | null
+          classe_id?: string | null
           created_at?: string | null
           descricao?: string | null
           id?: string
@@ -999,6 +1044,13 @@ export type Database = {
           valor_desconto?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "recompensas_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes_fidelidade"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recompensas_servico_id_fkey"
             columns: ["servico_id"]
