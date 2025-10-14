@@ -42,19 +42,19 @@ interface AgendamentoDetalhesProps {
 const statusConfig = {
   agendado: { 
     label: 'Agendado', 
-    color: 'bg-blue-500 text-white', 
+    color: 'bg-info text-info-foreground', 
     icon: Calendar,
     description: 'Agendamento confirmado'
   },
   concluido: { 
     label: 'Concluído', 
-    color: 'bg-green-500 text-white', 
+    color: 'bg-success text-success-foreground', 
     icon: Check,
     description: 'Serviço realizado com sucesso'
   },
   cancelado: { 
     label: 'Cancelado', 
-    color: 'bg-red-500 text-white', 
+    color: 'bg-destructive text-destructive-foreground', 
     icon: X,
     description: 'Agendamento cancelado'
   },
@@ -123,7 +123,7 @@ export default function AgendamentoDetalhes({
             <Button 
               variant="default" 
               onClick={onMarcarPagamento}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              className="bg-success hover:bg-success/90"
             >
               <DollarSign className="h-4 w-4 mr-2" />
               Marcar Pagamento
@@ -201,12 +201,12 @@ export default function AgendamentoDetalhes({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Valor Pago</Label>
-                    <p className="text-lg font-semibold text-green-600">{formatarValor(agendamento.valorPago)}</p>
+                    <p className="text-lg font-semibold text-success">{formatarValor(agendamento.valorPago)}</p>
                   </div>
                   
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Valor Devido</Label>
-                    <p className={`text-lg font-semibold ${agendamento.valorDevido > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                    <p className={`text-lg font-semibold ${agendamento.valorDevido > 0 ? 'text-destructive' : 'text-success'}`}>
                       {formatarValor(agendamento.valorDevido)}
                     </p>
                   </div>
@@ -229,10 +229,10 @@ export default function AgendamentoDetalhes({
                     <Label className="text-sm font-medium text-muted-foreground">Status do Pagamento</Label>
                     <Badge 
                       className={`mt-1 ${
-                        agendamento.statusPagamento === 'pago' ? 'bg-green-500' :
-                        agendamento.statusPagamento === 'parcial' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      } text-white`}
+                        agendamento.statusPagamento === 'pago' ? 'bg-success text-success-foreground' :
+                        agendamento.statusPagamento === 'parcial' ? 'bg-warning text-warning-foreground' :
+                        'bg-destructive text-destructive-foreground'
+                      }`}
                     >
                       {agendamento.statusPagamento === 'pago' ? '✓ Pago' :
                        agendamento.statusPagamento === 'parcial' ? '⚠ Parcial' :

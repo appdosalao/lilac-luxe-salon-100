@@ -170,12 +170,12 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
 
       {/* Resumo do Mês */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="group border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 transition-all hover:shadow-lg hover:scale-105">
+        <Card className="group border-0 bg-gradient-to-br from-info/10 to-info/5 dark:from-info/10 dark:to-info/5 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-6 text-center">
-            <div className="text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-3xl lg:text-4xl font-bold text-info">
               {agendadosMes.length}
             </div>
-            <p className="text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
+            <p className="text-sm text-info/70 font-medium">Agendados</p>
           </CardContent>
         </Card>
         
@@ -234,7 +234,7 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
                   <div className="flex items-center justify-between">
                     <span className={`text-sm font-medium ${dentroDoMes ? 'text-foreground' : 'text-muted-foreground/70'}`}>{format(dia, 'd', { locale: ptBR })}</span>
                     {count > 0 && (
-                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0" aria-label={`${count} agendamentos`}>
+                      <Badge className="bg-info/20 text-info border-0" aria-label={`${count} agendamentos`}>
                         {count}
                       </Badge>
                     )}
@@ -366,7 +366,7 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                   <span>{agendamentoSelecionado.clienteNome}</span>
-                  <Badge className="border-0 capitalize bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <Badge className="border-0 capitalize bg-info/20 text-info">
                     {agendamentoSelecionado.status}
                   </Badge>
                 </DialogTitle>

@@ -10,25 +10,25 @@ export const EstatisticasFidelidade = () => {
       title: 'Clientes no Programa',
       value: estatisticas?.total_clientes_programa || 0,
       icon: Users,
-      color: 'text-blue-500'
+      color: 'text-info'
     },
     {
       title: 'Pontos Distribuídos',
       value: estatisticas?.total_pontos_distribuidos || 0,
       icon: Award,
-      color: 'text-green-500'
+      color: 'text-success'
     },
     {
       title: 'Pontos Resgatados',
       value: estatisticas?.total_pontos_resgatados || 0,
       icon: Gift,
-      color: 'text-purple-500'
+      color: 'text-primary'
     },
     {
       title: 'Clientes Ativos (30d)',
       value: estatisticas?.clientes_ativos_30d || 0,
       icon: TrendingUp,
-      color: 'text-orange-500'
+      color: 'text-warning'
     }
   ];
 

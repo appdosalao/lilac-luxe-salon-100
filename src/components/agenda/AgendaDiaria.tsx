@@ -177,30 +177,30 @@ export function AgendaDiaria({ buscaTexto = '' }: AgendaDiariaProps) {
 
       {/* Resumo do Dia Aprimorado */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="group border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 transition-all hover:shadow-lg hover:scale-105">
+        <Card className="group border-0 bg-gradient-to-br from-info/10 to-info/5 dark:from-info/10 dark:to-info/5 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-4 text-center">
             <div className="flex flex-col items-center space-y-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-info/20">
+                <Clock className="h-5 w-5 text-info" />
               </div>
-              <div className="text-xl lg:text-2xl font-bold text-blue-700 dark:text-blue-300">
+              <div className="text-xl lg:text-2xl font-bold text-info">
                 {estatisticasDia.agendados}
               </div>
-              <p className="text-xs lg:text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
+              <p className="text-xs lg:text-sm text-info/70 font-medium">Agendados</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="group border-0 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/20 dark:to-green-900/20 transition-all hover:shadow-lg hover:scale-105">
+        <Card className="group border-0 bg-gradient-to-br from-success/10 to-success/5 dark:from-success/10 dark:to-success/5 transition-all hover:shadow-lg hover:scale-105">
           <CardContent className="p-4 text-center">
             <div className="flex flex-col items-center space-y-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                <User className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20">
+                <User className="h-5 w-5 text-success" />
               </div>
-              <div className="text-xl lg:text-2xl font-bold text-green-700 dark:text-green-300">
+              <div className="text-xl lg:text-2xl font-bold text-success">
                 {estatisticasDia.concluidos}
               </div>
-              <p className="text-xs lg:text-sm text-green-600/70 dark:text-green-400/70 font-medium">Concluídos</p>
+              <p className="text-xs lg:text-sm text-success/70 font-medium">Concluídos</p>
             </div>
           </CardContent>
         </Card>

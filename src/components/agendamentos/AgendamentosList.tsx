@@ -59,9 +59,9 @@ interface AgendamentosListProps {
 }
 
 const statusConfig = {
-  agendado: { label: 'Agendado', color: 'bg-blue-500', icon: Calendar },
-  concluido: { label: 'Concluído', color: 'bg-green-500', icon: Check },
-  cancelado: { label: 'Cancelado', color: 'bg-red-500', icon: X },
+  agendado: { label: 'Agendado', color: 'bg-info', icon: Calendar },
+  concluido: { label: 'Concluído', color: 'bg-success', icon: Check },
+  cancelado: { label: 'Cancelado', color: 'bg-destructive', icon: X },
 };
 
 export default function AgendamentosList({

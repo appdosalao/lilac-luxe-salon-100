@@ -129,17 +129,17 @@ export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
 
       {/* Resumo da Semana */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 shadow-lg">
+        <Card className="border-0 bg-gradient-to-br from-info/10 to-info/5 dark:from-info/10 dark:to-info/5 shadow-lg">
           <CardContent className="p-6 text-center">
             <div className="flex items-center justify-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-info/20">
+                <Calendar className="h-6 w-6 text-info" />
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                <div className="text-3xl font-bold text-info">
                   {agendadosSemana.length}
                 </div>
-                <p className="text-sm text-blue-600/70 dark:text-blue-400/70 font-medium">Agendados</p>
+                <p className="text-sm text-info/70 font-medium">Agendados</p>
               </div>
             </div>
           </CardContent>
@@ -195,7 +195,7 @@ export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
                   <div className="font-semibold">
                     {format(dia, "EEEE, dd 'de' MMM", { locale: ptBR })}
                   </div>
-                  <Badge variant="outline" className="border-0 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <Badge variant="outline" className="border-0 bg-info/20 text-info">
                     {ags.length} agend.
                   </Badge>
                 </button>
@@ -249,7 +249,7 @@ export function AgendaSemanal({ buscaTexto = '' }: AgendaSemanalProps) {
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                   <span>{agendamentoSelecionado.clienteNome}</span>
-                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0 capitalize">
+                  <Badge className="bg-info/20 text-info border-0 capitalize">
                     {agendamentoSelecionado.status}
                   </Badge>
                 </DialogTitle>
