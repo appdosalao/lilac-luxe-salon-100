@@ -16,6 +16,7 @@ const cadastroSchema = z.object({
   nome_completo: z.string().min(1, 'Nome completo é obrigatório'),
   email: z.string().email('E-mail inválido'),
   telefone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
+  tema_preferencia: z.enum(['feminino', 'masculino']),
   senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmar_senha: z.string().min(1, 'Confirmação de senha é obrigatória'),
 }).refine((data) => data.senha === data.confirmar_senha, {
@@ -31,6 +32,9 @@ const Cadastro = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm<UsuarioCadastro>({
     resolver: zodResolver(cadastroSchema),
+    defaultValues: {
+      tema_preferencia: 'feminino',
+    },
   });
 
   const onSubmit = async (data: UsuarioCadastro) => {
@@ -41,7 +45,8 @@ const Cadastro = () => {
       const { error } = await signUp(data.email, data.senha, {
         nome_completo: data.nome_completo,
         nome_personalizado_app: data.nome_personalizado_app,
-        telefone: data.telefone
+        telefone: data.telefone,
+        tema_preferencia: data.tema_preferencia
       });
       
       if (!error) {
@@ -123,6 +128,49 @@ const Cadastro = () => {
               />
               {errors.telefone && (
                 <p className="text-sm text-destructive">{errors.telefone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tema_preferencia">Preferência de Cores *</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="flex flex-col items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    value="feminino"
+                    {...register('tema_preferencia')}
+                    disabled={isLoading}
+                    className="sr-only peer"
+                  />
+                  <div className="w-full p-4 border-2 rounded-lg peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(267 83% 58%)' }}></div>
+                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(320 85% 75%)' }}></div>
+                    </div>
+                    <p className="text-center font-medium">Feminino</p>
+                    <p className="text-center text-xs text-muted-foreground mt-1">Lilás e Rosa</p>
+                  </div>
+                </label>
+                <label className="flex flex-col items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    value="masculino"
+                    {...register('tema_preferencia')}
+                    disabled={isLoading}
+                    className="sr-only peer"
+                  />
+                  <div className="w-full p-4 border-2 rounded-lg peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(217 91% 60%)' }}></div>
+                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(220 60% 50%)' }}></div>
+                    </div>
+                    <p className="text-center font-medium">Masculino</p>
+                    <p className="text-center text-xs text-muted-foreground mt-1">Azul e Cinza</p>
+                  </div>
+                </label>
+              </div>
+              {errors.tema_preferencia && (
+                <p className="text-sm text-destructive">{errors.tema_preferencia.message}</p>
               )}
             </div>
 

@@ -4,6 +4,7 @@ export interface Usuario {
   nome_personalizado_app: string;
   email: string;
   telefone: string;
+  tema_preferencia: 'feminino' | 'masculino';
   created_at: string;
   updated_at: string;
 }
@@ -13,6 +14,7 @@ export interface UsuarioCadastro {
   nome_completo: string;
   email: string;
   telefone: string;
+  tema_preferencia: 'feminino' | 'masculino';
   senha: string;
   confirmar_senha: string;
 }

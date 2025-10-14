@@ -1286,6 +1286,7 @@ export type Database = {
           nome_completo: string
           nome_personalizado_app: string
           telefone: string
+          tema_preferencia: string | null
           updated_at: string
         }
         Insert: {
@@ -1295,6 +1296,7 @@ export type Database = {
           nome_completo: string
           nome_personalizado_app?: string
           telefone?: string
+          tema_preferencia?: string | null
           updated_at?: string
         }
         Update: {
@@ -1304,6 +1306,7 @@ export type Database = {
           nome_completo?: string
           nome_personalizado_app?: string
           telefone?: string
+          tema_preferencia?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -48,7 +48,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
               }
 
               if (userData) {
-                setUsuario(userData);
+                setUsuario(userData as Usuario);
+                // Aplicar tema
+                const tema = (userData as Usuario).tema_preferencia || 'feminino';
+                document.documentElement.setAttribute('data-theme', tema);
               }
             } catch (error) {
               console.error('Erro ao buscar perfil do usuário:', error);
@@ -56,6 +59,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setUsuario(null);
+          // Reset para tema padrão
+          document.documentElement.setAttribute('data-theme', 'feminino');
         }
 
         setIsLoading(false);
@@ -105,6 +110,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             nome_completo: userData.nome_completo || '',
             nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
             telefone: userData.telefone || '',
+            tema_preferencia: userData.tema_preferencia || 'feminino',
           });
 
         if (profileError) {
@@ -179,7 +185,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      setUsuario(data);
+      setUsuario(data as Usuario);
       toast.success('Perfil atualizado com sucesso!');
       return { error: null };
     } catch (error) {
