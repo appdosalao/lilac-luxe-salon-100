@@ -56,8 +56,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
               if (error && error.code !== 'PGRST116') {
                 console.error('❌ [ERROR] Erro ao buscar dados do usuário:', error);
-                console.error('❌ [ERROR] Código do erro:', error.code);
-                console.error('❌ [ERROR] Mensagem:', error.message);
                 return;
               }
 
@@ -65,17 +63,40 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 const usuario = userData as Usuario;
                 setUsuario(usuario);
                 
-                // Aplicar tema
                 const tema = usuario.tema_preferencia || 'feminino';
-                console.log('✅ [SUCCESS] Usuário carregado:', usuario.email);
-                console.log('✅ [SUCCESS] Tema do banco de dados:', tema);
-                console.log('✅ [SUCCESS] Aplicando tema:', tema);
+                console.log('✅ [SUCCESS] Usuário carregado, aplicando tema:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
-              } else {
-                console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
-                document.documentElement.setAttribute('data-theme', 'feminino');
-                localStorage.setItem('app-theme', 'feminino');
+              } else if (error?.code === 'PGRST116') {
+                // Usuário não tem registro na tabela usuarios - criar automaticamente
+                console.log('🟡 [AUTO-CREATE] Criando registro de usuário automaticamente...');
+                
+                const { data: newUserData, error: createError } = await supabase
+                  .from('usuarios')
+                  .insert({
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    nome_completo: session.user.user_metadata?.nome_completo || '',
+                    nome_personalizado_app: 'Meu Salão',
+                    telefone: session.user.user_metadata?.telefone || '',
+                    tema_preferencia: 'feminino'
+                  })
+                  .select()
+                  .single();
+
+                if (createError) {
+                  console.error('❌ [AUTO-CREATE] Erro ao criar usuário:', createError);
+                  document.documentElement.setAttribute('data-theme', 'feminino');
+                  localStorage.setItem('app-theme', 'feminino');
+                } else if (newUserData) {
+                  console.log('✅ [AUTO-CREATE] Usuário criado com sucesso');
+                  const usuario = newUserData as Usuario;
+                  setUsuario(usuario);
+                  
+                  const tema = usuario.tema_preferencia || 'feminino';
+                  document.documentElement.setAttribute('data-theme', tema);
+                  localStorage.setItem('app-theme', tema);
+                }
               }
             } catch (error) {
               console.error('❌ [EXCEPTION] Erro ao buscar perfil do usuário:', error);
