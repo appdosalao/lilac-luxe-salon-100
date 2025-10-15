@@ -28,28 +28,36 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Aplicar tema salvo localmente imediatamente (evita flash)
     const storedTheme = localStorage.getItem('app-theme');
+    console.log('🟢 [INIT] Tema armazenado localmente:', storedTheme);
     if (storedTheme) {
       document.documentElement.setAttribute('data-theme', storedTheme);
     }
+    
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        console.log('🟡 [AUTH] State changed:', event, 'User ID:', session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          console.log('🟡 [AUTH] Usuário logado, buscando perfil...');
           // Defer para evitar deadlock
           setTimeout(async () => {
             try {
+              console.log('🔵 [QUERY] Buscando usuário no banco:', session.user.id);
               const { data: userData, error } = await supabase
                 .from('usuarios')
                 .select('*')
                 .eq('id', session.user.id)
                 .single();
 
+              console.log('🔵 [QUERY] Resultado:', { userData, error });
+
               if (error && error.code !== 'PGRST116') {
-                console.error('Erro ao buscar dados do usuário:', error);
+                console.error('❌ [ERROR] Erro ao buscar dados do usuário:', error);
+                console.error('❌ [ERROR] Código do erro:', error.code);
+                console.error('❌ [ERROR] Mensagem:', error.message);
                 return;
               }
 
@@ -59,25 +67,25 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 
                 // Aplicar tema
                 const tema = usuario.tema_preferencia || 'feminino';
-                console.log('✅ Usuário carregado:', usuario.email);
-                console.log('✅ Tema do banco de dados:', tema);
-                console.log('✅ Aplicando tema:', tema);
+                console.log('✅ [SUCCESS] Usuário carregado:', usuario.email);
+                console.log('✅ [SUCCESS] Tema do banco de dados:', tema);
+                console.log('✅ [SUCCESS] Aplicando tema:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
               } else {
-                console.log('⚠️ Usuário não encontrado, aplicando tema padrão');
+                console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
                 localStorage.setItem('app-theme', 'feminino');
               }
             } catch (error) {
-              console.error('Erro ao buscar perfil do usuário:', error);
+              console.error('❌ [EXCEPTION] Erro ao buscar perfil do usuário:', error);
               document.documentElement.setAttribute('data-theme', 'feminino');
               localStorage.setItem('app-theme', 'feminino');
             }
           }, 0);
         } else {
           setUsuario(null);
-          console.log('Sem sessão, aplicando tema padrão');
+          console.log('🟤 [AUTH] Sem sessão, aplicando tema padrão');
           document.documentElement.setAttribute('data-theme', 'feminino');
           localStorage.setItem('app-theme', 'feminino');
         }
@@ -102,7 +110,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/`;
       
-      console.log('SignUp - Tema selecionado:', userData.tema_preferencia);
+      console.log('🟣 [SIGNUP] Iniciando cadastro...');
+      console.log('🟣 [SIGNUP] Tema selecionado:', userData.tema_preferencia);
+      console.log('🟣 [SIGNUP] Email:', email);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -118,14 +128,18 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        console.error('❌ [SIGNUP] Erro no auth.signUp:', error);
         toast.error(error.message);
         return { error };
       }
 
+      console.log('✅ [SIGNUP] Auth criado com sucesso. User ID:', data.user?.id);
+
       if (data.user) {
         // Criar registro na tabela usuarios
-        console.log('🔵 Criando usuário com tema:', userData.tema_preferencia);
-        console.log('🔵 userData completo:', JSON.stringify(userData, null, 2));
+        console.log('🔵 [INSERT] Iniciando inserção na tabela usuarios...');
+        console.log('🔵 [INSERT] Tema para inserir:', userData.tema_preferencia);
+        console.log('🔵 [INSERT] userData completo:', JSON.stringify(userData, null, 2));
         
         const profileData = {
           id: data.user.id,
@@ -136,26 +150,42 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           tema_preferencia: userData.tema_preferencia || 'feminino',
         };
         
-        console.log('🔵 Dados que serão inseridos:', JSON.stringify(profileData, null, 2));
+        console.log('🔵 [INSERT] Dados que serão inseridos:', JSON.stringify(profileData, null, 2));
         
-        const { data: insertedData, error: profileError } = await supabase
-          .from('usuarios')
-          .insert(profileData)
-          .select()
-          .single();
+        try {
+          const { data: insertedData, error: profileError } = await supabase
+            .from('usuarios')
+            .insert(profileData)
+            .select()
+            .single();
 
-        if (profileError) {
-          console.error('❌ Erro ao criar perfil:', profileError);
-          console.error('❌ Detalhes do erro:', JSON.stringify(profileError, null, 2));
-        } else {
-          console.log('✅ Perfil criado com sucesso!');
-          console.log('✅ Dados inseridos:', JSON.stringify(insertedData, null, 2));
+          if (profileError) {
+            console.error('❌ [INSERT] ERRO CRÍTICO ao criar perfil!');
+            console.error('❌ [INSERT] Código do erro:', profileError.code);
+            console.error('❌ [INSERT] Mensagem:', profileError.message);
+            console.error('❌ [INSERT] Detalhes completos:', JSON.stringify(profileError, null, 2));
+            toast.error('Erro ao criar perfil no banco de dados. Por favor, tente novamente.');
+            return { error: profileError };
+          }
+
+          console.log('✅ [INSERT] Perfil criado com sucesso!');
+          console.log('✅ [INSERT] Dados inseridos:', JSON.stringify(insertedData, null, 2));
+          console.log('✅ [INSERT] Tema confirmado no banco:', insertedData.tema_preferencia);
           
           // Aplicar tema imediatamente após criação
           const temaFinal = insertedData.tema_preferencia || 'feminino';
-          console.log('✅ Aplicando tema após cadastro:', temaFinal);
+          console.log('✅ [THEME] Aplicando tema após cadastro:', temaFinal);
           document.documentElement.setAttribute('data-theme', temaFinal);
           localStorage.setItem('app-theme', temaFinal);
+          
+          // Verificar se realmente foi salvo
+          console.log('🔍 [VERIFY] Verificando tema aplicado...');
+          console.log('🔍 [VERIFY] document.documentElement.dataset.theme:', document.documentElement.getAttribute('data-theme'));
+          console.log('🔍 [VERIFY] localStorage app-theme:', localStorage.getItem('app-theme'));
+        } catch (insertError) {
+          console.error('❌ [INSERT] EXCEÇÃO ao inserir perfil:', insertError);
+          toast.error('Erro inesperado ao criar perfil. Por favor, contate o suporte.');
+          return { error: insertError };
         }
 
         toast.success('Conta criada com sucesso! Verifique seu email.');
@@ -163,7 +193,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Erro no cadastro:', error);
+      console.error('❌ [SIGNUP] EXCEÇÃO GERAL no cadastro:', error);
+      toast.error('Erro inesperado no cadastro. Por favor, tente novamente.');
       return { error };
     } finally {
       setIsLoading(false);
