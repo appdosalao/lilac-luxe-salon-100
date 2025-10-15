@@ -28,46 +28,45 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Buscar dados do usuário da tabela usuarios
-          try {
-            const { data: userData, error } = await supabase
-              .from('usuarios')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+          // Defer para evitar deadlock
+          setTimeout(async () => {
+            try {
+              const { data: userData, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-            if (error && error.code !== 'PGRST116') {
-              console.error('Erro ao buscar dados do usuário:', error);
-              setIsLoading(false);
-              return;
-            }
+              if (error && error.code !== 'PGRST116') {
+                console.error('Erro ao buscar dados do usuário:', error);
+                return;
+              }
 
-            if (userData) {
-              const usuario = userData as Usuario;
-              setUsuario(usuario);
-              
-              // Aplicar tema
-              const tema = usuario.tema_preferencia || 'feminino';
-              console.log('Aplicando tema:', tema);
-              document.documentElement.setAttribute('data-theme', tema);
-            } else {
-              // Se não encontrou dados, aplicar tema padrão
-              console.log('Usuário não encontrado, aplicando tema padrão');
+              if (userData) {
+                const usuario = userData as Usuario;
+                setUsuario(usuario);
+                
+                // Aplicar tema
+                const tema = usuario.tema_preferencia || 'feminino';
+                console.log('Aplicando tema do usuário:', tema);
+                document.documentElement.setAttribute('data-theme', tema);
+              } else {
+                console.log('Usuário não encontrado, aplicando tema padrão');
+                document.documentElement.setAttribute('data-theme', 'feminino');
+              }
+            } catch (error) {
+              console.error('Erro ao buscar perfil do usuário:', error);
               document.documentElement.setAttribute('data-theme', 'feminino');
             }
-          } catch (error) {
-            console.error('Erro ao buscar perfil do usuário:', error);
-            document.documentElement.setAttribute('data-theme', 'feminino');
-          }
+          }, 0);
         } else {
           setUsuario(null);
-          // Reset para tema padrão
           console.log('Sem sessão, aplicando tema padrão');
           document.documentElement.setAttribute('data-theme', 'feminino');
         }
@@ -78,9 +77,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
     // DEPOIS verificar sessão existente
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      if (!session) {
+        setIsLoading(false);
+      }
+      // O onAuthStateChange vai lidar com a sessão
     });
 
     return () => subscription.unsubscribe();
