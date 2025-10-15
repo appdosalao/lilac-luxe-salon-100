@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,6 +38,14 @@ const Cadastro = () => {
   });
 
   const temaEscolhido = watch('tema_preferencia');
+
+  // Aplicar tema em tempo real quando o usuário escolhe
+  useEffect(() => {
+    if (temaEscolhido) {
+      console.log('Aplicando tema preview:', temaEscolhido);
+      document.documentElement.setAttribute('data-theme', temaEscolhido);
+    }
+  }, [temaEscolhido]);
 
   const onSubmit = async (data: UsuarioCadastro) => {
     setIsLoading(true);
