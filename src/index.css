@@ -143,8 +143,7 @@ All colors MUST be HSL.
   }
 
   /* Dark mode - Feminino */
-  .dark[data-theme="feminino"],
-  .dark {
+  .dark[data-theme="feminino"] {
     --background: 260 30% 8%;
     --foreground: 320 20% 98%;
 

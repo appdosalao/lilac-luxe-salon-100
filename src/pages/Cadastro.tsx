@@ -44,6 +44,7 @@ const Cadastro = () => {
     if (temaEscolhido) {
       console.log('Aplicando tema preview:', temaEscolhido);
       document.documentElement.setAttribute('data-theme', temaEscolhido);
+      localStorage.setItem('app-theme', temaEscolhido);
     }
   }, [temaEscolhido]);
 

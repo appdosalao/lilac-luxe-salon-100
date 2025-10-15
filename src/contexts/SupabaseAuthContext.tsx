@@ -26,6 +26,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Aplicar tema salvo localmente imediatamente (evita flash)
+    const storedTheme = localStorage.getItem('app-theme');
+    if (storedTheme) {
+      document.documentElement.setAttribute('data-theme', storedTheme);
+    }
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -56,19 +61,23 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 const tema = usuario.tema_preferencia || 'feminino';
                 console.log('Aplicando tema do usuário:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
+                localStorage.setItem('app-theme', tema);
               } else {
                 console.log('Usuário não encontrado, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
+                localStorage.setItem('app-theme', 'feminino');
               }
             } catch (error) {
               console.error('Erro ao buscar perfil do usuário:', error);
               document.documentElement.setAttribute('data-theme', 'feminino');
+              localStorage.setItem('app-theme', 'feminino');
             }
           }, 0);
         } else {
           setUsuario(null);
           console.log('Sem sessão, aplicando tema padrão');
           document.documentElement.setAttribute('data-theme', 'feminino');
+          localStorage.setItem('app-theme', 'feminino');
         }
 
         setIsLoading(false);
@@ -205,6 +214,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       if (updates.tema_preferencia) {
         console.log('Aplicando novo tema:', updates.tema_preferencia);
         document.documentElement.setAttribute('data-theme', updates.tema_preferencia);
+        localStorage.setItem('app-theme', updates.tema_preferencia);
       }
       
       toast.success('Perfil atualizado com sucesso!');
