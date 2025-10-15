@@ -30,12 +30,14 @@ const Cadastro = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<UsuarioCadastro>({
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<UsuarioCadastro>({
     resolver: zodResolver(cadastroSchema),
     defaultValues: {
       tema_preferencia: 'feminino',
     },
   });
+
+  const temaEscolhido = watch('tema_preferencia');
 
   const onSubmit = async (data: UsuarioCadastro) => {
     setIsLoading(true);
@@ -132,45 +134,53 @@ const Cadastro = () => {
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="tema_preferencia" className="text-base">Escolha o Esquema de Cores do App *</Label>
+              <Label className="text-base">Escolha o Esquema de Cores do App *</Label>
               <p className="text-sm text-muted-foreground">Esta escolha definirá as cores de todo o aplicativo</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="flex flex-col cursor-pointer group">
-                  <input
-                    type="radio"
-                    value="feminino"
-                    {...register('tema_preferencia')}
-                    disabled={isLoading}
-                    className="sr-only peer"
-                  />
-                  <div className="relative w-full p-5 border-2 rounded-xl peer-checked:border-[hsl(267,83%,58%)] peer-checked:shadow-lg transition-all hover:shadow-md bg-card">
+                <div 
+                  className="flex flex-col cursor-pointer group"
+                  onClick={() => !isLoading && setValue('tema_preferencia', 'feminino')}
+                >
+                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
+                    temaEscolhido === 'feminino' 
+                      ? 'border-[hsl(267,83%,58%)] shadow-lg' 
+                      : 'border-border'
+                  }`}>
                     <div className="flex items-center justify-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(267 83% 58%), hsl(320 85% 75%))' }}></div>
                       <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(320 85% 75%), hsl(267 83% 58%))' }}></div>
                     </div>
                     <p className="text-center font-semibold text-lg mb-1">Feminino</p>
                     <p className="text-center text-sm text-muted-foreground">Lilás e Rosa</p>
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 peer-checked:bg-[hsl(267,83%,58%)] peer-checked:border-[hsl(267,83%,58%)] transition-all"></div>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
+                      temaEscolhido === 'feminino'
+                        ? 'bg-[hsl(267,83%,58%)] border-[hsl(267,83%,58%)]'
+                        : 'border-border'
+                    }`}></div>
                   </div>
-                </label>
-                <label className="flex flex-col cursor-pointer group">
-                  <input
-                    type="radio"
-                    value="masculino"
-                    {...register('tema_preferencia')}
-                    disabled={isLoading}
-                    className="sr-only peer"
-                  />
-                  <div className="relative w-full p-5 border-2 rounded-xl peer-checked:border-[hsl(217,91%,60%)] peer-checked:shadow-lg transition-all hover:shadow-md bg-card">
+                </div>
+                <div 
+                  className="flex flex-col cursor-pointer group"
+                  onClick={() => !isLoading && setValue('tema_preferencia', 'masculino')}
+                >
+                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
+                    temaEscolhido === 'masculino' 
+                      ? 'border-[hsl(217,91%,60%)] shadow-lg' 
+                      : 'border-border'
+                  }`}>
                     <div className="flex items-center justify-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(217 91% 60%), hsl(220 60% 50%))' }}></div>
                       <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(220 60% 50%), hsl(217 91% 60%))' }}></div>
                     </div>
                     <p className="text-center font-semibold text-lg mb-1">Masculino</p>
                     <p className="text-center text-sm text-muted-foreground">Azul e Cinza</p>
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 peer-checked:bg-[hsl(217,91%,60%)] peer-checked:border-[hsl(217,91%,60%)] transition-all"></div>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
+                      temaEscolhido === 'masculino'
+                        ? 'bg-[hsl(217,91%,60%)] border-[hsl(217,91%,60%)]'
+                        : 'border-border'
+                    }`}></div>
                   </div>
-                </label>
+                </div>
               </div>
               {errors.tema_preferencia && (
                 <p className="text-sm text-destructive">{errors.tema_preferencia.message}</p>
