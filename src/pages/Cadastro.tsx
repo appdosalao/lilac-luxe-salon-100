@@ -131,10 +131,11 @@ const Cadastro = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tema_preferencia">Preferência de Cores *</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <label className="flex flex-col items-center cursor-pointer">
+            <div className="space-y-3">
+              <Label htmlFor="tema_preferencia" className="text-base">Escolha o Esquema de Cores do App *</Label>
+              <p className="text-sm text-muted-foreground">Esta escolha definirá as cores de todo o aplicativo</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="flex flex-col cursor-pointer group">
                   <input
                     type="radio"
                     value="feminino"
@@ -142,16 +143,17 @@ const Cadastro = () => {
                     disabled={isLoading}
                     className="sr-only peer"
                   />
-                  <div className="w-full p-4 border-2 rounded-lg peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(267 83% 58%)' }}></div>
-                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(320 85% 75%)' }}></div>
+                  <div className="relative w-full p-5 border-2 rounded-xl peer-checked:border-[hsl(267,83%,58%)] peer-checked:shadow-lg transition-all hover:shadow-md bg-card">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(267 83% 58%), hsl(320 85% 75%))' }}></div>
+                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(320 85% 75%), hsl(267 83% 58%))' }}></div>
                     </div>
-                    <p className="text-center font-medium">Feminino</p>
-                    <p className="text-center text-xs text-muted-foreground mt-1">Lilás e Rosa</p>
+                    <p className="text-center font-semibold text-lg mb-1">Feminino</p>
+                    <p className="text-center text-sm text-muted-foreground">Lilás e Rosa</p>
+                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 peer-checked:bg-[hsl(267,83%,58%)] peer-checked:border-[hsl(267,83%,58%)] transition-all"></div>
                   </div>
                 </label>
-                <label className="flex flex-col items-center cursor-pointer">
+                <label className="flex flex-col cursor-pointer group">
                   <input
                     type="radio"
                     value="masculino"
@@ -159,13 +161,14 @@ const Cadastro = () => {
                     disabled={isLoading}
                     className="sr-only peer"
                   />
-                  <div className="w-full p-4 border-2 rounded-lg peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(217 91% 60%)' }}></div>
-                      <div className="w-6 h-6 rounded-full" style={{ background: 'hsl(220 60% 50%)' }}></div>
+                  <div className="relative w-full p-5 border-2 rounded-xl peer-checked:border-[hsl(217,91%,60%)] peer-checked:shadow-lg transition-all hover:shadow-md bg-card">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(217 91% 60%), hsl(220 60% 50%))' }}></div>
+                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(220 60% 50%), hsl(217 91% 60%))' }}></div>
                     </div>
-                    <p className="text-center font-medium">Masculino</p>
-                    <p className="text-center text-xs text-muted-foreground mt-1">Azul e Cinza</p>
+                    <p className="text-center font-semibold text-lg mb-1">Masculino</p>
+                    <p className="text-center text-sm text-muted-foreground">Azul e Cinza</p>
+                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 peer-checked:bg-[hsl(217,91%,60%)] peer-checked:border-[hsl(217,91%,60%)] transition-all"></div>
                   </div>
                 </label>
               </div>
