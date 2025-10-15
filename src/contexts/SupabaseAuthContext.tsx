@@ -125,21 +125,37 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       if (data.user) {
         // Criar registro na tabela usuarios
         console.log('🔵 Criando usuário com tema:', userData.tema_preferencia);
-        const { error: profileError } = await supabase
+        console.log('🔵 userData completo:', JSON.stringify(userData, null, 2));
+        
+        const profileData = {
+          id: data.user.id,
+          email,
+          nome_completo: userData.nome_completo || '',
+          nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
+          telefone: userData.telefone || '',
+          tema_preferencia: userData.tema_preferencia || 'feminino',
+        };
+        
+        console.log('🔵 Dados que serão inseridos:', JSON.stringify(profileData, null, 2));
+        
+        const { data: insertedData, error: profileError } = await supabase
           .from('usuarios')
-          .insert({
-            id: data.user.id,
-            email,
-            nome_completo: userData.nome_completo || '',
-            nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
-            telefone: userData.telefone || '',
-            tema_preferencia: userData.tema_preferencia || 'feminino',
-          });
+          .insert(profileData)
+          .select()
+          .single();
 
         if (profileError) {
           console.error('❌ Erro ao criar perfil:', profileError);
+          console.error('❌ Detalhes do erro:', JSON.stringify(profileError, null, 2));
         } else {
-          console.log('✅ Perfil criado com sucesso! Tema salvo:', userData.tema_preferencia);
+          console.log('✅ Perfil criado com sucesso!');
+          console.log('✅ Dados inseridos:', JSON.stringify(insertedData, null, 2));
+          
+          // Aplicar tema imediatamente após criação
+          const temaFinal = insertedData.tema_preferencia || 'feminino';
+          console.log('✅ Aplicando tema após cadastro:', temaFinal);
+          document.documentElement.setAttribute('data-theme', temaFinal);
+          localStorage.setItem('app-theme', temaFinal);
         }
 
         toast.success('Conta criada com sucesso! Verifique seu email.');
