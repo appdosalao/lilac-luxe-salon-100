@@ -59,11 +59,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 
                 // Aplicar tema
                 const tema = usuario.tema_preferencia || 'feminino';
-                console.log('Aplicando tema do usuário:', tema);
+                console.log('✅ Usuário carregado:', usuario.email);
+                console.log('✅ Tema do banco de dados:', tema);
+                console.log('✅ Aplicando tema:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
               } else {
-                console.log('Usuário não encontrado, aplicando tema padrão');
+                console.log('⚠️ Usuário não encontrado, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
                 localStorage.setItem('app-theme', 'feminino');
               }
@@ -122,6 +124,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data.user) {
         // Criar registro na tabela usuarios
+        console.log('🔵 Criando usuário com tema:', userData.tema_preferencia);
         const { error: profileError } = await supabase
           .from('usuarios')
           .insert({
@@ -134,9 +137,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (profileError) {
-          console.error('Erro ao criar perfil:', profileError);
+          console.error('❌ Erro ao criar perfil:', profileError);
         } else {
-          console.log('Perfil criado com tema:', userData.tema_preferencia);
+          console.log('✅ Perfil criado com sucesso! Tema salvo:', userData.tema_preferencia);
         }
 
         toast.success('Conta criada com sucesso! Verifique seu email.');
