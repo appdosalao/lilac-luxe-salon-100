@@ -525,6 +525,7 @@ export const useSupabaseFidelidade = () => {
     buscarNivelCliente,
     buscarHistoricoPontos,
     adicionarPontosManual,
+    carregarRanking,
     recarregar: () => {
       carregarPrograma();
       carregarRecompensas();

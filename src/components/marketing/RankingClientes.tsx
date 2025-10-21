@@ -1,10 +1,25 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Trophy, Medal, Award, Gift } from 'lucide-react';
 import { useSupabaseFidelidade } from '@/hooks/useSupabaseFidelidade';
+import { ResgateRecompensaDialog } from './ResgateRecompensaDialog';
+import type { RankingFidelidade } from '@/types/fidelidade';
 
 export const RankingClientes = () => {
-  const { ranking } = useSupabaseFidelidade();
+  const { ranking, carregarRanking } = useSupabaseFidelidade();
+  const [clienteSelecionado, setClienteSelecionado] = useState<RankingFidelidade | null>(null);
+  const [dialogAberto, setDialogAberto] = useState(false);
+
+  const handleAbrirResgate = (cliente: RankingFidelidade) => {
+    setClienteSelecionado(cliente);
+    setDialogAberto(true);
+  };
+
+  const handleResgate = () => {
+    carregarRanking();
+  };
 
   const getNivelBadge = (cliente: typeof ranking[0]) => {
     // Usar classe_nome e classe_cor da view se disponíveis
@@ -76,12 +91,24 @@ export const RankingClientes = () => {
                         {cliente.pontos_disponiveis} disponíveis
                       </div>
                     </div>
-                    <Badge 
-                      className={nivelInfo.color}
-                      style={nivelInfo.style}
-                    >
-                      {nivelInfo.label}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        className={nivelInfo.color}
+                        style={nivelInfo.style}
+                      >
+                        {nivelInfo.label}
+                      </Badge>
+                      {cliente.pontos_disponiveis > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAbrirResgate(cliente)}
+                        >
+                          <Gift className="h-4 w-4 mr-1" />
+                          Resgatar
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -89,6 +116,15 @@ export const RankingClientes = () => {
           </div>
         )}
       </CardContent>
+
+      {clienteSelecionado && (
+        <ResgateRecompensaDialog
+          cliente={clienteSelecionado}
+          open={dialogAberto}
+          onOpenChange={setDialogAberto}
+          onResgate={handleResgate}
+        />
+      )}
     </Card>
   );
 };
