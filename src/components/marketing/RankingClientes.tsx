@@ -4,16 +4,26 @@ import { Trophy, Medal, Award } from 'lucide-react';
 import { useSupabaseFidelidade } from '@/hooks/useSupabaseFidelidade';
 
 export const RankingClientes = () => {
-  const { ranking } = useSupabaseFidelidade();
+  const { ranking, classes } = useSupabaseFidelidade();
 
   const getNivelBadge = (nivel: string) => {
-    const niveis: Record<string, { color: string; label: string }> = {
-      bronze: { color: 'bg-warning text-warning-foreground', label: 'Bronze' },
-      prata: { color: 'bg-muted text-muted-foreground', label: 'Prata' },
-      ouro: { color: 'bg-accent text-accent-foreground', label: 'Ouro' },
-      platina: { color: 'bg-primary text-primary-foreground', label: 'Platina' }
+    // Buscar a classe correspondente ao nível
+    const classe = classes.find(c => c.nome.toLowerCase() === nivel.toLowerCase());
+    
+    if (classe) {
+      return {
+        color: 'border',
+        label: classe.nome,
+        style: { backgroundColor: classe.cor, color: '#fff' }
+      };
+    }
+    
+    // Fallback para cores padrão
+    return {
+      color: 'bg-muted text-muted-foreground',
+      label: nivel,
+      style: undefined
     };
-    return niveis[nivel] || niveis.bronze;
   };
 
   const getRankingIcon = (pos: number) => {
@@ -68,7 +78,10 @@ export const RankingClientes = () => {
                         {cliente.pontos_disponiveis} disponíveis
                       </div>
                     </div>
-                    <Badge className={nivelInfo.color}>
+                    <Badge 
+                      className={nivelInfo.color}
+                      style={nivelInfo.style}
+                    >
                       {nivelInfo.label}
                     </Badge>
                   </div>

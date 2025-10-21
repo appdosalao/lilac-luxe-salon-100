@@ -70,7 +70,7 @@ export interface NivelFidelidade {
   id: string;
   user_id: string;
   cliente_id: string;
-  nivel: 'bronze' | 'prata' | 'ouro' | 'platina';
+  nivel: string;
   pontos_totais: number;
   pontos_disponiveis: number;
   total_resgates: number;
@@ -112,7 +112,7 @@ export interface RankingFidelidade {
   cliente_id: string;
   cliente_nome: string;
   telefone: string;
-  nivel: 'bronze' | 'prata' | 'ouro' | 'platina';
+  nivel: string;
   pontos_totais: number;
   pontos_disponiveis: number;
   total_resgates: number;

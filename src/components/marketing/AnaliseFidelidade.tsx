@@ -59,13 +59,7 @@ export const AnaliseFidelidade = () => {
   const [dadosTempo, setDadosTempo] = useState<DadosAnalise[]>([]);
   const [distribuicaoNiveis, setDistribuicaoNiveis] = useState<DistribuicaoNiveis[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const COLORS = {
-    bronze: '#CD7F32',
-    prata: '#C0C0C0',
-    ouro: '#FFD700',
-    platina: '#E5E4E2'
-  };
+  const [classesColors, setClassesColors] = useState<Record<string, string>>({});
 
   const aplicarPreset = (preset: string) => {
     const hoje = new Date();
@@ -104,6 +98,18 @@ export const AnaliseFidelidade = () => {
 
     try {
       setLoading(true);
+
+      // Buscar classes para mapear cores
+      const { data: classesData } = await supabase
+        .from('classes_fidelidade')
+        .select('nome, cor')
+        .eq('user_id', user.id);
+
+      const colorsMap: Record<string, string> = {};
+      classesData?.forEach(c => {
+        colorsMap[c.nome.toLowerCase()] = c.cor;
+      });
+      setClassesColors(colorsMap);
 
       // Buscar pontos por período
       const { data: pontos, error: erroP } = await supabase
@@ -391,12 +397,15 @@ export const AnaliseFidelidade = () => {
                   fill="#8884d8"
                   dataKey="quantidade"
                 >
-                  {distribuicaoNiveis.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[entry.nivel.toLowerCase() as keyof typeof COLORS]}
-                    />
-                  ))}
+                  {distribuicaoNiveis.map((entry, index) => {
+                    const cor = classesColors[entry.nivel.toLowerCase()] || '#94a3b8';
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={cor}
+                      />
+                    );
+                  })}
                 </Pie>
                 <Tooltip />
               </PieChart>
