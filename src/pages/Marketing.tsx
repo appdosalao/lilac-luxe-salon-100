@@ -2,7 +2,6 @@ import { ProgramaFidelidadeConfig } from "@/components/marketing/ProgramaFidelid
 import { EstatisticasFidelidade } from "@/components/marketing/EstatisticasFidelidade";
 import { RecompensasList } from "@/components/marketing/RecompensasList";
 import { RankingClientes } from "@/components/marketing/RankingClientes";
-import { AnaliseFidelidade } from "@/components/marketing/AnaliseFidelidade";
 import { ClassesFidelidadeList } from "@/components/marketing/ClassesFidelidadeList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Award } from "lucide-react";
@@ -23,19 +22,14 @@ export default function Marketing() {
       <EstatisticasFidelidade />
 
       <Tabs defaultValue="configuracao" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="configuracao">Configuração</TabsTrigger>
-          <TabsTrigger value="classes">Classes</TabsTrigger>
           <TabsTrigger value="recompensas">Recompensas</TabsTrigger>
-          <TabsTrigger value="ranking">Ranking</TabsTrigger>
-          <TabsTrigger value="analise">Análise</TabsTrigger>
+          <TabsTrigger value="clientes">Clientes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuracao" className="space-y-6">
           <ProgramaFidelidadeConfig />
-        </TabsContent>
-
-        <TabsContent value="classes" className="space-y-6">
           <ClassesFidelidadeList />
         </TabsContent>
 
@@ -43,12 +37,8 @@ export default function Marketing() {
           <RecompensasList />
         </TabsContent>
 
-        <TabsContent value="ranking" className="space-y-6">
+        <TabsContent value="clientes" className="space-y-6">
           <RankingClientes />
-        </TabsContent>
-
-        <TabsContent value="analise" className="space-y-6">
-          <AnaliseFidelidade />
         </TabsContent>
       </Tabs>
     </div>
