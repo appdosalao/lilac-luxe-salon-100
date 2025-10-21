@@ -117,6 +117,8 @@ export interface RankingFidelidade {
   pontos_disponiveis: number;
   total_resgates: number;
   ranking: number;
+  classe_nome?: string;
+  classe_cor?: string;
 }
 
 export interface RecompensaFormData {

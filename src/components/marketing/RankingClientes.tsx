@@ -4,24 +4,22 @@ import { Trophy, Medal, Award } from 'lucide-react';
 import { useSupabaseFidelidade } from '@/hooks/useSupabaseFidelidade';
 
 export const RankingClientes = () => {
-  const { ranking, classes } = useSupabaseFidelidade();
+  const { ranking } = useSupabaseFidelidade();
 
-  const getNivelBadge = (nivel: string) => {
-    // Buscar a classe correspondente ao nível
-    const classe = classes.find(c => c.nome.toLowerCase() === nivel.toLowerCase());
-    
-    if (classe) {
+  const getNivelBadge = (cliente: typeof ranking[0]) => {
+    // Usar classe_nome e classe_cor da view se disponíveis
+    if (cliente.classe_nome && cliente.classe_cor) {
       return {
         color: 'border',
-        label: classe.nome,
-        style: { backgroundColor: classe.cor, color: '#fff' }
+        label: cliente.classe_nome,
+        style: { backgroundColor: cliente.classe_cor, color: '#fff' }
       };
     }
     
-    // Fallback para cores padrão
+    // Fallback se não houver classe
     return {
       color: 'bg-muted text-muted-foreground',
-      label: nivel,
+      label: 'Sem classe',
       style: undefined
     };
   };
@@ -52,7 +50,7 @@ export const RankingClientes = () => {
         ) : (
           <div className="space-y-4">
             {ranking.map((cliente) => {
-              const nivelInfo = getNivelBadge(cliente.nivel);
+              const nivelInfo = getNivelBadge(cliente);
               return (
                 <div
                   key={cliente.cliente_id}
