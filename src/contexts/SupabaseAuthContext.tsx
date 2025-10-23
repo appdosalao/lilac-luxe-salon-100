@@ -123,6 +123,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             nome_completo: userData.nome_completo,
             nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
             telefone: userData.telefone,
+            tema_preferencia: userData.tema_preferencia || 'feminino',
           }
         }
       });
@@ -133,63 +134,16 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      console.log('✅ [SIGNUP] Auth criado com sucesso. User ID:', data.user?.id);
-
-      if (data.user) {
-        // Criar registro na tabela usuarios
-        console.log('🔵 [INSERT] Iniciando inserção na tabela usuarios...');
-        console.log('🔵 [INSERT] Tema para inserir:', userData.tema_preferencia);
-        console.log('🔵 [INSERT] userData completo:', JSON.stringify(userData, null, 2));
-        
-        const profileData = {
-          id: data.user.id,
-          email,
-          nome_completo: userData.nome_completo || '',
-          nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
-          telefone: userData.telefone || '',
-          tema_preferencia: userData.tema_preferencia || 'feminino',
-        };
-        
-        console.log('🔵 [INSERT] Dados que serão inseridos:', JSON.stringify(profileData, null, 2));
-        
-        try {
-          const { data: insertedData, error: profileError } = await supabase
-            .from('usuarios')
-            .insert(profileData)
-            .select()
-            .single();
-
-          if (profileError) {
-            console.error('❌ [INSERT] ERRO CRÍTICO ao criar perfil!');
-            console.error('❌ [INSERT] Código do erro:', profileError.code);
-            console.error('❌ [INSERT] Mensagem:', profileError.message);
-            console.error('❌ [INSERT] Detalhes completos:', JSON.stringify(profileError, null, 2));
-            toast.error('Erro ao criar perfil no banco de dados. Por favor, tente novamente.');
-            return { error: profileError };
-          }
-
-          console.log('✅ [INSERT] Perfil criado com sucesso!');
-          console.log('✅ [INSERT] Dados inseridos:', JSON.stringify(insertedData, null, 2));
-          console.log('✅ [INSERT] Tema confirmado no banco:', insertedData.tema_preferencia);
-          
-          // Aplicar tema imediatamente após criação
-          const temaFinal = insertedData.tema_preferencia || 'feminino';
-          console.log('✅ [THEME] Aplicando tema após cadastro:', temaFinal);
-          document.documentElement.setAttribute('data-theme', temaFinal);
-          localStorage.setItem('app-theme', temaFinal);
-          
-          // Verificar se realmente foi salvo
-          console.log('🔍 [VERIFY] Verificando tema aplicado...');
-          console.log('🔍 [VERIFY] document.documentElement.dataset.theme:', document.documentElement.getAttribute('data-theme'));
-          console.log('🔍 [VERIFY] localStorage app-theme:', localStorage.getItem('app-theme'));
-        } catch (insertError) {
-          console.error('❌ [INSERT] EXCEÇÃO ao inserir perfil:', insertError);
-          toast.error('Erro inesperado ao criar perfil. Por favor, contate o suporte.');
-          return { error: insertError };
-        }
-
-        toast.success('Conta criada com sucesso! Verifique seu email.');
+      console.log('✅ [SIGNUP] Conta criada com sucesso! User ID:', data.user?.id);
+      
+      // O perfil é criado automaticamente via trigger no banco de dados
+      // Aplicar tema localmente
+      if (userData.tema_preferencia) {
+        document.documentElement.setAttribute('data-theme', userData.tema_preferencia);
+        localStorage.setItem('app-theme', userData.tema_preferencia);
       }
+
+      toast.success('Conta criada com sucesso! Verifique seu email para confirmar o cadastro.');
 
       return { error: null };
     } catch (error) {
