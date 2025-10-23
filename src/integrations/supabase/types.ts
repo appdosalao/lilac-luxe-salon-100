@@ -89,7 +89,7 @@ export type Database = {
           email: string
           horario: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           nome_completo: string
           observacoes: string | null
           origem: string | null
@@ -108,7 +108,7 @@ export type Database = {
           email: string
           horario: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           nome_completo: string
           observacoes?: string | null
           origem?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           email?: string
           horario?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           nome_completo?: string
           observacoes?: string | null
           origem?: string | null
@@ -769,7 +769,7 @@ export type Database = {
           entidade_id: string | null
           entidade_tipo: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadados: Json | null
           nivel: string
           user_agent: string | null
@@ -783,7 +783,7 @@ export type Database = {
           entidade_id?: string | null
           entidade_tipo?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadados?: Json | null
           nivel: string
           user_agent?: string | null
@@ -797,7 +797,7 @@ export type Database = {
           entidade_id?: string | null
           entidade_tipo?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadados?: Json | null
           nivel?: string
           user_agent?: string | null
@@ -1520,10 +1520,7 @@ export type Database = {
       }
     }
     Functions: {
-      aplicar_expiracao_pontos: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      aplicar_expiracao_pontos: { Args: never; Returns: undefined }
       associar_clientes_agendamento_online: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -1566,12 +1563,12 @@ export type Database = {
           status: string
         }[]
       }
-      calcular_nivel_cliente: {
-        Args:
-          | { p_user_id: string; pontos_totais: number }
-          | { pontos_totais: number }
-        Returns: string
-      }
+      calcular_nivel_cliente:
+        | {
+            Args: { p_user_id: string; pontos_totais: number }
+            Returns: string
+          }
+        | { Args: { pontos_totais: number }; Returns: string }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
@@ -1586,7 +1583,7 @@ export type Database = {
         Returns: string
       }
       diagnosticar_usuarios_validos: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           nome_completo: string
@@ -1594,17 +1591,14 @@ export type Database = {
         }[]
       }
       diagnostico_sistema_agendamento: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           tabela: string
           total_registros: number
           total_registros_ativos: number
         }[]
       }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_email: { Args: never; Returns: string }
       inserir_configuracao_horario: {
         Args: {
           p_ativo?: boolean
@@ -1619,7 +1613,7 @@ export type Database = {
         Returns: string
       }
       obter_configuracoes_horario: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           ativo: boolean
           dia_semana: number
