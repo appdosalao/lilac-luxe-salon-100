@@ -198,7 +198,6 @@ export const usePushSubscription = () => {
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-96x96.png',
         tag: 'test-notification',
-        vibrate: [200, 100, 200],
         data: {
           url: '/',
           timestamp: Date.now()
