@@ -846,6 +846,57 @@ export type Database = {
           },
         ]
       }
+      notificacoes_preferencias: {
+        Row: {
+          alerta_financeiro: boolean | null
+          cancelamento_agendamento: boolean | null
+          confirmacao_cliente: boolean | null
+          created_at: string | null
+          id: string
+          lembrete_agendamento: boolean | null
+          lembrete_cliente: boolean | null
+          novo_agendamento: boolean | null
+          ofertas_fidelidade: boolean | null
+          retorno_cronograma: boolean | null
+          som_notificacao: string | null
+          updated_at: string | null
+          user_id: string
+          vibracao: boolean | null
+        }
+        Insert: {
+          alerta_financeiro?: boolean | null
+          cancelamento_agendamento?: boolean | null
+          confirmacao_cliente?: boolean | null
+          created_at?: string | null
+          id?: string
+          lembrete_agendamento?: boolean | null
+          lembrete_cliente?: boolean | null
+          novo_agendamento?: boolean | null
+          ofertas_fidelidade?: boolean | null
+          retorno_cronograma?: boolean | null
+          som_notificacao?: string | null
+          updated_at?: string | null
+          user_id: string
+          vibracao?: boolean | null
+        }
+        Update: {
+          alerta_financeiro?: boolean | null
+          cancelamento_agendamento?: boolean | null
+          confirmacao_cliente?: boolean | null
+          created_at?: string | null
+          id?: string
+          lembrete_agendamento?: boolean | null
+          lembrete_cliente?: boolean | null
+          novo_agendamento?: boolean | null
+          ofertas_fidelidade?: boolean | null
+          retorno_cronograma?: boolean | null
+          som_notificacao?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vibracao?: boolean | null
+        }
+        Relationships: []
+      }
       pontos_fidelidade: {
         Row: {
           cliente_id: string
@@ -992,6 +1043,39 @@ export type Database = {
           id?: string
           nome?: string
           pontos_por_real?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          ativo: boolean | null
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
           updated_at?: string | null
           user_id?: string
         }
