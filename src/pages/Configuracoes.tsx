@@ -5,7 +5,8 @@ import { ConfiguracaoHorarios } from '@/components/configuracoes/ConfiguracaoHor
 import { ConfiguracaoNotificacoesAvancadas } from '@/components/configuracoes/ConfiguracaoNotificacoesAvancadas';
 import { ConfiguracaoNotificacoesPush } from '@/components/configuracoes/ConfiguracaoNotificacoesPush';
 import { ConfiguracaoBackup } from '@/components/configuracoes/ConfiguracaoBackup';
-import { Clock, Bell, Download, Settings } from 'lucide-react';
+import { ConfiguracaoAgendamentoOnline } from '@/components/configuracoes/ConfiguracaoAgendamentoOnline';
+import { Clock, Bell, Download, Settings, Calendar } from 'lucide-react';
 
 export default function Configuracoes() {
   const [activeTab, setActiveTab] = useState('horarios');
@@ -18,15 +19,19 @@ export default function Configuracoes() {
           <span>Configurações</span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Configure os horários de atendimento, notificações e backup do sistema
+          Configure os horários de atendimento, agendamento online, notificações e backup do sistema
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="horarios" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Horários
+          </TabsTrigger>
+          <TabsTrigger value="agendamento-online" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Agend. Online
           </TabsTrigger>
           <TabsTrigger value="notificacoes" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -66,6 +71,22 @@ export default function Configuracoes() {
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="agendamento-online" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span>Configurações do Agendamento Online</span>
+              </CardTitle>
+              <CardDescription>
+                Configure o formulário público de agendamento, informações do salão, redes sociais e regras de agendamento.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <ConfiguracaoAgendamentoOnline />
         </TabsContent>
 
         <TabsContent value="notificacoes" className="space-y-6">
