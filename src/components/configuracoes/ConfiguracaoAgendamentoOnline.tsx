@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -6,108 +5,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image } from 'lucide-react';
-
-interface ConfigAgendamentoOnline {
-  id?: string;
-  user_id?: string;
-  ativo: boolean;
-  nome_salao: string;
-  descricao: string;
-  telefone: string;
-  email: string;
-  endereco: string;
-  instagram?: string;
-  facebook?: string;
-  whatsapp?: string;
-  logo_url?: string;
-  taxa_sinal_percentual: number;
-  tempo_minimo_antecedencia: number;
-  tempo_maximo_antecedencia: number;
-  mensagem_boas_vindas: string;
-  termos_condicoes: string;
-  mensagem_confirmacao: string;
-}
+import { useConfigAgendamentoOnline, ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 
 export function ConfiguracaoAgendamentoOnline() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [config, setConfig] = useState<ConfigAgendamentoOnline>({
-    ativo: true,
-    nome_salao: 'Meu Salão',
-    descricao: 'Bem-vindo ao nosso salão! Agende seu horário de forma rápida e fácil.',
-    telefone: '',
-    email: '',
-    endereco: '',
-    instagram: '',
-    facebook: '',
-    whatsapp: '',
-    logo_url: '',
-    taxa_sinal_percentual: 30,
-    tempo_minimo_antecedencia: 60,
-    tempo_maximo_antecedencia: 4320,
-    mensagem_boas_vindas: 'Olá! Estamos felizes em atendê-lo(a). Preencha os dados abaixo para agendar seu horário.',
-    termos_condicoes: 'Ao agendar, você concorda em chegar no horário marcado. Em caso de atraso superior a 15 minutos, o agendamento poderá ser cancelado.',
-    mensagem_confirmacao: 'Agendamento confirmado! Em breve você receberá uma confirmação no WhatsApp.'
-  });
-
-  useEffect(() => {
-    carregarConfiguracao();
-  }, []);
-
-  const carregarConfiguracao = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('configuracoes_agendamento_online')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        setConfig(data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const salvarConfiguracao = async () => {
-    try {
-      setSaving(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const configData = {
-        ...config,
-        user_id: user.id,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supabase
-        .from('configuracoes_agendamento_online')
-        .upsert(configData, { onConflict: 'user_id' });
-
-      if (error) throw error;
-
-      toast.success('Configurações salvas com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar configuração:', error);
-      toast.error('Erro ao salvar configurações');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const { config, loading, saving, setConfig, salvarConfig } = useConfigAgendamentoOnline();
 
   const handleChange = (field: keyof ConfigAgendamentoOnline, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    await salvarConfig(config);
   };
 
   if (loading) {
@@ -417,7 +326,7 @@ export function ConfiguracaoAgendamentoOnline() {
       {/* Botão Salvar */}
       <div className="flex justify-end gap-4">
         <Button
-          onClick={salvarConfiguracao}
+          onClick={handleSave}
           disabled={saving}
           size="lg"
         >

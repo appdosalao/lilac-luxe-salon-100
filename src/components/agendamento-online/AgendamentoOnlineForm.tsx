@@ -12,6 +12,7 @@ import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { useShare } from '@/hooks/useShare';
 import { useConfiguracoesRealTime } from '@/hooks/useConfiguracoesRealTime';
+import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
 import { supabase } from '@/integrations/supabase/client';
 import { ProgressSteps } from './ProgressSteps';
@@ -35,6 +36,7 @@ export function AgendamentoOnlineForm() {
 
   const { shareContent, copyToClipboard, isSharing } = useShare();
   const { lastUpdate } = useConfiguracoesRealTime();
+  const { config: configOnline } = useConfigAgendamentoOnline();
 
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',

@@ -1,11 +1,12 @@
 import { Camera } from 'lucide-react';
 import { useState } from 'react';
+import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 
 export function SalonHeader() {
   const [imageError, setImageError] = useState(false);
+  const { config } = useConfigAgendamentoOnline();
   
-  // Você pode substituir esta URL pela URL real da foto do salão
-  const salonImageUrl = "/lovable-uploads/8a5121ab-d4ef-4272-be75-8450ce65f57a.png";
+  const salonImageUrl = config.logo_url || "/lovable-uploads/8a5121ab-d4ef-4272-be75-8450ce65f57a.png";
 
   return (
     <div className="w-full bg-gradient-to-br from-primary/10 via-primary/5 to-background py-8 px-4 mb-6">
@@ -16,7 +17,7 @@ export function SalonHeader() {
             {!imageError ? (
               <img 
                 src={salonImageUrl}
-                alt="Logo do Salão"
+                alt={`Logo ${config.nome_salao}`}
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
               />
@@ -30,10 +31,10 @@ export function SalonHeader() {
 
         {/* Nome do Salão */}
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-          Meu Salão
+          {config.nome_salao}
         </h1>
         <p className="text-muted-foreground text-sm sm:text-base">
-          Agende seu horário de forma rápida e prática
+          {config.descricao || 'Agende seu horário de forma rápida e prática'}
         </p>
       </div>
     </div>

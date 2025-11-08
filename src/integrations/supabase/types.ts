@@ -318,6 +318,75 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes_agendamento_online: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          email: string | null
+          endereco: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          mensagem_boas_vindas: string
+          mensagem_confirmacao: string
+          nome_salao: string
+          taxa_sinal_percentual: number
+          telefone: string | null
+          tempo_maximo_antecedencia: number
+          tempo_minimo_antecedencia: number
+          termos_condicoes: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          endereco?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          mensagem_boas_vindas?: string
+          mensagem_confirmacao?: string
+          nome_salao?: string
+          taxa_sinal_percentual?: number
+          telefone?: string | null
+          tempo_maximo_antecedencia?: number
+          tempo_minimo_antecedencia?: number
+          termos_condicoes?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          endereco?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          mensagem_boas_vindas?: string
+          mensagem_confirmacao?: string
+          nome_salao?: string
+          taxa_sinal_percentual?: number
+          telefone?: string | null
+          tempo_maximo_antecedencia?: number
+          tempo_minimo_antecedencia?: number
+          termos_condicoes?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       configuracoes_backup: {
         Row: {
           backup_automatico: boolean
