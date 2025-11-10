@@ -1824,6 +1824,12 @@ export type Database = {
           total_registros_ativos: number
         }[]
       }
+      get_active_booking_days: {
+        Args: never
+        Returns: {
+          dia_semana: number
+        }[]
+      }
       get_current_user_email: { Args: never; Returns: string }
       inserir_configuracao_horario: {
         Args: {

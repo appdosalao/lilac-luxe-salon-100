@@ -27,16 +27,13 @@ export const useSupabaseService = () => {
     }
   }, []);
 
-  const getConfiguracoes = useCallback(async () => {
+  const getActiveDays = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
       const { data, error } = await supabase
-        .from('configuracoes_horarios')
-        .select('*')
-        .eq('ativo', true)
-        .order('dia_semana');
+        .rpc('get_active_booking_days');
       
       if (error) throw error;
       
@@ -44,7 +41,7 @@ export const useSupabaseService = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      console.error('Erro ao buscar configurações:', err);
+      console.error('Erro ao buscar dias ativos:', err);
       return [];
     } finally {
       setLoading(false);
@@ -77,7 +74,7 @@ export const useSupabaseService = () => {
     loading,
     error,
     getServicos,
-    getConfiguracoes,
+    getActiveDays,
     createAgendamentoOnline
   };
 };
