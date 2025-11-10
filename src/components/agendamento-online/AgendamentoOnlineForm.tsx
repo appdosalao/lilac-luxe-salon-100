@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft } from 'lucide-react';
+import { z } from 'zod';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { useShare } from '@/hooks/useShare';
@@ -18,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProgressSteps } from './ProgressSteps';
 import { SalonHeader } from './SalonHeader';
 import { SalonFooter } from './SalonFooter';
+import { agendamentoOnlineSchema } from '@/lib/validation';
+import { toast } from 'sonner';
 
 export function AgendamentoOnlineForm() {
   const {
@@ -188,21 +191,40 @@ export function AgendamentoOnlineForm() {
     e.preventDefault();
 
     if (!termsAccepted) {
-      alert('Você deve aceitar os termos e condições para continuar.');
+      toast.error('Você deve aceitar os termos e condições para continuar.');
       return;
     }
     if (!taxaAccepted) {
-      alert('Você deve aceitar as condições da taxa antecipada para continuar.');
+      toast.error('Você deve aceitar as condições da taxa antecipada para continuar.');
       return;
     }
 
-    setIsSubmitting(true);
-    const sucesso = await criarAgendamento(formData);
-    
-    if (sucesso) {
-      setSuccess(true);
+    // Validate and sanitize input with zod
+    try {
+      const validatedData = agendamentoOnlineSchema.parse(formData);
+      setIsSubmitting(true);
+      const sucesso = await criarAgendamento(validatedData as AgendamentoOnlineData);
+      
+      if (sucesso) {
+        setSuccess(true);
+      } else {
+        setSuccess(false);
+      }
+      setIsSubmitting(false);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: FormErrors = {};
+        error.issues.forEach((err) => {
+          const field = err.path[0] as keyof FormErrors;
+          newErrors[field] = err.message;
+        });
+        setErrors(newErrors);
+        toast.error('Por favor, corrija os erros no formulário');
+      } else {
+        toast.error('Erro ao validar dados do formulário');
+      }
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const hoje = new Date();

@@ -29,8 +29,17 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, tipo, notification }: PushRequest = await req.json();
+    // Verify authentication token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
 
+    const token = authHeader.replace('Bearer ', '');
+    
     // Importar Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -38,11 +47,33 @@ serve(async (req) => {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Validate token and get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    const { userId, tipo, notification }: PushRequest = await req.json();
+
+    // Ensure user can only send notifications to themselves
+    if (userId && userId !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: cannot send notifications to other users' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    // Use authenticated user ID if not provided
+    const targetUserId = userId || user.id;
+
     // Buscar preferências do usuário
     const { data: preferencias } = await supabase
       .from('notificacoes_preferencias')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', targetUserId)
       .single();
 
     // Verificar se o tipo de notificação está habilitado
@@ -58,7 +89,7 @@ serve(async (req) => {
     };
 
     if (preferencias && !preferencias[tipoMap[tipo]]) {
-      console.log(`Notificação ${tipo} desabilitada para usuário ${userId}`);
+      console.log(`Notificação ${tipo} desabilitada para usuário ${targetUserId}`);
       return new Response(
         JSON.stringify({ message: 'Notification type disabled by user' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -69,13 +100,13 @@ serve(async (req) => {
     const { data: subscriptions, error: subError } = await supabase
       .from('push_subscriptions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', targetUserId)
       .eq('ativo', true);
 
     if (subError) throw subError;
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log(`Nenhuma subscription ativa encontrada para usuário ${userId}`);
+      console.log(`Nenhuma subscription ativa encontrada para usuário ${targetUserId}`);
       return new Response(
         JSON.stringify({ message: 'No active subscriptions found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
