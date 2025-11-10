@@ -154,10 +154,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agendamentos_online_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_servico"
             columns: ["servico_id"]
             isOneToOne: false
             referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
             referencedColumns: ["id"]
           },
         ]
@@ -668,6 +682,13 @@ export type Database = {
             columns: ["servico_id"]
             isOneToOne: false
             referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cronogramas_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1211,6 +1232,13 @@ export type Database = {
             referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "recompensas_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       referencias_clientes: {
@@ -1509,6 +1537,13 @@ export type Database = {
             referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_cronogramas_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       disponibilidade_agendamentos: {
@@ -1568,10 +1603,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agendamentos_online_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_servico"
             columns: ["servico_id"]
             isOneToOne: false
             referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_servico"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1670,6 +1719,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      servicos_public: {
+        Row: {
+          descricao: string | null
+          duracao: number | null
+          id: string | null
+          nome: string | null
+          valor: number | null
+        }
+        Insert: {
+          descricao?: string | null
+          duracao?: number | null
+          id?: string | null
+          nome?: string | null
+          valor?: number | null
+        }
+        Update: {
+          descricao?: string | null
+          duracao?: number | null
+          id?: string | null
+          nome?: string | null
+          valor?: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {

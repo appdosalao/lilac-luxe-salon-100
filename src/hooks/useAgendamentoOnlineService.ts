@@ -11,9 +11,8 @@ export const useAgendamentoOnlineService = () => {
   const carregarServicos = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('servicos')
-        .select('id, nome, valor, duracao, descricao')
-        .order('nome');
+        .from('servicos_public')
+        .select('*');
 
       if (error) throw error;
       setServicos(data || []);
