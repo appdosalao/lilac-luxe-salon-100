@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
@@ -30,6 +31,7 @@ interface SupabaseAuthContextType {
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -82,6 +84,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (session?.user) {
           console.log('🟡 [AUTH] Usuário logado, buscando perfil...');
+          // Verificar se é primeiro login
+          const onboardingCompleted = localStorage.getItem('onboarding-completed');
+          if (!onboardingCompleted && event === 'SIGNED_IN') {
+            setTimeout(() => navigate('/onboarding'), 500);
+          }
           // Verificar assinatura
           setTimeout(() => checkSubscription(), 100);
           // Defer para evitar deadlock
