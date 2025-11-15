@@ -16,6 +16,7 @@ import Configuracoes from './pages/Configuracoes';
 import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Marketing from "./pages/Marketing";
+import Assinatura from "./pages/Assinatura";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro"; 
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
@@ -109,6 +110,13 @@ const App = () => {
                       <ProtectedRoute>
                         <Layout>
                           <Marketing />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/assinatura" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Assinatura />
                         </Layout>
                       </ProtectedRoute>
                     } />
