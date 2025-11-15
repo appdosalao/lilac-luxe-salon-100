@@ -21,8 +21,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Permitir acesso à página de assinatura mesmo sem assinatura ativa
-  if (window.location.pathname === '/assinatura') {
+  // Permitir acesso à página de assinatura e onboarding mesmo sem assinatura ativa
+  if (window.location.pathname === '/assinatura' || window.location.pathname === '/onboarding') {
     return <>{children}</>;
   }
 

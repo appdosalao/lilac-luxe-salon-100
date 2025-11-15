@@ -17,8 +17,9 @@ import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Marketing from "./pages/Marketing";
 import Assinatura from "./pages/Assinatura";
+import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro"; 
+import Cadastro from "./pages/Cadastro";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 
@@ -38,6 +39,11 @@ const App = () => {
                     {/* Rotas públicas */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/cadastro" element={<Cadastro />} />
+                    <Route path="/onboarding" element={
+                      <ProtectedRoute>
+                        <Onboarding />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/agendamento-online" element={<AgendamentoOnline />} />
                     <Route path="/agendamento-publico" element={<AgendamentoOnline />} />
                     <Route path="/agendar" element={<AgendamentoOnline />} />
