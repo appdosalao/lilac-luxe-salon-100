@@ -78,6 +78,11 @@ const navigationItems = [
     icon: Shield,
   },
   {
+    title: "Assinatura",
+    href: "/assinatura",
+    icon: Sparkles,
+  },
+  {
     title: "Configurações",
     href: "/configuracoes",
     icon: Settings,

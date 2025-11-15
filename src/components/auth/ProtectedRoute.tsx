@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useSupabaseAuth();
+  const { isAuthenticated, isLoading, subscription, isSubscriptionLoading } = useSupabaseAuth();
 
-  if (isLoading) {
+  if (isLoading || isSubscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -19,6 +19,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Permitir acesso à página de assinatura mesmo sem assinatura ativa
+  if (window.location.pathname === '/assinatura') {
+    return <>{children}</>;
+  }
+
+  // Verificar se tem assinatura ativa
+  if (subscription && !subscription.subscribed) {
+    return <Navigate to="/assinatura" replace />;
   }
 
   return <>{children}</>;

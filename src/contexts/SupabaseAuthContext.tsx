@@ -5,12 +5,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
 
+interface SubscriptionStatus {
+  subscribed: boolean;
+  product_id?: string | null;
+  subscription_end?: string | null;
+  trial_end?: string | null;
+}
+
 interface SupabaseAuthContextType {
   user: User | null;
   session: Session | null;
   usuario: Usuario | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  subscription: SubscriptionStatus | null;
+  isSubscriptionLoading: boolean;
+  checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<Usuario>) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -24,6 +34,36 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
+
+  const checkSubscription = async () => {
+    if (!session) {
+      setSubscription(null);
+      return;
+    }
+
+    setIsSubscriptionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao verificar assinatura:', error);
+        setSubscription({ subscribed: false });
+      } else {
+        setSubscription(data);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar assinatura:', error);
+      setSubscription({ subscribed: false });
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Aplicar tema salvo localmente imediatamente (evita flash)
@@ -42,6 +82,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (session?.user) {
           console.log('🟡 [AUTH] Usuário logado, buscando perfil...');
+          // Verificar assinatura
+          setTimeout(() => checkSubscription(), 100);
           // Defer para evitar deadlock
           setTimeout(async () => {
             try {
@@ -241,6 +283,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         usuario,
         isLoading,
         isAuthenticated,
+        subscription,
+        isSubscriptionLoading,
+        checkSubscription,
         signUp,
         signIn,
         signOut,
