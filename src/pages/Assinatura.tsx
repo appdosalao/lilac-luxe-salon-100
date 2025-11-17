@@ -3,7 +3,8 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -88,131 +89,272 @@ export default function Assinatura() {
   const inTrial = subscription?.trial_end && new Date(subscription.trial_end) > new Date();
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Assinatura</h1>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto py-12 px-4 max-w-5xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Sua Assinatura
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Gerencie seu plano e aproveite todos os recursos
+          </p>
+        </div>
 
-      {isSubscribed ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-green-500" />
-              Assinatura Ativa
-            </CardTitle>
-            <CardDescription>
-              Você tem acesso completo ao sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {inTrial && subscription.trial_end && (
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="font-semibold text-blue-900 dark:text-blue-100">
-                  Período de teste grátis
-                </p>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Seu teste grátis termina em {format(new Date(subscription.trial_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        {isSubscribed ? (
+          <div className="space-y-6">
+            {/* Status Card */}
+            <Card className="border-primary/20 shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <Crown className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl mb-1">
+                        {inTrial ? 'Período de Teste Grátis' : 'Plano Premium Ativo'}
+                      </CardTitle>
+                      <CardDescription className="text-base">
+                        {inTrial 
+                          ? 'Aproveite todos os recursos sem custo'
+                          : 'Acesso completo a todas as funcionalidades'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+                    <Check className="h-3 w-3 mr-1" />
+                    Ativo
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {inTrial && subscription.trial_end && (
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-blue-500/10 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-1">
+                          🎉 Teste Grátis Ativo
+                        </h3>
+                        <p className="text-blue-700 dark:text-blue-300 mb-3">
+                          Você está aproveitando 7 dias de acesso gratuito a todos os recursos premium
+                        </p>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4" />
+                          <span className="font-medium">
+                            Termina em: {format(new Date(subscription.trial_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!inTrial && subscription.subscription_end && (
+                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground mb-1">Próxima renovação</p>
+                      <p className="font-semibold text-lg">
+                        {format(new Date(subscription.subscription_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-sm">
+                      R$ 20,00/mês
+                    </Badge>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t">
+                  <Button 
+                    onClick={handleManageSubscription} 
+                    disabled={loading}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Carregando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Gerenciar Pagamento e Assinatura
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-3">
+                    Atualize forma de pagamento, veja faturas ou cancele quando quiser
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Features Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recursos Incluídos</CardTitle>
+                <CardDescription>Tudo que você tem acesso com seu plano</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Agendamentos ilimitados</p>
+                      <p className="text-sm text-muted-foreground">Sem limites de quantidade</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Gerenciamento de clientes</p>
+                      <p className="text-sm text-muted-foreground">Cadastro completo</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Controle financeiro</p>
+                      <p className="text-sm text-muted-foreground">Relatórios e análises</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Programa de fidelidade</p>
+                      <p className="text-sm text-muted-foreground">Recompense seus clientes</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Agendamento online</p>
+                      <p className="text-sm text-muted-foreground">Link personalizado</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="p-1 bg-primary/10 rounded">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Notificações push</p>
+                      <p className="text-sm text-muted-foreground">Nunca perca um compromisso</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <Card className="shadow-xl">
+            <CardHeader className="text-center pb-8">
+              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Crown className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-3xl mb-2">Plano Premium</CardTitle>
+              <CardDescription className="text-base">
+                Acesso completo ao sistema de agendamentos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">
+                  R$ 20,00
+                  <span className="text-xl font-normal text-muted-foreground">/mês</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Cobrado mensalmente</p>
+              </div>
+
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Sparkles className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-xl text-green-900 dark:text-green-100 mb-2">
+                      🎉 7 dias grátis para testar!
+                    </h3>
+                    <p className="text-green-700 dark:text-green-300">
+                      Experimente todos os recursos sem custo. Cancele quando quiser, sem compromisso.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Tudo que você precisa:</h3>
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Agendamentos ilimitados</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Gerenciamento completo de clientes</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Controle financeiro com relatórios</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Programa de fidelidade personalizado</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Agendamento online com link próprio</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span>Notificações push em tempo real</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button 
+                  onClick={handleSubscribe} 
+                  disabled={loading}
+                  size="lg"
+                  className="w-full text-lg h-12"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Começar Teste Grátis de 7 Dias
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Você não será cobrado durante o período de teste. <br />
+                  Cancele quando quiser, sem compromisso ou taxas.
                 </p>
               </div>
-            )}
-
-            {subscription.subscription_end && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Próxima renovação:{' '}
-                  <span className="font-medium text-foreground">
-                    {format(new Date(subscription.subscription_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                  </span>
-                </p>
-              </div>
-            )}
-
-            <Button 
-              onClick={handleManageSubscription} 
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Carregando...
-                </>
-              ) : (
-                'Gerenciar Assinatura'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Plano Mensal</CardTitle>
-            <CardDescription>
-              Acesso completo ao sistema de agendamentos
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="text-4xl font-bold">
-              R$ 20,00
-              <span className="text-lg font-normal text-muted-foreground">/mês</span>
-            </div>
-
-            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <p className="font-semibold text-green-900 dark:text-green-100">
-                🎉 7 dias grátis para testar!
-              </p>
-              <p className="text-sm text-green-700 dark:text-green-300">
-                Cancele quando quiser, sem compromisso
-              </p>
-            </div>
-
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Agendamentos ilimitados</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Gerenciamento de clientes</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Controle financeiro completo</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Programa de fidelidade</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Agendamento online</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Notificações push</span>
-              </li>
-            </ul>
-
-            <Button 
-              onClick={handleSubscribe} 
-              disabled={loading}
-              size="lg"
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                'Começar Teste Grátis'
-              )}
-            </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              Você não será cobrado durante o período de teste. Cancele quando quiser.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
