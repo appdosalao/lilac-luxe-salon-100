@@ -32,6 +32,15 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Buscar dados do usuário para verificar se já usou trial
+    const { data: userData } = await supabaseClient
+      .from('usuarios')
+      .select('trial_used')
+      .eq('id', user.id)
+      .single();
+
+    logStep("User trial status", { trial_used: userData?.trial_used });
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
@@ -55,11 +64,12 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      subscription_data: {
+      // Só adicionar trial se usuário NUNCA usou trial
+      subscription_data: userData?.trial_used ? undefined : {
         trial_period_days: 7,
       },
       success_url: `${req.headers.get("origin")}/`,
-      cancel_url: `${req.headers.get("origin")}/`,
+      cancel_url: `${req.headers.get("origin")}/assinatura`,
     });
 
     logStep("Checkout session created", { sessionId: session.id });

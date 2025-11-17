@@ -8,9 +8,11 @@ import { toast } from 'sonner';
 
 interface SubscriptionStatus {
   subscribed: boolean;
-  product_id?: string | null;
+  status: 'trial' | 'active' | 'expired' | 'inactive';
+  trial_days_remaining?: number;
+  trial_end_date?: string;
   subscription_end?: string | null;
-  trial_end?: string | null;
+  product_id?: string | null;
 }
 
 interface SupabaseAuthContextType {
@@ -22,7 +24,7 @@ interface SupabaseAuthContextType {
   subscription: SubscriptionStatus | null;
   isSubscriptionLoading: boolean;
   checkSubscription: () => Promise<void>;
-  signUp: (email: string, password: string, userData: Partial<Usuario>) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Usuario>) => Promise<{ error: any }>;
@@ -40,28 +42,88 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
   const checkSubscription = async () => {
-    if (!session) {
+    if (!session || !user) {
       setSubscription(null);
       return;
     }
 
     setIsSubscriptionLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
+      // Primeiro: buscar dados locais do usuário
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('trial_start_date, trial_used, subscription_status')
+        .eq('id', user.id)
+        .single();
+
+      // Calcular status do trial local
+      if (userData?.trial_start_date && userData.subscription_status === 'trial') {
+        const trialStart = new Date(userData.trial_start_date);
+        const now = new Date();
+        const daysSinceTrial = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = 7 - daysSinceTrial;
+
+        if (daysRemaining > 0) {
+          // Trial ainda válido
+          const trialEndDate = new Date(trialStart);
+          trialEndDate.setDate(trialEndDate.getDate() + 7);
+          
+          setSubscription({
+            subscribed: true,
+            status: 'trial',
+            trial_days_remaining: daysRemaining,
+            trial_end_date: trialEndDate.toISOString()
+          });
+          setIsSubscriptionLoading(false);
+          return;
+        } else {
+          // Trial expirado - atualizar no banco
+          await supabase
+            .from('usuarios')
+            .update({ subscription_status: 'expired' })
+            .eq('id', user.id);
+            
+          setSubscription({
+            subscribed: false,
+            status: 'expired'
+          });
+          setIsSubscriptionLoading(false);
+          return;
+        }
+      }
+
+      // Segundo: verificar assinatura no Stripe
+      const { data: stripeData, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      if (error) {
-        console.error('Erro ao verificar assinatura:', error);
-        setSubscription({ subscribed: false });
+      if (!error && stripeData?.subscribed) {
+        // Tem assinatura ativa no Stripe - atualizar status local
+        await supabase
+          .from('usuarios')
+          .update({ 
+            subscription_status: 'active',
+            trial_used: true 
+          })
+          .eq('id', user.id);
+
+        setSubscription({
+          subscribed: true,
+          status: 'active',
+          subscription_end: stripeData.subscription_end,
+          product_id: stripeData.product_id
+        });
       } else {
-        setSubscription(data);
+        setSubscription({
+          subscribed: false,
+          status: 'inactive'
+        });
       }
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
-      setSubscription({ subscribed: false });
+      setSubscription({ subscribed: false, status: 'inactive' });
     } finally {
       setIsSubscriptionLoading(false);
     }
@@ -154,7 +216,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, userData: Partial<Usuario>) => {
+  const signUp = async (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => {
     try {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/`;
@@ -162,6 +224,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('🟣 [SIGNUP] Iniciando cadastro...');
       console.log('🟣 [SIGNUP] Tema selecionado:', userData.tema_preferencia);
       console.log('🟣 [SIGNUP] Email:', email);
+      console.log('🟣 [SIGNUP] Tipo de plano:', planType);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -173,6 +236,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
             telefone: userData.telefone,
             tema_preferencia: userData.tema_preferencia || 'feminino',
+            plan_type: planType || 'trial',
           }
         }
       });
