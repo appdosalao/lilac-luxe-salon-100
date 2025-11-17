@@ -29,6 +29,7 @@ const Cadastro = () => {
   const { signUp } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [planType, setPlanType] = useState<'trial' | 'paid'>('trial');
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<UsuarioCadastro>({
     resolver: zodResolver(cadastroSchema),
@@ -58,10 +59,14 @@ const Cadastro = () => {
         nome_personalizado_app: data.nome_personalizado_app,
         telefone: data.telefone,
         tema_preferencia: data.tema_preferencia
-      });
+      }, planType);
       
       if (!error) {
-        navigate('/login');
+        if (planType === 'paid') {
+          navigate('/assinatura');
+        } else {
+          navigate('/login');
+        }
       } else {
         setError(error.message || 'Erro ao criar conta');
       }
@@ -88,6 +93,57 @@ const Cadastro = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            {/* Seleção de Plano */}
+            <div className="space-y-3">
+              <Label className="text-base">Escolha seu plano *</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div 
+                  className="flex flex-col cursor-pointer"
+                  onClick={() => !isLoading && setPlanType('trial')}
+                >
+                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
+                    planType === 'trial' 
+                      ? 'border-primary shadow-lg' 
+                      : 'border-border'
+                  }`}>
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🎉</div>
+                      <p className="font-semibold text-lg mb-1">7 Dias Grátis</p>
+                      <p className="text-sm text-muted-foreground mb-3">Sem necessidade de cartão</p>
+                      <p className="text-xs text-muted-foreground">Acesso completo por 7 dias</p>
+                    </div>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
+                      planType === 'trial'
+                        ? 'bg-primary border-primary'
+                        : 'border-border'
+                    }`}></div>
+                  </div>
+                </div>
+                <div 
+                  className="flex flex-col cursor-pointer"
+                  onClick={() => !isLoading && setPlanType('paid')}
+                >
+                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
+                    planType === 'paid' 
+                      ? 'border-primary shadow-lg' 
+                      : 'border-border'
+                  }`}>
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">💳</div>
+                      <p className="font-semibold text-lg mb-1">Assinar Agora</p>
+                      <p className="text-sm text-muted-foreground mb-3">R$ 20,00/mês</p>
+                      <p className="text-xs text-muted-foreground">Cobrança recorrente</p>
+                    </div>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
+                      planType === 'paid'
+                        ? 'bg-primary border-primary'
+                        : 'border-border'
+                    }`}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="nome_personalizado_app">Nome da Profissional / Nome do Salão *</Label>
@@ -225,7 +281,8 @@ const Cadastro = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 'Criar Conta'}
+              {isLoading ? 'Criando conta...' : 
+               planType === 'trial' ? 'Começar Teste Grátis' : 'Criar Conta e Assinar'}
             </Button>
 
             <div className="text-center">

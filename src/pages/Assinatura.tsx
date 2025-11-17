@@ -86,7 +86,10 @@ export default function Assinatura() {
   }
 
   const isSubscribed = subscription?.subscribed;
-  const inTrial = subscription?.trial_end && new Date(subscription.trial_end) > new Date();
+  const isInTrial = subscription?.status === 'trial';
+  const isExpired = subscription?.status === 'expired';
+  const isActive = subscription?.status === 'active';
+  const isInactive = subscription?.status === 'inactive';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -100,7 +103,7 @@ export default function Assinatura() {
           </p>
         </div>
 
-        {isSubscribed ? (
+        {(isSubscribed || isInTrial) ? (
           <div className="space-y-6">
             {/* Status Card */}
             <Card className="border-primary/20 shadow-lg">
@@ -112,10 +115,10 @@ export default function Assinatura() {
                     </div>
                     <div>
                       <CardTitle className="text-2xl mb-1">
-                        {inTrial ? 'Período de Teste Grátis' : 'Plano Premium Ativo'}
+                        {isInTrial ? 'Período de Teste Grátis' : 'Plano Premium Ativo'}
                       </CardTitle>
                       <CardDescription className="text-base">
-                        {inTrial 
+                        {isInTrial 
                           ? 'Aproveite todos os recursos sem custo'
                           : 'Acesso completo a todas as funcionalidades'}
                       </CardDescription>
@@ -128,7 +131,7 @@ export default function Assinatura() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {inTrial && subscription.trial_end && (
+                {isInTrial && subscription.trial_end_date && (
                   <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -144,7 +147,7 @@ export default function Assinatura() {
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-4 w-4" />
                           <span className="font-medium">
-                            Termina em: {format(new Date(subscription.trial_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            Termina em: {format(new Date(subscription.trial_end_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                           </span>
                         </div>
                       </div>
@@ -152,7 +155,7 @@ export default function Assinatura() {
                   </div>
                 )}
 
-                {!inTrial && subscription.subscription_end && (
+                {!isInTrial && subscription.subscription_end && (
                   <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <Calendar className="h-5 w-5 text-primary" />
@@ -261,6 +264,71 @@ export default function Assinatura() {
               </CardContent>
             </Card>
           </div>
+        ) : isExpired ? (
+          <Card className="shadow-xl border-orange-200 dark:border-orange-900">
+            <CardHeader className="text-center pb-6">
+              <div className="mx-auto mb-4 p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full w-fit">
+                <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+              </div>
+              <CardTitle className="text-3xl mb-2">Seu teste grátis terminou</CardTitle>
+              <CardDescription className="text-base">
+                Assine agora para continuar aproveitando todos os recursos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center">
+                <div className="text-5xl font-bold mb-2">
+                  R$ 20,00
+                  <span className="text-xl font-normal text-muted-foreground">/mês</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Cobrado mensalmente</p>
+              </div>
+
+              <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
+                <p className="font-semibold text-center">O que você vai manter:</p>
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Agendamentos ilimitados</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Gerenciamento de clientes</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Controle financeiro</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Agendamento online</span>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleSubscribe} 
+                disabled={loading}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="mr-2 h-4 w-4" />
+                    Assinar Plano Premium
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Cancele quando quiser, sem multas ou taxas
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="shadow-xl">
             <CardHeader className="text-center pb-8">

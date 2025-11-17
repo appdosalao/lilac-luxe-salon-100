@@ -21,13 +21,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Permitir acesso à página de assinatura e onboarding mesmo sem assinatura ativa
+  // Permitir acesso à página de assinatura e onboarding
   if (window.location.pathname === '/assinatura' || window.location.pathname === '/onboarding') {
     return <>{children}</>;
   }
 
-  // Verificar se tem assinatura ativa
-  if (subscription && !subscription.subscribed) {
+  // Verificar se tem acesso (trial ativo OU assinatura ativa)
+  const hasAccess = subscription && (
+    subscription.status === 'trial' || 
+    subscription.status === 'active'
+  );
+
+  if (!hasAccess) {
     return <Navigate to="/assinatura" replace />;
   }
 

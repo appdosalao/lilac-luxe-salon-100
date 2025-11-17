@@ -1466,8 +1466,11 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app: string
+          subscription_status: string | null
           telefone: string
           tema_preferencia: string | null
+          trial_start_date: string | null
+          trial_used: boolean | null
           updated_at: string
         }
         Insert: {
@@ -1476,8 +1479,11 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app?: string
+          subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
+          trial_start_date?: string | null
+          trial_used?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -1486,8 +1492,11 @@ export type Database = {
           id?: string
           nome_completo?: string
           nome_personalizado_app?: string
+          subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
+          trial_start_date?: string | null
+          trial_used?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -1795,6 +1804,7 @@ export type Database = {
             Returns: string
           }
         | { Args: { pontos_totais: number }; Returns: string }
+      check_trial_status: { Args: { user_id: string }; Returns: string }
       converter_agendamento_online: {
         Args: { agendamento_online_id: string; user_id: string }
         Returns: string
