@@ -1466,11 +1466,8 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app: string
-          subscription_status: string | null
           telefone: string
           tema_preferencia: string | null
-          trial_start_date: string | null
-          trial_used: boolean | null
           updated_at: string
         }
         Insert: {
@@ -1479,11 +1476,8 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app?: string
-          subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
-          trial_start_date?: string | null
-          trial_used?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -1492,11 +1486,8 @@ export type Database = {
           id?: string
           nome_completo?: string
           nome_personalizado_app?: string
-          subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
-          trial_start_date?: string | null
-          trial_used?: boolean | null
           updated_at?: string
         }
         Relationships: []
