@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,10 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recha
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ConfiguracaoNotificacoesAvancadas } from "@/components/configuracoes/ConfiguracaoNotificacoesAvancadas";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Dashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   console.log('Dashboard: Iniciando renderização');
   
   try {
@@ -31,8 +34,23 @@ export default function Dashboard() {
     console.log('Dashboard: useLancamentos success');
     
     console.log('Dashboard: Tentando useSupabaseAuth');
-    const { usuario } = useSupabaseAuth();
+    const { usuario, checkSubscription } = useSupabaseAuth();
     console.log('Dashboard: useSupabaseAuth success');
+
+  // Detectar retorno de pagamento bem-sucedido
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      // Limpar query param
+      setSearchParams({});
+      
+      // Forçar verificação de assinatura múltiplas vezes
+      toast.success('🎉 Pagamento confirmado! Verificando assinatura...');
+      setTimeout(() => checkSubscription(), 1000);
+      setTimeout(() => checkSubscription(), 3000);
+      setTimeout(() => checkSubscription(), 6000);
+    }
+  }, [searchParams, setSearchParams, checkSubscription]);
 
   // Data atual
   const hoje = new Date();

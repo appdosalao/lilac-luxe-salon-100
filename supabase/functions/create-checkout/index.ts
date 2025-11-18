@@ -68,7 +68,7 @@ serve(async (req) => {
       subscription_data: userData?.trial_used ? undefined : {
         trial_period_days: 7,
       },
-      success_url: `${req.headers.get("origin")}/`,
+      success_url: `${req.headers.get("origin")}/?payment=success`,
       cancel_url: `${req.headers.get("origin")}/assinatura`,
     });
 

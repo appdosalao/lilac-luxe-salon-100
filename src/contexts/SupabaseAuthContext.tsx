@@ -50,7 +50,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
     setIsSubscriptionLoading(true);
     try {
-      // Primeiro: buscar dados locais do usuário
+      // Buscar dados locais do usuário
       const { data: userData } = await supabase
         .from('usuarios')
         .select('trial_start_date, trial_used, subscription_status')
@@ -67,7 +67,40 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Calcular status do trial local
+      // ✅ MUDANÇA PRINCIPAL: SEMPRE VERIFICAR STRIPE PRIMEIRO
+      // Isso garante que upgrades de trial para pago sejam detectados
+      try {
+        const { data: stripeData, error: stripeError } = await supabase.functions.invoke('check-subscription', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        // Se encontrou assinatura ativa no Stripe, atualizar e retornar
+        if (!stripeError && stripeData?.subscribed) {
+          await supabase
+            .from('usuarios')
+            .update({ 
+              subscription_status: 'active',
+              trial_used: true 
+            })
+            .eq('id', user.id);
+
+          setSubscription({
+            subscribed: true,
+            status: 'active',
+            subscription_end: stripeData.subscription_end,
+            product_id: stripeData.product_id
+          });
+          setIsSubscriptionLoading(false);
+          return; // ✅ Sair aqui se tem assinatura paga
+        }
+      } catch (stripeError) {
+        console.error('Erro ao verificar Stripe (continuando com verificação local):', stripeError);
+        // Continuar com verificação de trial local se Stripe falhar
+      }
+
+      // Só verifica trial local se NÃO encontrou assinatura no Stripe
       if (userData?.trial_start_date && userData.subscription_status === 'trial') {
         const trialStart = new Date(userData.trial_start_date);
         const now = new Date();
@@ -75,7 +108,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         const daysRemaining = 7 - daysSinceTrial;
 
         if (daysRemaining > 0) {
-          // Trial ainda válido
           const trialEndDate = new Date(trialStart);
           trialEndDate.setDate(trialEndDate.getDate() + 7);
           
@@ -88,7 +120,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           setIsSubscriptionLoading(false);
           return;
         } else {
-          // Trial expirado - atualizar no banco
+          // Trial expirado
           await supabase
             .from('usuarios')
             .update({ subscription_status: 'expired' })
@@ -103,35 +135,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Segundo: verificar assinatura no Stripe
-      const { data: stripeData, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+      // Se chegou aqui, não tem trial nem assinatura
+      setSubscription({
+        subscribed: false,
+        status: 'inactive'
       });
-
-      if (!error && stripeData?.subscribed) {
-        // Tem assinatura ativa no Stripe - atualizar status local
-        await supabase
-          .from('usuarios')
-          .update({ 
-            subscription_status: 'active',
-            trial_used: true 
-          })
-          .eq('id', user.id);
-
-        setSubscription({
-          subscribed: true,
-          status: 'active',
-          subscription_end: stripeData.subscription_end,
-          product_id: stripeData.product_id
-        });
-      } else {
-        setSubscription({
-          subscribed: false,
-          status: 'inactive'
-        });
-      }
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       setSubscription({ subscribed: false, status: 'inactive' });
