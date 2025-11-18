@@ -13,12 +13,18 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  logStep("🔔 Webhook called", { 
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Webhook received");
+    logStep("📨 Processing webhook event");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
