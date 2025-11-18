@@ -160,31 +160,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [navigate]);
 
-  const checkSubscription = async () => {
-    setIsSubscriptionLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setSubscription(null);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("check-subscription", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-      setSubscription(data);
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      setSubscription(null);
-    } finally {
-      setIsSubscriptionLoading(false);
-    }
-  };
-
   const signUp = async (
     email: string,
     password: string,
