@@ -18,8 +18,11 @@ export default function Assinatura() {
       navigate("/login");
       return;
     }
-    checkSubscription();
-  }, [user, navigate, checkSubscription]);
+    // Only check on mount if not already checked
+    if (!subscription) {
+      checkSubscription();
+    }
+  }, [user, navigate]); // Remove checkSubscription from dependencies to prevent loops
 
   const handleSubscribe = async () => {
     setIsLoading(true);

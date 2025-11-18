@@ -85,7 +85,16 @@ serve(async (req) => {
     const subscription = subscriptions.data[0];
     const isActive = subscription.status === "active" || subscription.status === "trialing";
     const isTrial = subscription.status === "trialing";
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+    
+    // Safely convert timestamp, handle null/undefined
+    let subscriptionEnd = null;
+    if (subscription.current_period_end) {
+      try {
+        subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      } catch (error) {
+        logStep("Error converting date", { error: error.message, timestamp: subscription.current_period_end });
+      }
+    }
 
     logStep("Subscription found", { 
       subscriptionId: subscription.id, 
