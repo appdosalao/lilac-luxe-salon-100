@@ -6,16 +6,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
 
+interface SubscriptionState {
+  subscribed: boolean;
+  status?: string;
+  trial?: boolean;
+  subscription_end?: string;
+  product_id?: string;
+}
+
 interface SupabaseAuthContextType {
   user: User | null;
   session: Session | null;
   usuario: Usuario | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  subscription: SubscriptionState | null;
+  isSubscriptionLoading: boolean;
   signUp: (email: string, password: string, userData: Partial<Usuario>) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Usuario>) => Promise<{ error: any }>;
+  checkSubscription: () => Promise<void>;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
@@ -26,6 +37,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('app-theme');
@@ -103,6 +116,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             document.documentElement.setAttribute('data-theme', tema);
             localStorage.setItem('app-theme', tema);
           }
+          
+          // Check subscription on initial load
+          checkSubscription();
         }
       } catch (error) {
         console.error('Erro ao verificar sessão inicial:', error);
@@ -117,6 +133,31 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  const checkSubscription = async () => {
+    setIsSubscriptionLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setSubscription(null);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("check-subscription", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      setSubscription(data);
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+      setSubscription(null);
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  };
 
   const signUp = async (
     email: string,
@@ -244,10 +285,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     usuario,
     isLoading,
     isAuthenticated: !!user,
+    subscription,
+    isSubscriptionLoading,
     signUp,
     signIn,
     signOut,
     updateProfile,
+    checkSubscription,
   };
 
   return (
