@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Assinatura() {
+  const navigate = useNavigate();
   const { subscription, isSubscriptionLoading, checkSubscription, session, user } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
@@ -395,9 +397,13 @@ export default function Assinatura() {
                           .eq('id', session.user.id);
                         
                         if (!error) {
-                          await checkSubscription();
                           toast.success('🎉 Trial de 7 dias iniciado!');
-                          window.location.href = '/';
+                          // Aguardar um momento para garantir que o banco atualizou
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          await checkSubscription();
+                          // Aguardar mais um momento para garantir que o estado foi atualizado
+                          await new Promise(resolve => setTimeout(resolve, 300));
+                          navigate('/');
                         } else {
                           toast.error('Erro ao iniciar trial');
                         }
