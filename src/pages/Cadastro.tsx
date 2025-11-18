@@ -62,10 +62,13 @@ const Cadastro = () => {
       }, planType);
       
       if (!error) {
-        if (planType === 'paid') {
-          navigate('/assinatura');
+        if (planType === 'trial') {
+          // Login automático já foi feito, aguardar um pouco e ir para home
+          await new Promise(resolve => setTimeout(resolve, 800));
+          navigate('/');
         } else {
-          navigate('/login');
+          // Assinar agora: ir para login primeiro, depois assinatura
+          navigate('/login?redirect=/assinatura');
         }
       } else {
         setError(error.message || 'Erro ao criar conta');
