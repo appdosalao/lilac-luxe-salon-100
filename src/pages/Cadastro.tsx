@@ -59,17 +59,10 @@ const Cadastro = () => {
         nome_personalizado_app: data.nome_personalizado_app,
         telefone: data.telefone,
         tema_preferencia: data.tema_preferencia
-      }, planType);
+      });
       
       if (!error) {
-        if (planType === 'trial') {
-          // Login automático já foi feito, aguardar um pouco e ir para home
-          await new Promise(resolve => setTimeout(resolve, 800));
-          navigate('/');
-        } else {
-          // Assinar agora: ir para login primeiro, depois assinatura
-          navigate('/login?redirect=/assinatura');
-        }
+        navigate('/onboarding');
       } else {
         setError(error.message || 'Erro ao criar conta');
       }
