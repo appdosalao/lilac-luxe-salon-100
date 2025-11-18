@@ -26,14 +26,18 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header:', authHeader ? 'Present' : 'Missing');
+    
     if (!authHeader) {
+      console.error('Missing authorization header');
       throw new Error('Missing authorization header');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // ✅ Use ANON_KEY para autenticar usuários via JWT
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -42,10 +46,21 @@ Deno.serve(async (req) => {
 
     // Verificar autenticação do usuário
     const token = authHeader.replace('Bearer ', '');
+    console.log('Token extracted, length:', token.length);
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (authError || !user) {
-      console.error('Auth error:', authError);
+    if (authError) {
+      console.error('Auth error details:', {
+        name: authError.name,
+        message: authError.message,
+        status: authError.status
+      });
+      throw new Error('Unauthorized');
+    }
+    
+    if (!user) {
+      console.error('User is null after auth');
       throw new Error('Unauthorized');
     }
 
