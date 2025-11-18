@@ -23,11 +23,10 @@ export default function Assinatura() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      console.log('[SUBSCRIBE] Iniciando checkout...');
+      
+      // ✅ supabase.functions.invoke automaticamente passa o Authorization header
+      const { data, error } = await supabase.functions.invoke('create-checkout');
 
       if (error) {
         toast.error('Erro ao criar sessão de checkout');
