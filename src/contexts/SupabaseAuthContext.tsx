@@ -56,6 +56,16 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', user.id)
         .single();
 
+      // Se usuário não tem status definido, permitir iniciar trial
+      if (!userData?.subscription_status || userData.subscription_status === 'inactive') {
+        setSubscription({
+          subscribed: false,
+          status: 'inactive'
+        });
+        setIsSubscriptionLoading(false);
+        return;
+      }
+
       // Calcular status do trial local
       if (userData?.trial_start_date && userData.subscription_status === 'trial') {
         const trialStart = new Date(userData.trial_start_date);

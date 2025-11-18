@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Assinatura() {
-  const { subscription, isSubscriptionLoading, checkSubscription, session } = useSupabaseAuth();
+  const { subscription, isSubscriptionLoading, checkSubscription, session, user } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSubscribe = async () => {
@@ -330,97 +330,164 @@ export default function Assinatura() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="shadow-xl">
-            <CardHeader className="text-center pb-8">
-              <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                <Crown className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-3xl mb-2">Plano Premium</CardTitle>
-              <CardDescription className="text-base">
-                Acesso completo ao sistema de agendamentos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="text-center">
-                <div className="text-5xl font-bold mb-2">
-                  R$ 20,00
-                  <span className="text-xl font-normal text-muted-foreground">/mês</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Cobrado mensalmente</p>
-              </div>
+          <div className="space-y-8">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold mb-2">Escolha seu Plano</h2>
+              <p className="text-muted-foreground">
+                Experimente grátis por 7 dias ou assine agora
+              </p>
+            </div>
 
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-green-500/10 rounded-lg">
-                    <Sparkles className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Card Trial Grátis */}
+              <Card className="relative overflow-hidden border-2 border-primary shadow-xl">
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 text-sm font-bold rounded-bl-lg">
+                  RECOMENDADO
+                </div>
+                <CardHeader className="pt-8">
+                  <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                    <Sparkles className="h-8 w-8 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-xl text-green-900 dark:text-green-100 mb-2">
-                      🎉 7 dias grátis para testar!
-                    </h3>
-                    <p className="text-green-700 dark:text-green-300">
-                      Experimente todos os recursos sem custo. Cancele quando quiser, sem compromisso.
+                  <CardTitle className="text-2xl text-center">🎉 7 Dias Grátis</CardTitle>
+                  <CardDescription className="text-center">
+                    Experimente sem compromisso
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold mb-2">
+                      R$ 0,00
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      depois R$ 20,00/mês
                     </p>
                   </div>
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Tudo que você precisa:</h3>
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Agendamentos ilimitados</span>
+                  <div className="space-y-3">
+                    {[
+                      'Acesso total por 7 dias',
+                      'Sem cartão de crédito',
+                      'Cancele quando quiser',
+                      'Todas as funcionalidades'
+                    ].map((feature) => (
+                      <div key={feature} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Gerenciamento completo de clientes</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Controle financeiro com relatórios</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Programa de fidelidade personalizado</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Agendamento online com link próprio</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>Notificações push em tempo real</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-3 pt-4">
-                <Button 
-                  onClick={handleSubscribe} 
-                  disabled={loading}
-                  size="lg"
-                  className="w-full text-lg h-12"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Começar Teste Grátis de 7 Dias
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Você não será cobrado durante o período de teste. <br />
-                  Cancele quando quiser, sem compromisso ou taxas.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                  <Button
+                    onClick={async () => {
+                      if (!session?.user) {
+                        toast.error('Você precisa estar logado');
+                        return;
+                      }
+                      setLoading(true);
+                      try {
+                        const now = new Date().toISOString();
+                        const { error } = await supabase
+                          .from('usuarios')
+                          .update({
+                            trial_start_date: now,
+                            subscription_status: 'trial'
+                          })
+                          .eq('id', session.user.id);
+                        
+                        if (!error) {
+                          await checkSubscription();
+                          toast.success('🎉 Trial de 7 dias iniciado!');
+                          window.location.href = '/';
+                        } else {
+                          toast.error('Erro ao iniciar trial');
+                        }
+                      } catch (error) {
+                        console.error(error);
+                        toast.error('Erro ao iniciar trial');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="w-full h-12 text-lg font-semibold"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Começar Teste Grátis
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Card Assinar Agora */}
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <div className="mx-auto mb-4 p-3 bg-secondary/10 rounded-full w-fit">
+                    <Crown className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl text-center">💳 Assinar Agora</CardTitle>
+                  <CardDescription className="text-center">
+                    Acesso imediato e completo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold mb-2">
+                      R$ 20,00
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      por mês
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      'Agendamentos ilimitados',
+                      'Gestão financeira completa',
+                      'Programa de fidelidade',
+                      'Suporte prioritário'
+                    ].map((feature) => (
+                      <div key={feature} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={handleSubscribe}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full h-12 text-lg font-semibold"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Assinar Agora
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Cobrança mensal automática. Cancele quando quiser.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>
