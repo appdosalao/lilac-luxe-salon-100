@@ -86,22 +86,44 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Se encontrou assinatura ativa no Stripe, atualizar e retornar
         if (!stripeError && stripeData?.subscribed) {
+          // ✅ CORREÇÃO: Verificar se está em trial ou se é assinatura ativa
+          const isInTrial = stripeData.trial_end && new Date(stripeData.trial_end) > new Date();
+          const dbStatus = isInTrial ? 'trial' : 'active';
+          const subscriptionStatus = isInTrial ? 'trial' : 'active';
+          
+          console.log('[AUTH] Stripe subscription found:', {
+            isInTrial,
+            trial_end: stripeData.trial_end,
+            dbStatus,
+            subscriptionStatus
+          });
+
           await supabase
             .from('usuarios')
             .update({ 
-              subscription_status: 'active',
+              subscription_status: dbStatus,
               trial_used: true 
             })
             .eq('id', user.id);
 
+          // Calcular dias restantes do trial se aplicável
+          let trialDaysRemaining: number | undefined;
+          if (isInTrial && stripeData.trial_end) {
+            const trialEnd = new Date(stripeData.trial_end);
+            const now = new Date();
+            trialDaysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          }
+
           setSubscription({
             subscribed: true,
-            status: 'active',
+            status: subscriptionStatus as 'trial' | 'active',
             subscription_end: stripeData.subscription_end,
-            product_id: stripeData.product_id
+            product_id: stripeData.product_id,
+            trial_end_date: stripeData.trial_end,
+            trial_days_remaining: trialDaysRemaining
           });
           setIsSubscriptionLoading(false);
-          return; // ✅ Sair aqui se tem assinatura paga
+          return; // ✅ Sair aqui se tem assinatura paga ou trial do Stripe
         }
       } catch (stripeError) {
         console.error('Erro ao verificar Stripe (continuando com verificação local):', stripeError);
