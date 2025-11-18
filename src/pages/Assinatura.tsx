@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles } from 'lucide-react';
+import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles, Clock, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -126,35 +126,52 @@ export default function Assinatura() {
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
-                    <Check className="h-3 w-3 mr-1" />
-                    Ativo
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+                      <Check className="h-3 w-3 mr-1" />
+                      Ativo
+                    </Badge>
+                    <Badge variant="outline" className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">
+                      <Check className="h-3 w-3 mr-1" />
+                      Cancele quando quiser
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {isInTrial && subscription.trial_end_date && (
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-blue-500/10 rounded-lg">
-                        <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-1">
-                          🎉 Teste Grátis Ativo
-                        </h3>
-                        <p className="text-blue-700 dark:text-blue-300 mb-3">
-                          Você está aproveitando 7 dias de acesso gratuito a todos os recursos premium
-                        </p>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4" />
-                          <span className="font-medium">
-                            Termina em: {format(new Date(subscription.trial_end_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                          </span>
+                  <>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                          <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-1">
+                            🎉 Teste Grátis Ativo
+                          </h3>
+                          <p className="text-blue-700 dark:text-blue-300 mb-3">
+                            Você está aproveitando 7 dias de acesso gratuito a todos os recursos premium
+                          </p>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-4 w-4" />
+                            <span className="font-medium">
+                              Termina em: {format(new Date(subscription.trial_end_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm">
+                      <p className="text-blue-900 dark:text-blue-100 font-medium mb-1">
+                        💡 Durante o Trial
+                      </p>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        Nenhum cartão de crédito necessário. Você pode cancelar a qualquer momento 
+                        ou deixar expirar automaticamente sem cobranças.
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 {!isInTrial && subscription.subscription_end && (
@@ -174,7 +191,14 @@ export default function Assinatura() {
                   </div>
                 )}
 
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-3">
+                  <div className="text-sm text-muted-foreground text-center mb-2">
+                    <p className="font-medium mb-1">Gerenciar sua Assinatura</p>
+                    <p className="text-xs">
+                      Acesse o portal para atualizar pagamento, ver faturas ou cancelar quando quiser
+                    </p>
+                  </div>
+                  
                   <Button 
                     onClick={handleManageSubscription} 
                     disabled={loading}
@@ -189,13 +213,35 @@ export default function Assinatura() {
                     ) : (
                       <>
                         <CreditCard className="mr-2 h-4 w-4" />
-                        Gerenciar Pagamento e Assinatura
+                        Abrir Portal de Gerenciamento
                       </>
                     )}
                   </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-3">
-                    Atualize forma de pagamento, veja faturas ou cancele quando quiser
-                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Informações sobre cancelamento */}
+            <Card className="border-muted">
+              <CardHeader>
+                <CardTitle className="text-lg">ℹ️ Sobre o Cancelamento</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p>Cancele a qualquer momento sem multas ou taxas</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p>Acesso garantido até o fim do período já pago</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p>Todos os seus dados ficam salvos se quiser retornar</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p>Processo 100% online através do portal seguro do Stripe</p>
                 </div>
               </CardContent>
             </Card>
