@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,6 +18,8 @@ const loginSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/';
   const { signIn } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +35,7 @@ const Login = () => {
     try {
       const { error } = await signIn(data.email, data.senha);
       if (!error) {
-        navigate('/');
+        navigate(redirect);
       } else {
         setError('E-mail ou senha incorretos');
       }

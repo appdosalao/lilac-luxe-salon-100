@@ -23,6 +23,7 @@ interface SupabaseAuthContextType {
   isAuthenticated: boolean;
   subscription: SubscriptionStatus | null;
   isSubscriptionLoading: boolean;
+  setSubscription: (sub: SubscriptionStatus | null) => void;
   checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -266,7 +267,27 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('app-theme', userData.tema_preferencia);
       }
 
-      toast.success('Conta criada com sucesso! Verifique seu email para confirmar o cadastro.');
+      // Se escolheu trial, fazer login automático
+      if (planType === 'trial' && data.user && !error) {
+        console.log('🟣 [SIGNUP] Fazendo login automático para trial...');
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (signInError) {
+          console.error('❌ [SIGNUP] Erro no login automático:', signInError);
+          toast.error('Conta criada! Por favor, faça login.');
+          return { error: signInError };
+        }
+        
+        console.log('✅ [SIGNUP] Login automático realizado com sucesso!');
+        // Aguardar um momento para o onAuthStateChange processar
+        await new Promise(resolve => setTimeout(resolve, 500));
+        toast.success('🎉 Conta criada! Bem-vindo ao seu trial de 7 dias!');
+      } else {
+        toast.success('Conta criada com sucesso! Faça login para continuar.');
+      }
 
       return { error: null };
     } catch (error) {
@@ -366,6 +387,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         subscription,
         isSubscriptionLoading,
+        setSubscription,
         checkSubscription,
         signUp,
         signIn,

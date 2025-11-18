@@ -12,7 +12,7 @@ import { ptBR } from 'date-fns/locale';
 
 export default function Assinatura() {
   const navigate = useNavigate();
-  const { subscription, isSubscriptionLoading, checkSubscription, session, user } = useSupabaseAuth();
+  const { subscription, isSubscriptionLoading, checkSubscription, session, user, setSubscription } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSubscribe = async () => {
@@ -388,25 +388,43 @@ export default function Assinatura() {
                       setLoading(true);
                       try {
                         const now = new Date().toISOString();
+                        
+                        // 1. Atualizar banco
                         const { error } = await supabase
                           .from('usuarios')
                           .update({
                             trial_start_date: now,
-                            subscription_status: 'trial'
+                            subscription_status: 'trial',
+                            trial_used: true
                           })
                           .eq('id', session.user.id);
                         
-                        if (!error) {
-                          toast.success('🎉 Trial de 7 dias iniciado!');
-                          // Aguardar um momento para garantir que o banco atualizou
-                          await new Promise(resolve => setTimeout(resolve, 500));
-                          await checkSubscription();
-                          // Aguardar mais um momento para garantir que o estado foi atualizado
-                          await new Promise(resolve => setTimeout(resolve, 300));
-                          navigate('/');
-                        } else {
+                        if (error) {
                           toast.error('Erro ao iniciar trial');
+                          setLoading(false);
+                          return;
                         }
+                        
+                        // 2. Calcular data de fim do trial
+                        const trialEndDate = new Date(now);
+                        trialEndDate.setDate(trialEndDate.getDate() + 7);
+                        
+                        // 3. Atualizar estado local DIRETAMENTE
+                        setSubscription({
+                          subscribed: true,
+                          status: 'trial',
+                          trial_days_remaining: 7,
+                          trial_end_date: trialEndDate.toISOString()
+                        });
+                        
+                        // 4. Mostrar sucesso
+                        toast.success('🎉 Trial de 7 dias iniciado com sucesso!');
+                        
+                        // 5. Aguardar um momento para React processar o estado
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        
+                        // 6. Navegar para home
+                        navigate('/');
                       } catch (error) {
                         console.error(error);
                         toast.error('Erro ao iniciar trial');
