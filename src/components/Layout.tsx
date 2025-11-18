@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { TrialBanner } from "@/components/TrialBanner";
+
 
 import { Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ function LayoutContent({ children }: LayoutProps) {
             {/* Main Content */}
         <main className="flex-1 p-responsive overflow-auto">
           <div className="container-responsive max-w-none">
-            <TrialBanner />
+            
             {children}
           </div>
         </main>
