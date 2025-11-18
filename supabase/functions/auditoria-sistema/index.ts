@@ -36,8 +36,11 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // ✅ Use ANON_KEY para autenticar usuários via JWT
+    // ✅ Create client with Auth context of the user that called the function
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization')! },
+      },
       auth: {
         autoRefreshToken: false,
         persistSession: false
