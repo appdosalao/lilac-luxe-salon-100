@@ -21,18 +21,27 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Permitir acesso à página de assinatura e onboarding
-  if (window.location.pathname === '/assinatura' || window.location.pathname === '/onboarding') {
+  // Permitir acesso à página de assinatura, checkout-success e onboarding
+  const publicPaths = ['/assinatura', '/onboarding', '/checkout-success'];
+  if (publicPaths.includes(window.location.pathname)) {
     return <>{children}</>;
   }
 
-  // Verificar se tem acesso (trial ativo OU assinatura ativa)
+  // ✅ VERIFICAR ACESSO: aceitar 'trial' OU 'active'
   const hasAccess = subscription && (
     subscription.status === 'trial' || 
     subscription.status === 'active'
   );
 
+  console.log('[PROTECTED-ROUTE] Access check:', {
+    pathname: window.location.pathname,
+    hasAccess,
+    subscriptionStatus: subscription?.status,
+    subscribed: subscription?.subscribed
+  });
+
   if (!hasAccess) {
+    console.log('[PROTECTED-ROUTE] ❌ Access denied, redirecting to /assinatura');
     return <Navigate to="/assinatura" replace />;
   }
 

@@ -45,15 +45,62 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil" 
     });
     
+    // Buscar cliente existente
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
+    
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep("Found existing customer", { customerId });
+      
+      // ✅ VERIFICAR SE JÁ TEM ASSINATURA ATIVA
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        limit: 10,
+      });
+      
+      logStep("Checking existing subscriptions", { 
+        total: subscriptions.data.length,
+        statuses: subscriptions.data.map(s => ({ id: s.id, status: s.status }))
+      });
+      
+      // Filtrar assinaturas válidas (active ou trialing)
+      const validSubscriptions = subscriptions.data.filter(s => 
+        s.status === 'active' || s.status === 'trialing'
+      );
+      
+      if (validSubscriptions.length > 0) {
+        logStep("User already has active subscription, redirecting", {
+          subscriptionId: validSubscriptions[0].id,
+          status: validSubscriptions[0].status
+        });
+        
+        // Atualizar status no banco
+        await supabaseClient
+          .from('usuarios')
+          .update({ 
+            subscription_status: validSubscriptions[0].status === 'trialing' ? 'trial' : 'active',
+            trial_used: true 
+          })
+          .eq('id', user.id);
+        
+        return new Response(JSON.stringify({ 
+          message: 'Already subscribed',
+          redirect: `${req.headers.get("origin")}/`,
+          subscription: {
+            id: validSubscriptions[0].id,
+            status: validSubscriptions[0].status
+          }
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
     } else {
       logStep("Creating new customer");
     }
 
+    // ✅ CRIAR NOVA ASSINATURA COM TRIAL EXPLÍCITO
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -64,15 +111,19 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      // Só adicionar trial se usuário NUNCA usou trial
+      // Adicionar trial period explicitamente se usuário nunca usou
       subscription_data: userData?.trial_used ? undefined : {
         trial_period_days: 7,
       },
-      success_url: `${req.headers.get("origin")}/?payment=success`,
+      success_url: `${req.headers.get("origin")}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/assinatura`,
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
+    logStep("Checkout session created", { 
+      sessionId: session.id,
+      hasTrial: !userData?.trial_used,
+      url: session.url 
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

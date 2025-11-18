@@ -108,16 +108,37 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Se encontrou assinatura ativa no Stripe, atualizar e retornar
       if (!stripeError && stripeData?.subscribed) {
-          // ✅ CORREÇÃO: Verificar se está em trial ou se é assinatura ativa
-          const isInTrial = stripeData.trial_end && new Date(stripeData.trial_end) > new Date();
+          // ✅ VALIDAÇÃO ROBUSTA DE DATAS
+          let isInTrial = false;
+          let trialDaysRemaining: number | undefined;
+          
+          // Validar trial_end antes de criar Date
+          if (stripeData.trial_end && stripeData.trial_end !== 'null') {
+            try {
+              const trialEndDate = new Date(stripeData.trial_end);
+              // Verificar se é uma data válida
+              if (!isNaN(trialEndDate.getTime())) {
+                const now = new Date();
+                isInTrial = trialEndDate > now;
+                
+                if (isInTrial) {
+                  trialDaysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                }
+              }
+            } catch (error) {
+              console.error('[AUTH] ❌ Erro ao processar trial_end:', error);
+            }
+          }
+          
           const dbStatus = isInTrial ? 'trial' : 'active';
           const subscriptionStatus = isInTrial ? 'trial' : 'active';
           
-          console.log('[AUTH] Stripe subscription found:', {
+          console.log('[AUTH] ✅ Stripe subscription found:', {
             isInTrial,
             trial_end: stripeData.trial_end,
             dbStatus,
-            subscriptionStatus
+            subscriptionStatus,
+            trialDaysRemaining
           });
 
           await supabase
@@ -127,14 +148,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
               trial_used: true 
             })
             .eq('id', user.id);
-
-          // Calcular dias restantes do trial se aplicável
-          let trialDaysRemaining: number | undefined;
-          if (isInTrial && stripeData.trial_end) {
-            const trialEnd = new Date(stripeData.trial_end);
-            const now = new Date();
-            trialDaysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          }
 
           console.log('[AUTH] ✅ Assinatura Stripe confirmada:', subscriptionStatus);
           
