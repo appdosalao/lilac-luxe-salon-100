@@ -40,6 +40,32 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
+  // Move checkSubscription outside useEffect to prevent recreation and loops
+  const checkSubscription = async () => {
+    setIsSubscriptionLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setSubscription(null);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("check-subscription", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      setSubscription(data);
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+      setSubscription(null);
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  };
+
   useEffect(() => {
     const storedTheme = localStorage.getItem('app-theme');
     if (storedTheme) {
