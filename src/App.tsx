@@ -17,6 +17,7 @@ import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Marketing from "./pages/Marketing";
 import Assinatura from "./pages/Assinatura";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -124,6 +125,11 @@ const App = () => {
                         <Layout>
                           <Assinatura />
                         </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/checkout-success" element={
+                      <ProtectedRoute>
+                        <CheckoutSuccess />
                       </ProtectedRoute>
                     } />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

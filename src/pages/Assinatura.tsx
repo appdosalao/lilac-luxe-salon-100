@@ -35,6 +35,14 @@ export default function Assinatura() {
         return;
       }
 
+      // ✅ VERIFICAR SE JÁ TEM ASSINATURA ATIVA
+      if (data?.message === 'Already subscribed' && data?.redirect) {
+        toast.success('Você já tem uma assinatura ativa!');
+        await checkSubscription();
+        setTimeout(() => navigate('/'), 1500);
+        return;
+      }
+
       if (data?.url) {
         window.open(data.url, '_blank');
         toast.info('Complete o pagamento na janela que abriu. Seu status será atualizado automaticamente.');
@@ -47,6 +55,20 @@ export default function Assinatura() {
     } catch (error) {
       console.error('Erro ao iniciar checkout:', error);
       toast.error('Erro ao processar pagamento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefreshStatus = async () => {
+    setLoading(true);
+    try {
+      toast.info('Verificando status da assinatura...');
+      await checkSubscription();
+      toast.success('Status atualizado!');
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      toast.error('Erro ao verificar status');
     } finally {
       setLoading(false);
     }
@@ -412,6 +434,26 @@ export default function Assinatura() {
                   </>
                 )}
               </Button>
+              
+              <Button
+                onClick={handleRefreshStatus}
+                variant="outline"
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Atualizando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Verificar Status
+                  </>
+                )}
+              </Button>
+              
               <p className="text-xs text-center text-muted-foreground">
                 Cancele quando quiser, sem multas ou taxas
               </p>
