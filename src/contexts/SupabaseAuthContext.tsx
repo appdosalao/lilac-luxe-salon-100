@@ -70,9 +70,17 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       // ✅ MUDANÇA PRINCIPAL: SEMPRE VERIFICAR STRIPE PRIMEIRO
       // Isso garante que upgrades de trial para pago sejam detectados
       try {
+        // Obter sessão mais recente para garantir token válido
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!currentSession) {
+          console.warn('Sem sessão ativa para verificar Stripe');
+          throw new Error('No active session');
+        }
+
         const { data: stripeData, error: stripeError } = await supabase.functions.invoke('check-subscription', {
           headers: {
-            Authorization: `Bearer ${session.access_token}`
+            Authorization: `Bearer ${currentSession.access_token}`
           }
         });
 
