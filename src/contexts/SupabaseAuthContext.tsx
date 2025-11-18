@@ -265,8 +265,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           if (!onboardingCompleted && event === 'SIGNED_IN') {
             setTimeout(() => navigate('/onboarding'), 500);
           }
-          // Verificar assinatura
-          setTimeout(() => checkSubscription(), 100);
           // Defer para evitar deadlock
           setTimeout(async () => {
             try {
@@ -297,6 +295,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 console.log('✅ [SUCCESS] Aplicando tema:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
+                
+                // ✅ VERIFICAR ASSINATURA AQUI, APÓS SESSÃO E USUÁRIO ESTAREM PRONTOS
+                console.log('🔄 [AUTH] Iniciando verificação de assinatura após carregar usuário');
+                checkSubscription();
               } else {
                 console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
