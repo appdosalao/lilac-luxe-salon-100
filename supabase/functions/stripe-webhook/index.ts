@@ -72,7 +72,9 @@ serve(async (req) => {
         logStep("Processing subscription event", { 
           subscriptionId: subscription.id,
           status: subscription.status,
-          customerId: subscription.customer
+          customerId: subscription.customer,
+          trial_end: subscription.trial_end,
+          current_period_end: subscription.current_period_end
         });
 
         // Buscar email do cliente
@@ -90,10 +92,22 @@ serve(async (req) => {
 
         logStep("Customer email found", { email: customerEmail });
 
-        // Atualizar status no banco de dados
-        const newStatus = subscription.status === 'active' ? 'active' : 
-                         subscription.status === 'canceled' ? 'inactive' : 
-                         subscription.status;
+        // ✅ MAPEAMENTO CORRETO: Incluir "trialing" como status válido
+        let newStatus: string;
+        if (subscription.status === 'active') {
+          newStatus = 'active';
+        } else if (subscription.status === 'trialing') {
+          newStatus = 'trial'; // Mapear "trialing" do Stripe para "trial" no banco
+        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+          newStatus = 'inactive';
+        } else {
+          newStatus = subscription.status; // Manter outros status como estão
+        }
+
+        logStep("Status mapping", { 
+          stripeStatus: subscription.status, 
+          dbStatus: newStatus 
+        });
 
         const { error: updateError } = await supabaseClient
           .from('usuarios')
@@ -107,8 +121,8 @@ serve(async (req) => {
           logStep("ERROR updating user", { error: updateError });
         } else {
           logStep("User subscription status updated", { 
-            email: customerEmail,
-            newStatus 
+            email: customerEmail, 
+            status: newStatus 
           });
         }
         break;
@@ -121,7 +135,6 @@ serve(async (req) => {
           customerId: subscription.customer
         });
 
-        // Buscar email do cliente
         const customer = await stripe.customers.retrieve(subscription.customer as string);
         if (customer.deleted) {
           logStep("Customer deleted, skipping");
@@ -134,28 +147,32 @@ serve(async (req) => {
           break;
         }
 
-        // Atualizar para inactive
         const { error: updateError } = await supabaseClient
           .from('usuarios')
           .update({ subscription_status: 'inactive' })
           .eq('email', customerEmail);
 
         if (updateError) {
-          logStep("ERROR updating user", { error: updateError });
+          logStep("ERROR updating user on deletion", { error: updateError });
         } else {
-          logStep("User subscription set to inactive", { email: customerEmail });
+          logStep("User subscription marked as inactive", { email: customerEmail });
         }
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        logStep("Payment succeeded", { 
+        logStep("Processing payment success", { 
           invoiceId: invoice.id,
-          customerId: invoice.customer
+          customerId: invoice.customer,
+          subscriptionId: invoice.subscription
         });
 
-        // Buscar email do cliente
+        if (!invoice.subscription) {
+          logStep("No subscription associated with invoice, skipping");
+          break;
+        }
+
         const customer = await stripe.customers.retrieve(invoice.customer as string);
         if (customer.deleted) {
           logStep("Customer deleted, skipping");
@@ -168,47 +185,52 @@ serve(async (req) => {
           break;
         }
 
-        // Garantir que status está ativo
+        // Buscar a assinatura para verificar se é trial ou active
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+        
+        let newStatus: string;
+        if (subscription.status === 'trialing') {
+          newStatus = 'trial';
+        } else if (subscription.status === 'active') {
+          newStatus = 'active';
+        } else {
+          newStatus = subscription.status;
+        }
+
+        logStep("Payment success status mapping", { 
+          subscriptionStatus: subscription.status, 
+          dbStatus: newStatus 
+        });
+
         const { error: updateError } = await supabaseClient
           .from('usuarios')
           .update({ 
-            subscription_status: 'active',
+            subscription_status: newStatus,
             trial_used: true
           })
           .eq('email', customerEmail);
 
         if (updateError) {
-          logStep("ERROR updating user", { error: updateError });
+          logStep("ERROR updating user on payment success", { error: updateError });
         } else {
-          logStep("User activated after payment", { email: customerEmail });
+          logStep("User subscription confirmed active", { 
+            email: customerEmail,
+            status: newStatus
+          });
         }
         break;
       }
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        logStep("Payment failed", { 
+        logStep("Processing payment failure", { 
           invoiceId: invoice.id,
           customerId: invoice.customer
         });
 
-        // Buscar email do cliente
-        const customer = await stripe.customers.retrieve(invoice.customer as string);
-        if (customer.deleted) {
-          logStep("Customer deleted, skipping");
-          break;
-        }
-
-        const customerEmail = (customer as Stripe.Customer).email;
-        if (!customerEmail) {
-          logStep("No email for customer, skipping");
-          break;
-        }
-
-        // Manter status, mas logar o problema
-        logStep("Payment failed for user", { email: customerEmail });
-        // Nota: Não mudamos para inactive automaticamente, 
-        // pois o Stripe pode retentar o pagamento
+        // NÃO mudar status automaticamente no primeiro falha
+        // Stripe vai tentar novamente
+        logStep("Payment failed - Stripe will retry automatically");
         break;
       }
 
@@ -223,7 +245,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in webhook", { message: errorMessage });
+    logStep("ERROR processing webhook", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

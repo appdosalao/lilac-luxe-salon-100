@@ -56,31 +56,46 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Buscar todas as assinaturas do cliente (não filtrar por status ainda)
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      limit: 10, // Aumentar limite para ver todas as assinaturas
     });
-    const hasActiveSub = subscriptions.data.length > 0;
+    
+    logStep("All subscriptions found", { 
+      total: subscriptions.data.length,
+      statuses: subscriptions.data.map(s => ({ id: s.id, status: s.status }))
+    });
+    
+    // Filtrar apenas assinaturas "active" ou "trialing"
+    const validSubscriptions = subscriptions.data.filter(sub => 
+      sub.status === 'active' || sub.status === 'trialing'
+    );
+    
+    const hasActiveSub = validSubscriptions.length > 0;
     let productId = null;
     let subscriptionEnd = null;
     let trialEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
+      const subscription = validSubscriptions[0]; // Pegar a primeira válida
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       if (subscription.trial_end) {
         trialEnd = new Date(subscription.trial_end * 1000).toISOString();
       }
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
+      logStep("Valid subscription found", { 
+        subscriptionId: subscription.id,
+        status: subscription.status,
         endDate: subscriptionEnd,
         trialEnd: trialEnd 
       });
       productId = subscription.items.data[0].price.product;
-      logStep("Determined subscription tier", { productId });
+      logStep("Determined subscription tier", { productId, status: subscription.status });
     } else {
-      logStep("No active subscription found");
+      logStep("No valid subscription found (active or trialing)", {
+        totalSubscriptions: subscriptions.data.length,
+        statuses: subscriptions.data.map(s => s.status)
+      });
     }
 
     return new Response(JSON.stringify({
