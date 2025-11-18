@@ -13,6 +13,7 @@ import Cronogramas from "./pages/Cronogramas";
 import Financeiro from "./pages/Financeiro";
 import Agenda from "./pages/Agenda";
 import Configuracoes from './pages/Configuracoes';
+import Assinatura from "./pages/Assinatura";
 import AgendamentoOnline from "./pages/AgendamentoOnline";
 import Auditoria from "./pages/Auditoria";
 import Marketing from "./pages/Marketing";
@@ -115,6 +116,13 @@ const App = () => {
                       <ProtectedRoute>
                         <Layout>
                           <Marketing />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/assinatura" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Assinatura />
                         </Layout>
                       </ProtectedRoute>
                     } />
