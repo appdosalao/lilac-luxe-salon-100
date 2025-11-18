@@ -68,6 +68,16 @@ export function useAuditoria() {
       try {
         setCarregandoBackend(true);
         console.log('Calling backend audit function...');
+        
+        // ✅ Verificar se temos sessão ativa antes de chamar
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.error('No active session found');
+          toast.error('Sessão expirada. Faça login novamente.');
+          return;
+        }
+        
+        console.log('Session valid, calling audit function');
 
         const { data, error } = await supabase.functions.invoke('auditoria-sistema', {
           method: 'POST',
