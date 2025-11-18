@@ -74,11 +74,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           console.log(`[AUTH] 🔄 Tentativa ${attempt}/${maxRetries} - Verificando Stripe...`);
           
-          const { data, error } = await supabase.functions.invoke('check-subscription', {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
-            }
-          });
+          // ✅ supabase.functions.invoke automaticamente passa o Authorization header
+          const { data, error } = await supabase.functions.invoke('check-subscription');
 
           stripeData = data;
           stripeError = error;
