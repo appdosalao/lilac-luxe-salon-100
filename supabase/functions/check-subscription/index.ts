@@ -79,16 +79,26 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = validSubscriptions[0]; // Pegar a primeira válida
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      if (subscription.trial_end) {
+      
+      // Validar e criar data de fim da assinatura
+      if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
+        subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      }
+      
+      // Validar e criar data de fim do trial
+      if (subscription.trial_end && typeof subscription.trial_end === 'number') {
         trialEnd = new Date(subscription.trial_end * 1000).toISOString();
       }
+      
       logStep("Valid subscription found", { 
         subscriptionId: subscription.id,
         status: subscription.status,
         endDate: subscriptionEnd,
-        trialEnd: trialEnd 
+        trialEnd: trialEnd,
+        rawTrialEnd: subscription.trial_end,
+        rawPeriodEnd: subscription.current_period_end
       });
+      
       productId = subscription.items.data[0].price.product;
       logStep("Determined subscription tier", { productId, status: subscription.status });
     } else {
