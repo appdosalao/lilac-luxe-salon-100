@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles, Clock, DollarSign } from 'lucide-react';
+import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles, Clock, DollarSign, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -37,8 +37,12 @@ export default function Assinatura() {
 
       if (data?.url) {
         window.open(data.url, '_blank');
-        // Verificar assinatura após alguns segundos
-        setTimeout(() => checkSubscription(), 3000);
+        toast.info('Complete o pagamento na janela que abriu. Seu status será atualizado automaticamente.');
+        
+        // Verificar assinatura múltiplas vezes
+        setTimeout(() => checkSubscription(), 5000);  // 5s
+        setTimeout(() => checkSubscription(), 10000); // 10s
+        setTimeout(() => checkSubscription(), 20000); // 20s
       }
     } catch (error) {
       console.error('Erro ao iniciar checkout:', error);
@@ -220,6 +224,42 @@ export default function Assinatura() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Botão para atualizar status manualmente */}
+            {isInTrial && (
+              <Card className="border-blue-200 dark:border-blue-800">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Acabou de assinar? Clique abaixo para atualizar seu status
+                    </p>
+                    <Button
+                      onClick={async () => {
+                        setLoading(true);
+                        await checkSubscription();
+                        setLoading(false);
+                        toast.success('Status atualizado!');
+                      }}
+                      variant="outline"
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Atualizando...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Atualizar Status da Assinatura
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Informações sobre cancelamento */}
             <Card className="border-muted">
