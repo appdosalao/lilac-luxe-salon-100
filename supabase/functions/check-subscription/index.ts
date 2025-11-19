@@ -17,13 +17,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // ✅ Use SERVICE_ROLE_KEY para operações de servidor
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
     logStep("Function started");
 
@@ -38,30 +31,32 @@ serve(async (req) => {
     }
     logStep("Authorization header found");
 
-    const token = authHeader.replace("Bearer ", "");
-    logStep("Token extracted", { 
-      tokenLength: token.length,
-      tokenPrefix: token.substring(0, 20) + "...",
-      hasBearer: authHeader.startsWith("Bearer ")
-    });
+    // ✅ Criar client com ANON_KEY para validar o token JWT do usuário
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+        auth: { persistSession: false }
+      }
+    );
+
+    logStep("Validating user token");
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
     
-    // ✅ Verificar usuário com o token JWT usando SERVICE_ROLE
-    logStep("Verifying JWT token");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError) {
+    if (userError || !user) {
       logStep("ERROR: Authentication failed", {
-        error: userError.message,
-        name: userError.name,
-        status: userError.status
+        error: userError?.message,
+        hasUser: !!user
       });
-      throw new Error(`Authentication error: ${userError.message}`);
+      throw new Error(`Authentication error: ${userError?.message || 'User not found'}`);
     }
     
-    const user = userData.user;
-    if (!user?.email) {
-      logStep("ERROR: User data missing after auth");
-      throw new Error("User not authenticated or email not available");
+    if (!user.email) {
+      logStep("ERROR: User email missing");
+      throw new Error("User email not available");
     }
     
     logStep("User authenticated", { userId: user.id, email: user.email });
