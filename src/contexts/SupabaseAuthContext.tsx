@@ -58,30 +58,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       console.log('[AUTH] 🔄 Verificando status no Stripe...');
-
-      // ✅ Primeiro, tentar atualizar a sessão se necessário
-      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
       
-      if (refreshError) {
-        console.error('[AUTH] ❌ Erro ao atualizar sessão:', refreshError);
-        // Se não conseguir atualizar, fazer logout
-        await supabase.auth.signOut();
-        navigate('/login');
-        setSubscription(null);
-        setIsSubscriptionLoading(false);
-        return;
-      }
-      
-      if (refreshedSession) {
-        console.log('[AUTH] ✅ Sessão atualizada com sucesso');
-        setSession(refreshedSession);
-        setUser(refreshedSession.user);
-      }
-      
-      // Tentar verificar Stripe com retry automático
+      // Reduzir retries para evitar rate limit
       let stripeData = null;
       let stripeError = null;
-      const maxRetries = 3;
+      const maxRetries = 2; // Reduzido de 3 para 2
       
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -101,26 +82,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
           if (!error) break; // Sucesso, sair do loop
           
-          // Se o erro for de autenticação, não tentar novamente - a sessão já foi atualizada
+          // Se o erro for de autenticação, não tentar novamente
           if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
-            console.error('[AUTH] ❌ Erro de autenticação persistente, fazendo logout');
-            await supabase.auth.signOut();
-            navigate('/login');
+            console.error('[AUTH] ❌ Erro de autenticação - sessão inválida');
             setSubscription(null);
             setIsSubscriptionLoading(false);
             return;
           }
           
           if (attempt < maxRetries) {
-            console.warn(`[AUTH] ⚠️ Tentativa ${attempt} falhou, tentando novamente em 1s...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.warn(`[AUTH] ⚠️ Tentativa ${attempt} falhou, tentando novamente em 2s...`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Aumentado para 2s
           }
         } catch (err) {
           console.error(`[AUTH] ❌ Erro na tentativa ${attempt}:`, err);
           if (attempt === maxRetries) {
             stripeError = err;
           } else {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       }
