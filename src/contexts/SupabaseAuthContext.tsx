@@ -25,7 +25,7 @@ interface SupabaseAuthContextType {
   subscription: SubscriptionStatus | null;
   isSubscriptionLoading: boolean;
   setSubscription: (sub: SubscriptionStatus | null) => void;
-  checkSubscription: () => Promise<void>;
+  checkSubscription: (currentSession?: Session | null) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -43,15 +43,18 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
-  const checkSubscription = async () => {
-    if (!session || !user) {
+  const checkSubscription = async (currentSession?: Session | null) => {
+    const sessionToUse = currentSession || session;
+    const userToUse = sessionToUse?.user || user;
+    
+    if (!sessionToUse || !userToUse) {
       console.log('[AUTH] ❌ Sem sessão ou usuário, pulando verificação');
       setSubscription(null);
       return;
     }
 
     setIsSubscriptionLoading(true);
-    console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', user.email);
+    console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', userToUse.email);
 
     try {
       console.log('[AUTH] 🔄 Verificando status no Stripe...');
@@ -230,9 +233,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
                 
-                // ✅ VERIFICAR ASSINATURA AQUI, APÓS SESSÃO E USUÁRIO ESTAREM PRONTOS
+                // ✅ VERIFICAR ASSINATURA AQUI, PASSANDO A SESSÃO ATUAL
                 console.log('🔄 [AUTH] Iniciando verificação de assinatura após carregar usuário');
-                checkSubscription();
+                checkSubscription(session);
               } else {
                 console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
