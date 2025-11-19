@@ -57,12 +57,23 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', userToUse.email);
 
     try {
+      // ✅ Verificar se a sessão atual é válida antes de chamar a edge function
+      const { data: { session: currentValidSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !currentValidSession) {
+        console.error('[AUTH] ❌ Sessão inválida ou expirada:', sessionError);
+        setSubscription(null);
+        setIsSubscriptionLoading(false);
+        return;
+      }
+      
+      console.log('[AUTH] ✅ Sessão válida confirmada, chamando edge function...');
       console.log('[AUTH] 🔄 Verificando status no Stripe...');
       
       // Reduzir retries para evitar rate limit
       let stripeData = null;
       let stripeError = null;
-      const maxRetries = 2; // Reduzido de 3 para 2
+      const maxRetries = 2;
       
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
