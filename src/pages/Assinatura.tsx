@@ -514,44 +514,11 @@ export default function Assinatura() {
                       }
                       setLoading(true);
                       try {
-                        const now = new Date().toISOString();
+                        console.log('[TRIAL] Iniciando checkout com trial de 7 dias...');
                         
-                        // 1. Atualizar banco
-                        const { error } = await supabase
-                          .from('usuarios')
-                          .update({
-                            trial_start_date: now,
-                            subscription_status: 'trial',
-                            trial_used: true
-                          })
-                          .eq('id', session.user.id);
-                        
-                        if (error) {
-                          toast.error('Erro ao iniciar trial');
-                          setLoading(false);
-                          return;
-                        }
-                        
-                        // 2. Calcular data de fim do trial
-                        const trialEndDate = new Date(now);
-                        trialEndDate.setDate(trialEndDate.getDate() + 7);
-                        
-                        // 3. Atualizar estado local DIRETAMENTE
-                        setSubscription({
-                          subscribed: true,
-                          status: 'trial',
-                          trial_days_remaining: 7,
-                          trial_end_date: trialEndDate.toISOString()
-                        });
-                        
-                        // 4. Mostrar sucesso
-                        toast.success('🎉 Trial de 7 dias iniciado com sucesso!');
-                        
-                        // 5. Aguardar um momento para React processar o estado
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                        
-                        // 6. Navegar para home
-                        navigate('/');
+                        // Redirecionar para o checkout do Stripe
+                        // O trial de 7 dias será aplicado automaticamente
+                        await handleSubscribe();
                       } catch (error) {
                         console.error(error);
                         toast.error('Erro ao iniciar trial');
