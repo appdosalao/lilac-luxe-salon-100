@@ -60,15 +60,6 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Buscar dados do usuário para verificar se já usou trial
-    const { data: userData } = await supabaseClient
-      .from('usuarios')
-      .select('trial_used')
-      .eq('id', user.id)
-      .single();
-
-    logStep("User trial status", { trial_used: userData?.trial_used });
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
@@ -128,19 +119,19 @@ serve(async (req) => {
       logStep("Creating new customer");
     }
 
-    // ✅ CRIAR NOVA ASSINATURA COM TRIAL EXPLÍCITO
+    // ✅ CRIAR NOVA ASSINATURA COM TRIAL DE 7 DIAS
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1STfSQHEo75Bn3U3GaTXOsrh",
+          price: "price_1SV0XTHEo75Bn3U3GkCvYztP", // Novo produto: Salão de Bolso Premium
           quantity: 1,
         },
       ],
       mode: "subscription",
-      // Adicionar trial period explicitamente se usuário nunca usou
-      subscription_data: userData?.trial_used ? undefined : {
+      // Trial de 7 dias para todos os novos clientes
+      subscription_data: {
         trial_period_days: 7,
       },
       success_url: `${req.headers.get("origin")}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -149,7 +140,7 @@ serve(async (req) => {
 
     logStep("Checkout session created", { 
       sessionId: session.id,
-      hasTrial: !userData?.trial_used,
+      hasTrial: true,
       url: session.url 
     });
 

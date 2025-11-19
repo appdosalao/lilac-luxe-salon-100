@@ -53,14 +53,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', user.email);
 
     try {
-      // Buscar dados locais do usuário
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('trial_start_date, trial_used, subscription_status')
-        .eq('id', user.id)
-        .single();
-
-      console.log('[AUTH] 📊 Dados locais do usuário:', userData);
+      console.log('[AUTH] 🔄 Verificando status no Stripe...');
 
       // ✅ MUDANÇA PRINCIPAL: SEMPRE VERIFICAR STRIPE PRIMEIRO
       // Remover verificação prematura que impedia a chamada ao Stripe
@@ -133,18 +126,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           console.log('[AUTH] ✅ Stripe subscription found:', {
             isInTrial,
             trial_end: stripeData.trial_end,
-            dbStatus,
             subscriptionStatus,
             trialDaysRemaining
           });
-
-          await supabase
-            .from('usuarios')
-            .update({ 
-              subscription_status: dbStatus,
-              trial_used: true 
-            })
-            .eq('id', user.id);
 
           console.log('[AUTH] ✅ Assinatura Stripe confirmada:', subscriptionStatus);
           
@@ -160,78 +144,26 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           return; // ✅ Sair aqui se tem assinatura paga ou trial do Stripe
         }
 
-        // ✅ Se Stripe retornar subscribed: false, atualizar banco e NÃO continuar
+        // ✅ Se Stripe retornar subscribed: false
         if (!stripeError && !stripeData?.subscribed) {
-          console.log('[AUTH] ⚠️ Sem assinatura ativa no Stripe, atualizando banco para inactive');
-          
-          await supabase
-            .from('usuarios')
-            .update({ subscription_status: 'inactive' })
-            .eq('id', user.id);
+          console.log('[AUTH] ⚠️ Sem assinatura ativa no Stripe');
           
           setSubscription({ 
             subscribed: false, 
             status: 'inactive' 
           });
           setIsSubscriptionLoading(false);
-          return; // ✅ NÃO continuar para verificação local de trial
+          return;
         }
 
         // Se chegou aqui, houve erro ao acessar o Stripe
-        console.warn('[AUTH] ⚠️ Erro ao acessar Stripe, usando verificação local como fallback');
-      
-
-      // ✅ Só verifica trial local se Stripe estiver inacessível (erro de rede)
-      // E se o usuário tem trial_start_date no banco
-      if (userData?.trial_start_date && userData.subscription_status === 'trial') {
-        console.log('[AUTH] 🔄 Verificando trial local (Stripe inacessível)');
+        console.warn('[AUTH] ⚠️ Erro ao acessar Stripe');
         
-        const trialStart = new Date(userData.trial_start_date);
-        const now = new Date();
-        const daysSinceTrial = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysRemaining = 7 - daysSinceTrial;
-
-        console.log('[AUTH] 📅 Trial local:', { daysSinceTrial, daysRemaining });
-
-        if (daysRemaining > 0) {
-          const trialEndDate = new Date(trialStart);
-          trialEndDate.setDate(trialEndDate.getDate() + 7);
-          
-          console.log('[AUTH] ✅ Trial local ativo:', daysRemaining, 'dias restantes');
-          
-          setSubscription({
-            subscribed: true,
-            status: 'trial',
-            trial_days_remaining: daysRemaining,
-            trial_end_date: trialEndDate.toISOString()
-          });
-          setIsSubscriptionLoading(false);
-          return;
-        } else {
-          // Trial expirado
-          console.log('[AUTH] ❌ Trial local expirado');
-          
-          await supabase
-            .from('usuarios')
-            .update({ subscription_status: 'expired' })
-            .eq('id', user.id);
-            
-          setSubscription({
-            subscribed: false,
-            status: 'expired'
-          });
-          setIsSubscriptionLoading(false);
-          return;
-        }
-      }
-
-      // Se chegou aqui, não tem trial nem assinatura
-      console.log('[AUTH] ❌ Sem assinatura ou trial válidos');
-      
-      setSubscription({
-        subscribed: false,
-        status: 'inactive'
-      });
+        // Sem assinatura
+        setSubscription({
+          subscribed: false,
+          status: 'inactive'
+        });
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       setSubscription({ subscribed: false, status: 'inactive' });
