@@ -31,15 +31,20 @@ serve(async (req) => {
     }
     logStep("Authorization header found");
 
-    const token = authHeader.replace("Bearer ", "");
-
-    // ✅ Criar client com ANON_KEY para validar o token JWT do usuário
+    // ✅ Create client with Auth context (following official Supabase example)
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { auth: { persistSession: false } }
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+        auth: { persistSession: false }
+      }
     );
 
+    // Extract token and validate user
+    const token = authHeader.replace("Bearer ", "");
     logStep("Validating user token");
     const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     
