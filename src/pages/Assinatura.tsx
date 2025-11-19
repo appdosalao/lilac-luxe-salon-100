@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,14 @@ export default function Assinatura() {
   const navigate = useNavigate();
   const { subscription, isSubscriptionLoading, checkSubscription, session, user, setSubscription } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
+
+  // Se já tem assinatura ativa, redirecionar para dashboard
+  useEffect(() => {
+    if (subscription?.status === 'active') {
+      console.log('[ASSINATURA] User has active subscription, redirecting to dashboard');
+      navigate('/', { replace: true });
+    }
+  }, [subscription, navigate]);
 
   const handleSubscribe = async () => {
     if (!session) {

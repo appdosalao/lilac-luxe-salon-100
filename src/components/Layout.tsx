@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TrialBanner } from "@/components/TrialBanner";
+import { TrialStatus } from "@/components/TrialStatus";
 
 import { Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ function LayoutContent({ children }: LayoutProps) {
 
   return (
     <SidebarProvider>
+      <TrialStatus />
         <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-lilac-lighter to-background">
           <AppSidebar />
           

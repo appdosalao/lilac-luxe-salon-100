@@ -13,6 +13,7 @@ interface SubscriptionStatus {
   trial_end_date?: string;
   subscription_end?: string | null;
   product_id?: string | null;
+  is_trial_expired?: boolean;
 }
 
 interface SupabaseAuthContextType {
@@ -101,6 +102,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           // ✅ VALIDAÇÃO ROBUSTA DE DATAS
           let isInTrial = false;
           let trialDaysRemaining: number | undefined;
+          let isTrialExpired = false;
           
           // Validar trial_end antes de criar Date
           if (stripeData.trial_end && stripeData.trial_end !== 'null') {
@@ -110,6 +112,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
               if (!isNaN(trialEndDate.getTime())) {
                 const now = new Date();
                 isInTrial = trialEndDate > now;
+                isTrialExpired = trialEndDate <= now && stripeData.status === 'trialing';
                 
                 if (isInTrial) {
                   trialDaysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -125,6 +128,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           
           console.log('[AUTH] ✅ Stripe subscription found:', {
             isInTrial,
+            isTrialExpired,
             trial_end: stripeData.trial_end,
             subscriptionStatus,
             trialDaysRemaining
@@ -138,7 +142,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             subscription_end: stripeData.subscription_end,
             product_id: stripeData.product_id,
             trial_end_date: stripeData.trial_end,
-            trial_days_remaining: trialDaysRemaining
+            trial_days_remaining: trialDaysRemaining,
+            is_trial_expired: isTrialExpired
           });
           setIsSubscriptionLoading(false);
           return; // ✅ Sair aqui se tem assinatura paga ou trial do Stripe
