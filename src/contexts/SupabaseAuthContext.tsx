@@ -57,62 +57,59 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', userToUse.email);
 
     try {
-      // ✅ Verificar se a sessão atual é válida antes de chamar a edge function
+      // ✅ Verificar se a sessão atual é válida PRIMEIRO
       const { data: { session: currentValidSession }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError || !currentValidSession) {
-        console.error('[AUTH] ❌ Sessão inválida ou expirada:', sessionError);
+      if (sessionError || !currentValidSession || !currentValidSession.access_token) {
+        console.error('[AUTH] ❌ Sessão inválida, expirada ou sem token:', sessionError);
         setSubscription(null);
         setIsSubscriptionLoading(false);
         return;
       }
       
-      console.log('[AUTH] ✅ Sessão válida confirmada, chamando edge function...');
+      // Verificar se o token está expirado
+      const tokenExpiry = currentValidSession.expires_at;
+      const now = Math.floor(Date.now() / 1000);
+      
+      if (tokenExpiry && tokenExpiry < now) {
+        console.error('[AUTH] ❌ Token expirado:', { tokenExpiry, now });
+        setSubscription(null);
+        setIsSubscriptionLoading(false);
+        return;
+      }
+      
+      console.log('[AUTH] ✅ Sessão e token válidos, chamando edge function...');
       console.log('[AUTH] 🔄 Verificando status no Stripe...');
       
-      // Reduzir retries para evitar rate limit
+      // Chamar edge function UMA VEZ apenas - sem retries
       let stripeData = null;
       let stripeError = null;
-      const maxRetries = 2;
       
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`[AUTH] 🔄 Tentativa ${attempt}/${maxRetries} - Verificando Stripe...`);
-          
-          const { data, error } = await supabase.functions.invoke('check-subscription');
+      try {
+        console.log('[AUTH] 🔄 Chamando check-subscription...');
+        
+        const { data, error } = await supabase.functions.invoke('check-subscription');
 
-          stripeData = data;
-          stripeError = error;
+        stripeData = data;
+        stripeError = error;
 
-          console.log('[AUTH] 📡 Resposta do Stripe:', { 
-            subscribed: data?.subscribed,
-            status: data?.status,
-            trial_end: data?.trial_end,
-            error: error?.message 
-          });
-
-          if (!error) break; // Sucesso, sair do loop
-          
-          // Se o erro for de autenticação, não tentar novamente
-          if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
-            console.error('[AUTH] ❌ Erro de autenticação - sessão inválida');
-            setSubscription(null);
-            setIsSubscriptionLoading(false);
-            return;
-          }
-          
-          if (attempt < maxRetries) {
-            console.warn(`[AUTH] ⚠️ Tentativa ${attempt} falhou, tentando novamente em 2s...`);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Aumentado para 2s
-          }
-        } catch (err) {
-          console.error(`[AUTH] ❌ Erro na tentativa ${attempt}:`, err);
-          if (attempt === maxRetries) {
-            stripeError = err;
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
+        console.log('[AUTH] 📡 Resposta do Stripe:', { 
+          subscribed: data?.subscribed,
+          status: data?.status,
+          trial_end: data?.trial_end,
+          error: error?.message 
+        });
+        
+        // Se erro de autenticação, apenas logar e retornar
+        if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
+          console.error('[AUTH] ❌ Erro de autenticação na edge function');
+          setSubscription(null);
+          setIsSubscriptionLoading(false);
+          return;
         }
+      } catch (err) {
+        console.error('[AUTH] ❌ Erro ao chamar edge function:', err);
+        stripeError = err;
       }
 
       // Se encontrou assinatura ativa no Stripe, atualizar e retornar
