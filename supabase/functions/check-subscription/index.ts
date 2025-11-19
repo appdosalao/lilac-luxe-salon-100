@@ -17,15 +17,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // ✅ Use ANON_KEY para autenticar usuários via JWT token
+  // ✅ Use SERVICE_ROLE_KEY para operações de servidor
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-    {
-      global: {
-        headers: { Authorization: req.headers.get('Authorization')! },
-      },
-    }
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
   );
 
   try {
@@ -49,6 +45,8 @@ serve(async (req) => {
       hasBearer: authHeader.startsWith("Bearer ")
     });
     
+    // ✅ Verificar usuário com o token JWT usando SERVICE_ROLE
+    logStep("Verifying JWT token");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError) {
