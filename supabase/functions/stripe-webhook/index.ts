@@ -83,7 +83,6 @@ serve(async (req) => {
           current_period_end: subscription.current_period_end
         });
 
-        // Buscar email do cliente
         const customer = await stripe.customers.retrieve(subscription.customer as string);
         if (customer.deleted) {
           logStep("Customer deleted, skipping");
@@ -98,12 +97,12 @@ serve(async (req) => {
 
         logStep("Customer email found", { email: customerEmail });
 
-        // ✅ MAPEAMENTO CORRETO: Incluir "trialing" como status válido
+        // ✅ Mapear status do Stripe para o banco
         let newStatus: string;
         if (subscription.status === 'active') {
           newStatus = 'active';
         } else if (subscription.status === 'trialing') {
-          newStatus = 'trial'; // Mapear "trialing" do Stripe para "trial" no banco
+          newStatus = 'trial';
         } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
           newStatus = 'inactive';
         } else {

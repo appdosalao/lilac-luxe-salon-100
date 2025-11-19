@@ -47,7 +47,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   });
 
   if (!hasAccess) {
-    console.log('[PROTECTED-ROUTE] ❌ Access denied, redirecting to /assinatura');
+    console.log('[PROTECTED-ROUTE] ❌ Acesso negado, redirecionando para /assinatura');
     return <Navigate to="/assinatura" replace />;
   }
 

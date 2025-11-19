@@ -1466,6 +1466,7 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app: string
+          stripe_customer_id: string | null
           subscription_status: string | null
           telefone: string
           tema_preferencia: string | null
@@ -1479,6 +1480,7 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app?: string
+          stripe_customer_id?: string | null
           subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
@@ -1492,6 +1494,7 @@ export type Database = {
           id?: string
           nome_completo?: string
           nome_personalizado_app?: string
+          stripe_customer_id?: string | null
           subscription_status?: string | null
           telefone?: string
           tema_preferencia?: string | null
