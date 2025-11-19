@@ -31,20 +31,17 @@ serve(async (req) => {
     }
     logStep("Authorization header found");
 
+    const token = authHeader.replace("Bearer ", "");
+
     // ✅ Criar client com ANON_KEY para validar o token JWT do usuário
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-        auth: { persistSession: false }
-      }
+      { auth: { persistSession: false } }
     );
 
     logStep("Validating user token");
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     
     if (userError || !user) {
       logStep("ERROR: Authentication failed", {
