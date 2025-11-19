@@ -31,21 +31,22 @@ serve(async (req) => {
     }
     logStep("Authorization header found");
 
-    // ✅ Create client with Auth context (following official Supabase example)
+    // ✅ Extract JWT token from Authorization header
+    const jwt = authHeader.replace('Bearer ', '');
+    logStep("JWT token extracted from header");
+
+    // ✅ Create Supabase client
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
-        global: {
-          headers: { Authorization: authHeader },
-        },
         auth: { persistSession: false }
       }
     );
 
-    // Call getUser() without token parameter since auth header is already set
-    logStep("Validating user with JWT from header");
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    // ✅ Validate user with explicit JWT token
+    logStep("Validating user with JWT token");
+    const { data: { user }, error: userError } = await authClient.auth.getUser(jwt);
     
     if (userError || !user) {
       logStep("ERROR: Authentication failed", {
