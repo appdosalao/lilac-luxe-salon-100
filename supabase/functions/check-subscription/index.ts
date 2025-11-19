@@ -43,10 +43,9 @@ serve(async (req) => {
       }
     );
 
-    // Extract token and validate user
-    const token = authHeader.replace("Bearer ", "");
-    logStep("Validating user token");
-    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
+    // Call getUser() without token parameter since auth header is already set
+    logStep("Validating user with JWT from header");
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
     
     if (userError || !user) {
       logStep("ERROR: Authentication failed", {
