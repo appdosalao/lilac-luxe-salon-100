@@ -71,6 +71,16 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           console.log(`[AUTH] 🔄 Tentativa ${attempt}/${maxRetries} - Verificando Stripe...`);
           
+          // ✅ Verificar se a sessão ainda é válida antes de chamar o edge function
+          const { data: { session: currentValidSession } } = await supabase.auth.getSession();
+          if (!currentValidSession) {
+            console.warn('[AUTH] ⚠️ Sessão expirada ou inválida, forçando re-login');
+            await supabase.auth.signOut();
+            navigate('/login');
+            setSubscription(null);
+            return;
+          }
+          
           // ✅ supabase.functions.invoke automaticamente passa o Authorization header
           const { data, error } = await supabase.functions.invoke('check-subscription');
 
@@ -85,6 +95,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
           if (!error) break; // Sucesso, sair do loop
+          
+          // Se o erro for de autenticação, não tentar novamente
+          if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
+            console.error('[AUTH] ❌ Erro de autenticação detectado, forçando re-login');
+            await supabase.auth.signOut();
+            navigate('/login');
+            setSubscription(null);
+            return;
+          }
           
           if (attempt < maxRetries) {
             console.warn(`[AUTH] ⚠️ Tentativa ${attempt} falhou, tentando novamente em 1s...`);
