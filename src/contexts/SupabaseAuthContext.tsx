@@ -57,133 +57,51 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', userToUse.email);
 
     try {
-      // ✅ Verificar se a sessão atual é válida PRIMEIRO
       const { data: { session: currentValidSession }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !currentValidSession || !currentValidSession.access_token) {
-        console.error('[AUTH] ❌ Sessão inválida, expirada ou sem token:', sessionError);
+        console.error('[AUTH] ❌ Sessão inválida:', sessionError);
         setSubscription(null);
         setIsSubscriptionLoading(false);
         return;
       }
       
-      // Verificar se o token está expirado
       const tokenExpiry = currentValidSession.expires_at;
       const now = Math.floor(Date.now() / 1000);
       
       if (tokenExpiry && tokenExpiry < now) {
-        console.error('[AUTH] ❌ Token expirado:', { tokenExpiry, now });
+        console.error('[AUTH] ❌ Token expirado');
         setSubscription(null);
         setIsSubscriptionLoading(false);
         return;
       }
       
-      console.log('[AUTH] ✅ Sessão e token válidos, chamando edge function...');
-      console.log('[AUTH] 🔄 Verificando status no Stripe...');
+      console.log('[AUTH] ✅ Chamando check-subscription...');
       
-      // Chamar edge function UMA VEZ apenas - sem retries
-      let stripeData = null;
-      let stripeError = null;
-      
-      try {
-        console.log('[AUTH] 🔄 Chamando check-subscription...');
-        
-        const { data, error } = await supabase.functions.invoke('check-subscription');
+      const { data, error } = await supabase.functions.invoke('check-subscription');
 
-        stripeData = data;
-        stripeError = error;
-
-        console.log('[AUTH] 📡 Resposta do Stripe:', { 
-          subscribed: data?.subscribed,
-          status: data?.status,
-          trial_end: data?.trial_end,
-          error: error?.message 
-        });
-        
-        // Se erro de autenticação, apenas logar e retornar
-        if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
-          console.error('[AUTH] ❌ Erro de autenticação na edge function');
-          setSubscription(null);
-          setIsSubscriptionLoading(false);
-          return;
-        }
-      } catch (err) {
-        console.error('[AUTH] ❌ Erro ao chamar edge function:', err);
-        stripeError = err;
-      }
-
-      // Se encontrou assinatura ativa no Stripe, atualizar e retornar
-      if (!stripeError && stripeData?.subscribed) {
-          // ✅ VALIDAÇÃO ROBUSTA DE DATAS
-          let isInTrial = false;
-          let trialDaysRemaining: number | undefined;
-          let isTrialExpired = false;
-          
-          // Validar trial_end antes de criar Date
-          if (stripeData.trial_end && stripeData.trial_end !== 'null') {
-            try {
-              const trialEndDate = new Date(stripeData.trial_end);
-              // Verificar se é uma data válida
-              if (!isNaN(trialEndDate.getTime())) {
-                const now = new Date();
-                isInTrial = trialEndDate > now;
-                isTrialExpired = trialEndDate <= now && stripeData.status === 'trialing';
-                
-                if (isInTrial) {
-                  trialDaysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                }
-              }
-            } catch (error) {
-              console.error('[AUTH] ❌ Erro ao processar trial_end:', error);
-            }
-          }
-          
-          const dbStatus = isInTrial ? 'trial' : 'active';
-          const subscriptionStatus = isInTrial ? 'trial' : 'active';
-          
-          console.log('[AUTH] ✅ Stripe subscription found:', {
-            isInTrial,
-            isTrialExpired,
-            trial_end: stripeData.trial_end,
-            subscriptionStatus,
-            trialDaysRemaining
-          });
-
-          console.log('[AUTH] ✅ Assinatura Stripe confirmada:', subscriptionStatus);
-          
-          setSubscription({
-            subscribed: true,
-            status: subscriptionStatus as 'trial' | 'active',
-            subscription_end: stripeData.subscription_end,
-            product_id: stripeData.product_id,
-            trial_end_date: stripeData.trial_end,
-            trial_days_remaining: trialDaysRemaining,
-            is_trial_expired: isTrialExpired
-          });
-          setIsSubscriptionLoading(false);
-          return; // ✅ Sair aqui se tem assinatura paga ou trial do Stripe
-        }
-
-        // ✅ Se Stripe retornar subscribed: false
-        if (!stripeError && !stripeData?.subscribed) {
-          console.log('[AUTH] ⚠️ Sem assinatura ativa no Stripe');
-          
-          setSubscription({ 
-            subscribed: false, 
-            status: 'inactive' 
-          });
-          setIsSubscriptionLoading(false);
-          return;
-        }
-
-        // Se chegou aqui, houve erro ao acessar o Stripe
-        console.warn('[AUTH] ⚠️ Erro ao acessar Stripe');
-        
-        // Sem assinatura
+      if (error) {
+        console.error('[AUTH] ❌ Erro ao verificar assinatura:', error);
         setSubscription({
           subscribed: false,
-          status: 'inactive'
+          status: 'inactive',
+          is_trial_expired: false
         });
+        setIsSubscriptionLoading(false);
+        return;
+      }
+      
+      console.log('[AUTH] ✅ Status recebido:', data);
+      
+      setSubscription({
+        subscribed: data.subscribed,
+        status: data.status,
+        trial_days_remaining: data.trial_days_remaining,
+        trial_end_date: data.trial_end_date,
+        is_trial_expired: data.is_trial_expired || false,
+        subscription_end: data.subscription_end,
+        product_id: data.product_id
+      });
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       setSubscription({ subscribed: false, status: 'inactive' });
