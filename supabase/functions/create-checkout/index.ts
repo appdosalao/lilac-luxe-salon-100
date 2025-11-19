@@ -125,7 +125,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SV0XTHEo75Bn3U3GkCvYztP", // Novo produto: Salão de Bolso Premium
+          price: "price_1STfSQHEo75Bn3U3GaTXOsrh", // Plano Mensal - prod_TQWVfarZ7rQSgy
           quantity: 1,
         },
       ],
