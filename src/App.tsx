@@ -31,8 +31,8 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SupabaseAuthProvider>
-          <PWAProvider>
-            <NotificationProviderAvancado>
+          <NotificationProviderAvancado>
+            <PWAProvider>
               <div id="app-container">
                 <BackupPrompt />
                 <Toaster position="top-right" />
@@ -146,8 +146,8 @@ const App = () => {
                     } />
                   </Routes>
               </div>
-            </NotificationProviderAvancado>
-          </PWAProvider>
+            </PWAProvider>
+          </NotificationProviderAvancado>
         </SupabaseAuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
