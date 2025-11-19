@@ -17,6 +17,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ✅ Use ANON_KEY para autenticar usuários via JWT token
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization')! },
+      },
+    }
+  );
+
   try {
     logStep("Function started");
 
@@ -24,37 +35,45 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      logStep("ERROR: No authorization header");
+      throw new Error("No authorization header provided");
+    }
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
+    logStep("Token extracted", { 
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 20) + "...",
+      hasBearer: authHeader.startsWith("Bearer ")
+    });
+    
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    if (userError) {
+      logStep("ERROR: Authentication failed", {
+        error: userError.message,
+        name: userError.name,
+        status: userError.status
+      });
+      throw new Error(`Authentication error: ${userError.message}`);
+    }
+    
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) {
+      logStep("ERROR: User data missing after auth");
+      throw new Error("User not authenticated or email not available");
+    }
+    
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No customer found");
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        status: "no_subscription",
-        trial: false
-      }), {
+      logStep("No customer found, updating unsubscribed state");
+      return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -63,43 +82,63 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    // Verificar assinaturas ativas ou em trial
+    // Buscar todas as assinaturas do cliente (não filtrar por status ainda)
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "all",
-      limit: 1,
+      limit: 10, // Aumentar limite para ver todas as assinaturas
     });
+    
+    logStep("All subscriptions found", { 
+      total: subscriptions.data.length,
+      statuses: subscriptions.data.map(s => ({ id: s.id, status: s.status }))
+    });
+    
+    // Filtrar apenas assinaturas "active" ou "trialing"
+    const validSubscriptions = subscriptions.data.filter(sub => 
+      sub.status === 'active' || sub.status === 'trialing'
+    );
+    
+    const hasActiveSub = validSubscriptions.length > 0;
+    let productId = null;
+    let subscriptionEnd = null;
+    let trialEnd = null;
 
-    if (subscriptions.data.length === 0) {
-      logStep("No subscriptions found");
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        status: "no_subscription",
-        trial: false
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+    if (hasActiveSub) {
+      const subscription = validSubscriptions[0]; // Pegar a primeira válida
+      
+      // Validar e criar data de fim da assinatura
+      if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
+        subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      }
+      
+      // Validar e criar data de fim do trial
+      if (subscription.trial_end && typeof subscription.trial_end === 'number') {
+        trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+      }
+      
+      logStep("Valid subscription found", { 
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        endDate: subscriptionEnd,
+        trialEnd: trialEnd,
+        rawTrialEnd: subscription.trial_end,
+        rawPeriodEnd: subscription.current_period_end
+      });
+      
+      productId = subscription.items.data[0].price.product;
+      logStep("Determined subscription tier", { productId, status: subscription.status });
+    } else {
+      logStep("No valid subscription found (active or trialing)", {
+        totalSubscriptions: subscriptions.data.length,
+        statuses: subscriptions.data.map(s => s.status)
       });
     }
 
-    const subscription = subscriptions.data[0];
-    const isActive = subscription.status === "active" || subscription.status === "trialing";
-    const isTrial = subscription.status === "trialing";
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-
-    logStep("Subscription found", { 
-      subscriptionId: subscription.id, 
-      status: subscription.status,
-      endDate: subscriptionEnd,
-      isTrial
-    });
-
     return new Response(JSON.stringify({
-      subscribed: isActive,
-      status: subscription.status,
-      trial: isTrial,
+      subscribed: hasActiveSub,
+      product_id: productId,
       subscription_end: subscriptionEnd,
-      product_id: "prod_TRp78WNScmrLVn"
+      trial_end: trialEnd
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

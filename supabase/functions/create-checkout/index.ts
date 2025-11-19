@@ -17,64 +17,141 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization')! },
+      },
+    }
+  );
+
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
-
+    if (!authHeader) {
+      logStep("ERROR: No authorization header");
+      throw new Error("No authorization header provided");
+    }
+    
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("Extracting token", { 
+      tokenLength: token.length,
+      hasBearer: authHeader.startsWith("Bearer ")
+    });
+    
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError) {
+      logStep("ERROR: Auth failed", {
+        error: authError.message,
+        name: authError.name
+      });
+      throw new Error(`Authentication error: ${authError.message}`);
+    }
+    
+    const user = data.user;
+    if (!user?.email) {
+      logStep("ERROR: User or email missing");
+      throw new Error("User not authenticated or email not available");
+    }
+    
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Buscar dados do usuário para verificar se já usou trial
+    const { data: userData } = await supabaseClient
+      .from('usuarios')
+      .select('trial_used')
+      .eq('id', user.id)
+      .single();
+
+    logStep("User trial status", { trial_used: userData?.trial_used });
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+      apiVersion: "2025-08-27.basil" 
+    });
     
-    // Verificar se já existe um customer
+    // Buscar cliente existente
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Found existing Stripe customer", { customerId });
+      logStep("Found existing customer", { customerId });
+      
+      // ✅ VERIFICAR SE JÁ TEM ASSINATURA ATIVA
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        limit: 10,
+      });
+      
+      logStep("Checking existing subscriptions", { 
+        total: subscriptions.data.length,
+        statuses: subscriptions.data.map(s => ({ id: s.id, status: s.status }))
+      });
+      
+      // Filtrar assinaturas válidas (active ou trialing)
+      const validSubscriptions = subscriptions.data.filter(s => 
+        s.status === 'active' || s.status === 'trialing'
+      );
+      
+      if (validSubscriptions.length > 0) {
+        logStep("User already has active subscription, redirecting", {
+          subscriptionId: validSubscriptions[0].id,
+          status: validSubscriptions[0].status
+        });
+        
+        // Atualizar status no banco
+        await supabaseClient
+          .from('usuarios')
+          .update({ 
+            subscription_status: validSubscriptions[0].status === 'trialing' ? 'trial' : 'active',
+            trial_used: true 
+          })
+          .eq('id', user.id);
+        
+        return new Response(JSON.stringify({ 
+          message: 'Already subscribed',
+          redirect: `${req.headers.get("origin")}/`,
+          subscription: {
+            id: validSubscriptions[0].id,
+            status: validSubscriptions[0].status
+          }
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    } else {
+      logStep("Creating new customer");
     }
 
-    // Criar sessão de checkout com trial de 7 dias
+    // ✅ CRIAR NOVA ASSINATURA COM TRIAL EXPLÍCITO
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SUvTIHEo75Bn3U3WzfsVNxO",
+          price: "price_1STfSQHEo75Bn3U3GaTXOsrh",
           quantity: 1,
         },
       ],
       mode: "subscription",
-      subscription_data: {
+      // Adicionar trial period explicitamente se usuário nunca usou
+      subscription_data: userData?.trial_used ? undefined : {
         trial_period_days: 7,
       },
-      success_url: `${req.headers.get("origin")}/dashboard?payment=success`,
+      success_url: `${req.headers.get("origin")}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/assinatura`,
     });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    logStep("Checkout session created", { 
+      sessionId: session.id,
+      hasTrial: !userData?.trial_used,
+      url: session.url 
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

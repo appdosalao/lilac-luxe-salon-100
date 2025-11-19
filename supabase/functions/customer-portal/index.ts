@@ -26,12 +26,7 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -47,20 +42,17 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
     if (customers.data.length === 0) {
       throw new Error("No Stripe customer found for this user");
     }
-    
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/assinatura`,
+      return_url: `${origin}/`,
     });
-    
     logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {

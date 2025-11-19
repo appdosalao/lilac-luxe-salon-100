@@ -6,12 +6,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
 
-interface SubscriptionState {
+interface SubscriptionStatus {
   subscribed: boolean;
-  status?: string;
-  trial?: boolean;
-  subscription_end?: string;
-  product_id?: string;
+  status: 'trial' | 'active' | 'expired' | 'inactive';
+  trial_days_remaining?: number;
+  trial_end_date?: string;
+  subscription_end?: string | null;
+  product_id?: string | null;
 }
 
 interface SupabaseAuthContextType {
@@ -20,13 +21,14 @@ interface SupabaseAuthContextType {
   usuario: Usuario | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  subscription: SubscriptionState | null;
+  subscription: SubscriptionStatus | null;
   isSubscriptionLoading: boolean;
-  signUp: (email: string, password: string, userData: Partial<Usuario>) => Promise<{ error: any }>;
+  setSubscription: (sub: SubscriptionStatus | null) => void;
+  checkSubscription: () => Promise<void>;
+  signUp: (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Usuario>) => Promise<{ error: any }>;
-  checkSubscription: () => Promise<void>;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
@@ -37,37 +39,245 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
+  const checkSubscription = async () => {
+    if (!session || !user) {
+      console.log('[AUTH] ❌ Sem sessão ou usuário, pulando verificação');
+      setSubscription(null);
+      return;
+    }
+
+    setIsSubscriptionLoading(true);
+    console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', user.email);
+
+    try {
+      // Buscar dados locais do usuário
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('trial_start_date, trial_used, subscription_status')
+        .eq('id', user.id)
+        .single();
+
+      console.log('[AUTH] 📊 Dados locais do usuário:', userData);
+
+      // ✅ MUDANÇA PRINCIPAL: SEMPRE VERIFICAR STRIPE PRIMEIRO
+      // Remover verificação prematura que impedia a chamada ao Stripe
+      
+      // Tentar verificar Stripe com retry automático
+      let stripeData = null;
+      let stripeError = null;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`[AUTH] 🔄 Tentativa ${attempt}/${maxRetries} - Verificando Stripe...`);
+          
+          // ✅ supabase.functions.invoke automaticamente passa o Authorization header
+          const { data, error } = await supabase.functions.invoke('check-subscription');
+
+          stripeData = data;
+          stripeError = error;
+
+          console.log('[AUTH] 📡 Resposta do Stripe:', { 
+            subscribed: data?.subscribed,
+            status: data?.status,
+            trial_end: data?.trial_end,
+            error: error?.message 
+          });
+
+          if (!error) break; // Sucesso, sair do loop
+          
+          if (attempt < maxRetries) {
+            console.warn(`[AUTH] ⚠️ Tentativa ${attempt} falhou, tentando novamente em 1s...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } catch (err) {
+          console.error(`[AUTH] ❌ Erro na tentativa ${attempt}:`, err);
+          if (attempt === maxRetries) {
+            stripeError = err;
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+
+      // Se encontrou assinatura ativa no Stripe, atualizar e retornar
+      if (!stripeError && stripeData?.subscribed) {
+          // ✅ VALIDAÇÃO ROBUSTA DE DATAS
+          let isInTrial = false;
+          let trialDaysRemaining: number | undefined;
+          
+          // Validar trial_end antes de criar Date
+          if (stripeData.trial_end && stripeData.trial_end !== 'null') {
+            try {
+              const trialEndDate = new Date(stripeData.trial_end);
+              // Verificar se é uma data válida
+              if (!isNaN(trialEndDate.getTime())) {
+                const now = new Date();
+                isInTrial = trialEndDate > now;
+                
+                if (isInTrial) {
+                  trialDaysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                }
+              }
+            } catch (error) {
+              console.error('[AUTH] ❌ Erro ao processar trial_end:', error);
+            }
+          }
+          
+          const dbStatus = isInTrial ? 'trial' : 'active';
+          const subscriptionStatus = isInTrial ? 'trial' : 'active';
+          
+          console.log('[AUTH] ✅ Stripe subscription found:', {
+            isInTrial,
+            trial_end: stripeData.trial_end,
+            dbStatus,
+            subscriptionStatus,
+            trialDaysRemaining
+          });
+
+          await supabase
+            .from('usuarios')
+            .update({ 
+              subscription_status: dbStatus,
+              trial_used: true 
+            })
+            .eq('id', user.id);
+
+          console.log('[AUTH] ✅ Assinatura Stripe confirmada:', subscriptionStatus);
+          
+          setSubscription({
+            subscribed: true,
+            status: subscriptionStatus as 'trial' | 'active',
+            subscription_end: stripeData.subscription_end,
+            product_id: stripeData.product_id,
+            trial_end_date: stripeData.trial_end,
+            trial_days_remaining: trialDaysRemaining
+          });
+          setIsSubscriptionLoading(false);
+          return; // ✅ Sair aqui se tem assinatura paga ou trial do Stripe
+        }
+
+        // ✅ Se Stripe retornar subscribed: false, atualizar banco e NÃO continuar
+        if (!stripeError && !stripeData?.subscribed) {
+          console.log('[AUTH] ⚠️ Sem assinatura ativa no Stripe, atualizando banco para inactive');
+          
+          await supabase
+            .from('usuarios')
+            .update({ subscription_status: 'inactive' })
+            .eq('id', user.id);
+          
+          setSubscription({ 
+            subscribed: false, 
+            status: 'inactive' 
+          });
+          setIsSubscriptionLoading(false);
+          return; // ✅ NÃO continuar para verificação local de trial
+        }
+
+        // Se chegou aqui, houve erro ao acessar o Stripe
+        console.warn('[AUTH] ⚠️ Erro ao acessar Stripe, usando verificação local como fallback');
+      
+
+      // ✅ Só verifica trial local se Stripe estiver inacessível (erro de rede)
+      // E se o usuário tem trial_start_date no banco
+      if (userData?.trial_start_date && userData.subscription_status === 'trial') {
+        console.log('[AUTH] 🔄 Verificando trial local (Stripe inacessível)');
+        
+        const trialStart = new Date(userData.trial_start_date);
+        const now = new Date();
+        const daysSinceTrial = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = 7 - daysSinceTrial;
+
+        console.log('[AUTH] 📅 Trial local:', { daysSinceTrial, daysRemaining });
+
+        if (daysRemaining > 0) {
+          const trialEndDate = new Date(trialStart);
+          trialEndDate.setDate(trialEndDate.getDate() + 7);
+          
+          console.log('[AUTH] ✅ Trial local ativo:', daysRemaining, 'dias restantes');
+          
+          setSubscription({
+            subscribed: true,
+            status: 'trial',
+            trial_days_remaining: daysRemaining,
+            trial_end_date: trialEndDate.toISOString()
+          });
+          setIsSubscriptionLoading(false);
+          return;
+        } else {
+          // Trial expirado
+          console.log('[AUTH] ❌ Trial local expirado');
+          
+          await supabase
+            .from('usuarios')
+            .update({ subscription_status: 'expired' })
+            .eq('id', user.id);
+            
+          setSubscription({
+            subscribed: false,
+            status: 'expired'
+          });
+          setIsSubscriptionLoading(false);
+          return;
+        }
+      }
+
+      // Se chegou aqui, não tem trial nem assinatura
+      console.log('[AUTH] ❌ Sem assinatura ou trial válidos');
+      
+      setSubscription({
+        subscribed: false,
+        status: 'inactive'
+      });
+    } catch (error) {
+      console.error('Erro ao verificar assinatura:', error);
+      setSubscription({ subscribed: false, status: 'inactive' });
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  };
+
   useEffect(() => {
+    // Aplicar tema salvo localmente imediatamente (evita flash)
     const storedTheme = localStorage.getItem('app-theme');
+    console.log('🟢 [INIT] Tema armazenado localmente:', storedTheme);
     if (storedTheme) {
       document.documentElement.setAttribute('data-theme', storedTheme);
     }
     
+    // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log('Auth state changed:', event);
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+      (event, session) => {
+        console.log('🟡 [AUTH] State changed:', event, 'User ID:', session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
 
-        if (newSession?.user) {
+        if (session?.user) {
+          console.log('🟡 [AUTH] Usuário logado, buscando perfil...');
+          // Verificar se é primeiro login
           const onboardingCompleted = localStorage.getItem('onboarding-completed');
           if (!onboardingCompleted && event === 'SIGNED_IN') {
             setTimeout(() => navigate('/onboarding'), 500);
           }
-          
+          // Defer para evitar deadlock
           setTimeout(async () => {
             try {
+              console.log('🔵 [QUERY] Buscando usuário no banco:', session.user.id);
               const { data: userData, error } = await supabase
                 .from('usuarios')
                 .select('*')
-                .eq('id', newSession.user.id)
+                .eq('id', session.user.id)
                 .single();
 
+              console.log('🔵 [QUERY] Resultado:', { userData, error });
+
               if (error && error.code !== 'PGRST116') {
-                console.error('Erro ao buscar dados do usuário:', error);
+                console.error('❌ [ERROR] Erro ao buscar dados do usuário:', error);
+                console.error('❌ [ERROR] Código do erro:', error.code);
+                console.error('❌ [ERROR] Mensagem:', error.message);
                 return;
               }
 
@@ -75,177 +285,158 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 const usuario = userData as Usuario;
                 setUsuario(usuario);
                 
+                // Aplicar tema
                 const tema = usuario.tema_preferencia || 'feminino';
+                console.log('✅ [SUCCESS] Usuário carregado:', usuario.email);
+                console.log('✅ [SUCCESS] Tema do banco de dados:', tema);
+                console.log('✅ [SUCCESS] Aplicando tema:', tema);
                 document.documentElement.setAttribute('data-theme', tema);
                 localStorage.setItem('app-theme', tema);
+                
+                // ✅ VERIFICAR ASSINATURA AQUI, APÓS SESSÃO E USUÁRIO ESTAREM PRONTOS
+                console.log('🔄 [AUTH] Iniciando verificação de assinatura após carregar usuário');
+                checkSubscription();
               } else {
+                console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
                 localStorage.setItem('app-theme', 'feminino');
               }
             } catch (error) {
-              console.error('Erro ao buscar perfil do usuário:', error);
+              console.error('❌ [EXCEPTION] Erro ao buscar perfil do usuário:', error);
               document.documentElement.setAttribute('data-theme', 'feminino');
               localStorage.setItem('app-theme', 'feminino');
             }
           }, 0);
         } else {
           setUsuario(null);
+          console.log('🟤 [AUTH] Sem sessão, aplicando tema padrão');
+          document.documentElement.setAttribute('data-theme', 'feminino');
+          localStorage.setItem('app-theme', 'feminino');
         }
+
+        setIsLoading(false);
       }
     );
 
-    const checkInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setSession(session);
-          setUser(session.user);
-          
-          const { data: userData } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (userData) {
-            const usuario = userData as Usuario;
-            setUsuario(usuario);
-            
-            const tema = usuario.tema_preferencia || 'feminino';
-            document.documentElement.setAttribute('data-theme', tema);
-            localStorage.setItem('app-theme', tema);
-          }
-          
-          // Check subscription on initial load
-          checkSubscription();
-        }
-      } catch (error) {
-        console.error('Erro ao verificar sessão inicial:', error);
-      } finally {
+    // DEPOIS verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
         setIsLoading(false);
       }
-    };
+      // O onAuthStateChange vai lidar com a sessão
+    });
 
-    checkInitialSession();
+    return () => subscription.unsubscribe();
+  }, []);
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const checkSubscription = async () => {
-    setIsSubscriptionLoading(true);
+  const signUp = async (email: string, password: string, userData: Partial<Usuario>, planType?: 'trial' | 'paid') => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setSubscription(null);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("check-subscription", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-      setSubscription(data);
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      setSubscription(null);
-    } finally {
-      setIsSubscriptionLoading(false);
-    }
-  };
-
-  const signUp = async (
-    email: string,
-    password: string,
-    userData: Partial<Usuario>
-  ) => {
-    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      
+      console.log('🟣 [SIGNUP] Iniciando cadastro...');
+      console.log('🟣 [SIGNUP] Tema selecionado:', userData.tema_preferencia);
+      console.log('🟣 [SIGNUP] Email:', email);
+      console.log('🟣 [SIGNUP] Tipo de plano:', planType);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             nome_completo: userData.nome_completo,
+            nome_personalizado_app: userData.nome_personalizado_app || 'Meu Salão',
             telefone: userData.telefone,
             tema_preferencia: userData.tema_preferencia || 'feminino',
+            plan_type: planType || 'trial',
           }
         }
       });
 
       if (error) {
-        console.error('Erro no auth.signUp:', error);
+        console.error('❌ [SIGNUP] Erro no auth.signUp:', error);
         toast.error(error.message);
         return { error };
       }
 
-      console.log('Conta criada com sucesso! User ID:', data.user?.id);
+      console.log('✅ [SIGNUP] Conta criada com sucesso! User ID:', data.user?.id);
       
+      // O perfil é criado automaticamente via trigger no banco de dados
+      // Aplicar tema localmente
       if (userData.tema_preferencia) {
         document.documentElement.setAttribute('data-theme', userData.tema_preferencia);
         localStorage.setItem('app-theme', userData.tema_preferencia);
       }
 
-      toast.success('Conta criada com sucesso!');
+      // Se escolheu trial, fazer login automático
+      if (planType === 'trial' && data.user && !error) {
+        console.log('🟣 [SIGNUP] Fazendo login automático para trial...');
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (signInError) {
+          console.error('❌ [SIGNUP] Erro no login automático:', signInError);
+          toast.error('Conta criada! Por favor, faça login.');
+          return { error: signInError };
+        }
+        
+        console.log('✅ [SIGNUP] Login automático realizado com sucesso!');
+        // Aguardar um momento para o onAuthStateChange processar
+        await new Promise(resolve => setTimeout(resolve, 500));
+        toast.success('🎉 Conta criada! Bem-vindo ao seu trial de 7 dias!');
+      } else {
+        toast.success('Conta criada com sucesso! Faça login para continuar.');
+      }
+
       return { error: null };
     } catch (error) {
-      console.error('Erro no signup:', error);
-      toast.error('Erro ao criar conta');
+      console.error('❌ [SIGNUP] EXCEÇÃO GERAL no cadastro:', error);
+      toast.error('Erro inesperado no cadastro. Por favor, tente novamente.');
       return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('Erro no login:', error);
         toast.error(error.message);
         return { error };
       }
 
-      if (data.user) {
-        const { data: userData } = await supabase
-          .from('usuarios')
-          .select('nome_completo, telefone, nome_personalizado_app')
-          .eq('id', data.user.id)
-          .single();
-
-        if (!userData?.nome_completo || !userData?.telefone || !userData?.nome_personalizado_app) {
-          navigate('/onboarding');
-        } else {
-          navigate('/');
-        }
-      }
-
+      toast.success('Login realizado com sucesso!');
       return { error: null };
     } catch (error) {
       console.error('Erro no login:', error);
-      toast.error('Erro ao fazer login');
       return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
+      setIsLoading(true);
+      await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setUsuario(null);
-      navigate('/login');
+      toast.success('Logout realizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Erro no logout:', error);
       toast.error('Erro ao fazer logout');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -253,49 +444,59 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return { error: new Error('Usuário não autenticado') };
 
     try {
-      const { error } = await supabase
+      setIsLoading(true);
+      const { data, error } = await supabase
         .from('usuarios')
         .update(updates)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('*')
         .eq('id', user.id)
+        .select()
         .single();
 
-      if (userData) {
-        setUsuario(userData as Usuario);
+      if (error) {
+        toast.error('Erro ao atualizar perfil');
+        return { error };
       }
 
+      const updatedUsuario = data as Usuario;
+      setUsuario(updatedUsuario);
+      
+      // Aplicar tema se foi atualizado
+      if (updates.tema_preferencia) {
+        console.log('Aplicando novo tema:', updates.tema_preferencia);
+        document.documentElement.setAttribute('data-theme', updates.tema_preferencia);
+        localStorage.setItem('app-theme', updates.tema_preferencia);
+      }
+      
       toast.success('Perfil atualizado com sucesso!');
       return { error: null };
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
-      toast.error('Erro ao atualizar perfil');
       return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const value = {
-    user,
-    session,
-    usuario,
-    isLoading,
-    isAuthenticated: !!user,
-    subscription,
-    isSubscriptionLoading,
-    signUp,
-    signIn,
-    signOut,
-    updateProfile,
-    checkSubscription,
-  };
+  const isAuthenticated = !!session;
 
   return (
-    <SupabaseAuthContext.Provider value={value}>
+    <SupabaseAuthContext.Provider
+      value={{
+        user,
+        session,
+        usuario,
+        isLoading,
+        isAuthenticated,
+        subscription,
+        isSubscriptionLoading,
+        setSubscription,
+        checkSubscription,
+        signUp,
+        signIn,
+        signOut,
+        updateProfile,
+      }}
+    >
       {children}
     </SupabaseAuthContext.Provider>
   );
@@ -304,7 +505,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 export const useSupabaseAuth = () => {
   const context = useContext(SupabaseAuthContext);
   if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
+    throw new Error('useSupabaseAuth deve ser usado dentro de SupabaseAuthProvider');
   }
   return context;
 };

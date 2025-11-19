@@ -34,7 +34,7 @@ export default function Dashboard() {
     console.log('Dashboard: useLancamentos success');
     
     console.log('Dashboard: Tentando useSupabaseAuth');
-    const { usuario } = useSupabaseAuth();
+    const { usuario, checkSubscription } = useSupabaseAuth();
     console.log('Dashboard: useSupabaseAuth success');
 
   // Detectar retorno de pagamento bem-sucedido
@@ -43,9 +43,14 @@ export default function Dashboard() {
     if (paymentStatus === 'success') {
       // Limpar query param
       setSearchParams({});
-      toast.success('🎉 Pagamento confirmado!');
+      
+      // Forçar verificação de assinatura múltiplas vezes
+      toast.success('🎉 Pagamento confirmado! Verificando assinatura...');
+      setTimeout(() => checkSubscription(), 1000);
+      setTimeout(() => checkSubscription(), 3000);
+      setTimeout(() => checkSubscription(), 6000);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, checkSubscription]);
 
   // Data atual
   const hoje = new Date();
