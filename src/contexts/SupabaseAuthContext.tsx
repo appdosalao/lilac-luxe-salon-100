@@ -59,8 +59,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('[AUTH] 🔄 Verificando status no Stripe...');
 
-      // ✅ MUDANÇA PRINCIPAL: SEMPRE VERIFICAR STRIPE PRIMEIRO
-      // Remover verificação prematura que impedia a chamada ao Stripe
+      // ✅ Primeiro, tentar atualizar a sessão se necessário
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.error('[AUTH] ❌ Erro ao atualizar sessão:', refreshError);
+        // Se não conseguir atualizar, fazer logout
+        await supabase.auth.signOut();
+        navigate('/login');
+        setSubscription(null);
+        setIsSubscriptionLoading(false);
+        return;
+      }
+      
+      if (refreshedSession) {
+        console.log('[AUTH] ✅ Sessão atualizada com sucesso');
+        setSession(refreshedSession);
+        setUser(refreshedSession.user);
+      }
       
       // Tentar verificar Stripe com retry automático
       let stripeData = null;
@@ -71,17 +87,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           console.log(`[AUTH] 🔄 Tentativa ${attempt}/${maxRetries} - Verificando Stripe...`);
           
-          // ✅ Verificar se a sessão ainda é válida antes de chamar o edge function
-          const { data: { session: currentValidSession } } = await supabase.auth.getSession();
-          if (!currentValidSession) {
-            console.warn('[AUTH] ⚠️ Sessão expirada ou inválida, forçando re-login');
-            await supabase.auth.signOut();
-            navigate('/login');
-            setSubscription(null);
-            return;
-          }
-          
-          // ✅ supabase.functions.invoke automaticamente passa o Authorization header
           const { data, error } = await supabase.functions.invoke('check-subscription');
 
           stripeData = data;
@@ -96,12 +101,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
           if (!error) break; // Sucesso, sair do loop
           
-          // Se o erro for de autenticação, não tentar novamente
+          // Se o erro for de autenticação, não tentar novamente - a sessão já foi atualizada
           if (error?.message?.includes('Auth session missing') || error?.message?.includes('Authentication error')) {
-            console.error('[AUTH] ❌ Erro de autenticação detectado, forçando re-login');
+            console.error('[AUTH] ❌ Erro de autenticação persistente, fazendo logout');
             await supabase.auth.signOut();
             navigate('/login');
             setSubscription(null);
+            setIsSubscriptionLoading(false);
             return;
           }
           
