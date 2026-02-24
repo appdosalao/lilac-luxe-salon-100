@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/lilac-luxe-salon-100/sw.js', { scope: '/lilac-luxe-salon-100/' })})}
