@@ -1,0 +1,60 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Builds
+dist/
+build/
+.turbo/
+.parcel-cache/
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Coverage
+coverage/
+
+# Next/Remix/Storybook etc (in case)
+.next/
+.storybook-out/
+storybook-static/
+.cache/
+
+# Supabase/local dev
+supabase/.temp/
+supabase/.branches/
+supabase/functions/.env
+
+# PWA assets generated
+public/sw.js
+public/workbox-*.js
+public/manifest.webmanifest

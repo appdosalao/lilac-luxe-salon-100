@@ -1,0 +1,7 @@
+project_id = "dfwepnzwktjyhvfmpuxo"
+
+[functions.auditoria-sistema]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
