@@ -61,18 +61,18 @@ export default function Servicos() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8 p-3 sm:p-0">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Serviços</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">Serviços</h1>
+          <p className="text-xs sm:text-base text-muted-foreground">
             Gerencie todos os serviços oferecidos pelo seu salão
           </p>
         </div>
         <Button 
           onClick={handleNovoServico}
-          className="bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-gradient-to-r from-primary to-lilac-primary shadow-lg hover:shadow-xl transition-all duration-300 btn-touch"
         >
           <Plus className="mr-2 h-4 w-4" />
           Novo Serviço
@@ -80,43 +80,43 @@ export default function Servicos() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light">
-              <Scissors className="h-6 w-6 text-primary-foreground" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-primary to-lilac-light">
+              <Scissors className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{servicos.length}</p>
-              <p className="text-sm text-muted-foreground">Total de Serviços</p>
+              <p className="text-lg sm:text-2xl font-bold">{servicos.length}</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">Total</p>
             </div>
           </CardContent>
         </Card>
         
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent">
-              <Scissors className="h-6 w-6 text-primary-foreground" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent">
+              <Scissors className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">
+              <p className="text-lg sm:text-2xl font-bold">
                 R$ {servicos.length > 0 ? Math.min(...servicos.map(s => s.valor)).toFixed(2) : '0,00'}
               </p>
-              <p className="text-sm text-muted-foreground">Menor Valor</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">Menor Valor</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-accent to-lavender">
-              <Scissors className="h-6 w-6 text-primary-foreground" />
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm col-span-2 sm:col-span-2 lg:col-span-1">
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-pink-accent to-lavender">
+              <Scissors className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">
+              <p className="text-lg sm:text-2xl font-bold">
                 R$ {servicos.length > 0 ? Math.max(...servicos.map(s => s.valor)).toFixed(2) : '0,00'}
               </p>
-              <p className="text-sm text-muted-foreground">Maior Valor</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">Maior Valor</p>
             </div>
           </CardContent>
         </Card>

@@ -133,12 +133,12 @@ export default function Financeiro() {
   }
 
   return (
-    <div className="space-responsive-lg">
+    <div className="space-y-4 sm:space-y-8 p-3 sm:p-0">
       {/* Header */}
-      <div className="flex-responsive flex-responsive-row-md items-start justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="text-responsive-3xl font-bold text-foreground">Financeiro</h1>
-          <p className="text-responsive-base text-muted-foreground mt-2">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">Financeiro</h1>
+          <p className="text-xs sm:text-base text-muted-foreground mt-1">
             Controle completo das finanças do seu salão
           </p>
         </div>
@@ -154,70 +154,70 @@ export default function Financeiro() {
       <ResumoFinanceiro resumo={resumoFinanceiro} />
 
       {/* Abas do Sistema Financeiro */}
-      <Tabs defaultValue="lancamentos" className="space-responsive-lg">
-        <ScrollArea className="w-full">
-          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-7 gap-1 p-1">
+      <Tabs defaultValue="lancamentos" className="space-y-4 sm:space-y-8">
+        <ScrollArea className="w-full whitespace-nowrap">
+          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-7 gap-1 p-1 bg-muted rounded-lg">
             <TabsTrigger 
               value="lancamentos" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <Receipt className="mr-1 h-4 w-4 md:hidden" />
+              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Lançamentos
             </TabsTrigger>
             <TabsTrigger 
               value="contas-fixas" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <AlertTriangle className="mr-1 h-4 w-4 md:hidden" />
+              <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Contas Fixas
             </TabsTrigger>
             <TabsTrigger 
               value="produtos" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <FileText className="mr-1 h-4 w-4 md:hidden" />
+              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Produtos
             </TabsTrigger>
             <TabsTrigger 
               value="contas-receber" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <Users className="mr-1 h-4 w-4 md:hidden" />
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               A Receber
             </TabsTrigger>
             <TabsTrigger 
               value="pagamentos" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <Receipt className="mr-1 h-4 w-4 md:hidden" />
+              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Pagamentos
             </TabsTrigger>
             <TabsTrigger 
               value="graficos" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <TrendingUp className="mr-1 h-4 w-4 md:hidden" />
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Gráficos
             </TabsTrigger>
             <TabsTrigger 
               value="relatorios" 
-              className="text-responsive-xs whitespace-nowrap min-h-[44px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
             >
-              <FileText className="mr-1 h-4 w-4 md:hidden" />
+              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Relatórios
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" className="md:hidden" />
         </ScrollArea>
 
-        <TabsContent value="lancamentos" className="space-responsive-lg animate-fade-in">
-          <div className="flex-responsive flex-responsive-row-sm items-start justify-between gap-4">
-            <h2 className="text-responsive-xl font-semibold">Lançamentos Financeiros</h2>
+        <TabsContent value="lancamentos" className="space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg sm:text-xl font-semibold">Lançamentos Financeiros</h2>
             <Button 
               onClick={handleNovoLancamento}
-              className="bg-gradient-to-r from-primary to-lilac-primary btn-touch flex-shrink-0 hover-scale"
+              className="bg-gradient-to-r from-primary to-lilac-primary shadow-sm hover:shadow-md transition-all h-9 sm:h-10 text-xs sm:text-sm btn-touch"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Novo Lançamento</span>
               <span className="sm:hidden">Novo</span>
             </Button>

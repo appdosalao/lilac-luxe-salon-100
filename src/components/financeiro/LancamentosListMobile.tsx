@@ -44,12 +44,12 @@ export function LancamentosListMobile({
   if (lancamentos.length === 0) {
     return (
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardContent className="py-12">
-          <div className="flex flex-col items-center gap-3 animate-fade-in">
-            <Receipt className="h-12 w-12 text-muted-foreground/50" />
+        <CardContent className="py-8 sm:py-12">
+          <div className="flex flex-col items-center gap-2 sm:gap-3 animate-fade-in">
+            <Receipt className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
             <div className="text-center">
-              <p className="text-base font-medium text-foreground">Nenhum lançamento encontrado</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm sm:text-base font-medium text-foreground">Nenhum lançamento encontrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 Adicione seu primeiro lançamento financeiro
               </p>
             </div>
@@ -60,34 +60,34 @@ export function LancamentosListMobile({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 sm:space-y-3">
       {lancamentos.map((lancamento) => (
         <Card 
           key={lancamento.id} 
-          className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover-scale animate-fade-in"
+          className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover-scale animate-fade-in active:scale-[0.99] transition-transform"
         >
-          <CardContent className="p-4 mobile-card">
-            <div className="space-y-3">
+          <CardContent className="p-3 mobile-card">
+            <div className="space-y-2 sm:space-y-3">
               {/* Header with type and value */}
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {lancamento.tipo === 'entrada' ? (
-                    <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                   ) : (
-                    <TrendingDown className="h-5 w-5 text-red-600 flex-shrink-0" />
+                    <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm sm:text-base truncate">
+                    <h3 className="font-semibold text-xs sm:text-base truncate">
                       {lancamento.descricao}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       {format(new Date(lancamento.data), "dd/MM/yyyy", { locale: ptBR })}
                     </p>
                   </div>
                 </div>
                 
                 <div className="text-right flex-shrink-0">
-                  <p className={`font-bold text-base sm:text-lg ${
+                  <p className={`font-bold text-sm sm:text-lg ${
                     lancamento.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {lancamento.tipo === 'entrada' ? '+' : '-'} {formatarValor(lancamento.valor)}
@@ -97,9 +97,9 @@ export function LancamentosListMobile({
 
               {/* Category badge */}
               {lancamento.categoria && (
-                <div className="flex items-center gap-2">
-                  <Tag className="h-3 w-3 text-muted-foreground" />
-                  <Badge variant="outline" className="text-xs">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                  <Badge variant="outline" className="text-[10px] sm:text-xs h-5 px-1.5 font-normal">
                     {lancamento.categoria}
                   </Badge>
                 </div>
@@ -111,10 +111,10 @@ export function LancamentosListMobile({
                   variant="outline"
                   size="sm"
                   onClick={() => onEdit(lancamento)}
-                  className="h-10 text-xs btn-touch hover-scale"
+                  className="h-9 text-xs btn-touch hover-scale"
                   aria-label="Editar lançamento"
                 >
-                  <Edit className="h-3 w-3 mr-1" />
+                  <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5" />
                   Editar
                 </Button>
                 
@@ -123,10 +123,10 @@ export function LancamentosListMobile({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-10 text-xs btn-touch hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 hover-scale"
+                      className="h-9 text-xs btn-touch hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 hover-scale"
                       aria-label="Excluir lançamento"
                     >
-                      <Trash2 className="h-3 w-3 mr-1" />
+                      <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5" />
                       Excluir
                     </Button>
                   </AlertDialogTrigger>

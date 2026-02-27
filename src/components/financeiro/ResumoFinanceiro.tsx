@@ -15,87 +15,87 @@ export default function ResumoFinanceiro({ resumo }: ResumoFinanceiroProps) {
   };
 
   return (
-    <div className="grid-responsive-5 animate-fade-in">
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive hover-scale transition-all">
-        <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success flex-shrink-0">
-            <TrendingUp className="h-6 w-6 text-success-foreground" />
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5 animate-fade-in">
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover-scale transition-all">
+        <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+          <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-success flex-shrink-0">
+            <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-success-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-success truncate">
+            <p className="text-lg sm:text-xl font-bold text-success truncate">
               {formatarValor(resumo.totalEntradas)}
             </p>
-            <p className="text-responsive-sm text-muted-foreground">Entradas do Mês</p>
+            <p className="text-[10px] sm:text-sm text-muted-foreground">Entradas</p>
           </div>
         </CardContent>
       </Card>
       
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive hover-scale transition-all">
-        <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive flex-shrink-0">
-            <TrendingDown className="h-6 w-6 text-destructive-foreground" />
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover-scale transition-all">
+        <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+          <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-destructive flex-shrink-0">
+            <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6 text-destructive-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-destructive truncate">
+            <p className="text-lg sm:text-xl font-bold text-destructive truncate">
               {formatarValor(resumo.totalSaidas)}
             </p>
-            <p className="text-responsive-sm text-muted-foreground">Saídas do Mês</p>
+            <p className="text-[10px] sm:text-sm text-muted-foreground">Saídas</p>
           </div>
         </CardContent>
       </Card>
       
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive hover-scale transition-all">
-        <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-xl flex-shrink-0 ${
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover-scale transition-all col-span-2 sm:col-span-1">
+        <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+          <div className={`flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl flex-shrink-0 ${
             resumo.lucro >= 0 
               ? 'bg-primary' 
               : 'bg-destructive'
           }`}>
             {resumo.lucro >= 0 ? (
-              <PiggyBank className="h-6 w-6 text-primary-foreground" />
+              <PiggyBank className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
             ) : (
-              <DollarSign className="h-6 w-6 text-destructive-foreground" />
+              <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-destructive-foreground" />
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className={`text-responsive-lg font-bold truncate ${
+            <p className={`text-lg sm:text-xl font-bold truncate ${
               resumo.lucro >= 0 ? 'text-primary' : 'text-destructive'
             }`}>
               {formatarValor(resumo.lucro)}
             </p>
-            <p className="text-responsive-sm text-muted-foreground">
-              {resumo.lucro >= 0 ? 'Lucro do Mês' : 'Prejuízo do Mês'}
+            <p className="text-[10px] sm:text-sm text-muted-foreground">
+              {resumo.lucro >= 0 ? 'Lucro' : 'Prejuízo'}
             </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Valor em Aberto */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive hover-scale transition-all">
-        <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning flex-shrink-0">
-            <Clock className="h-4 w-4 text-warning-foreground" />
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover-scale transition-all">
+        <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+          <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-warning flex-shrink-0">
+            <Clock className="h-4 w-4 sm:h-4 sm:w-4 text-warning-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-warning truncate">
+            <p className="text-lg sm:text-xl font-bold text-warning truncate">
               {formatarValor(resumo.valorEmAberto)}
             </p>
-            <p className="text-responsive-sm text-muted-foreground">Valor em Aberto</p>
+            <p className="text-[10px] sm:text-sm text-muted-foreground">Em Aberto</p>
           </div>
         </CardContent>
       </Card>
 
       {/* Contas a Pagar */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm card-responsive hover-scale transition-all">
-        <CardContent className="flex items-center gap-4 p-responsive-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive flex-shrink-0">
-            <AlertCircle className="h-4 w-4 text-destructive-foreground" />
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover-scale transition-all">
+        <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+          <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-destructive flex-shrink-0">
+            <AlertCircle className="h-4 w-4 sm:h-4 sm:w-4 text-destructive-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-responsive-lg font-bold text-destructive truncate">
+            <p className="text-lg sm:text-xl font-bold text-destructive truncate">
               {formatarValor(resumo.contasAPagar)}
             </p>
-            <p className="text-responsive-sm text-muted-foreground">Contas a Pagar</p>
+            <p className="text-[10px] sm:text-sm text-muted-foreground">A Pagar</p>
           </div>
         </CardContent>
       </Card>

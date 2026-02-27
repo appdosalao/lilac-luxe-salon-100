@@ -368,37 +368,37 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
             </div>
 
             {/* Mobile Cards - Otimizados */}
-            <div className="lg:hidden space-y-3 p-4">
+            <div className="lg:hidden space-y-2 p-2">
               {currentClientes.map((cliente) => (
                 <Card 
                   key={cliente.id} 
-                  className="border-border/50 bg-card/50 backdrop-blur-sm cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
+                  className="border-border/50 bg-card/50 backdrop-blur-sm cursor-pointer active:scale-[0.99] transition-transform"
                   onClick={() => onViewDetails(cliente)}
                 >
-                  <CardContent className="p-4">
-                    <div className="space-y-4">
+                  <CardContent className="p-3">
+                    <div className="space-y-3">
                       {/* Header com avatar placeholder e info */}
                       <div className="flex items-start gap-3">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <User className="h-6 w-6 text-primary" />
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <User className="h-5 w-5 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-base truncate">
+                          <h3 className="font-semibold text-sm truncate">
                             {highlightText(cliente.nomeCompleto || cliente.nome || '', searchTerm)}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {formatarTelefone(cliente.telefone)}
                           </p>
                         </div>
                       </div>
                       
                       {/* Info badges */}
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-accent/50 text-xs h-6">
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="outline" className="bg-accent/50 text-[10px] h-5 px-1.5 font-normal">
                           {cliente.servicoFrequente || 'Não definido'}
                         </Badge>
-                        <Badge variant="outline" className="text-xs h-6">
-                          <Calendar className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal">
+                          <Calendar className="h-2.5 w-2.5 mr-1" />
                           {cliente.ultimaVisita ? (() => {
                             try {
                               const data = new Date(cliente.ultimaVisita);
@@ -419,9 +419,9 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                             e.stopPropagation();
                             ligar(cliente.telefone);
                           }}
-                          className="flex-1 h-11 btn-touch"
+                          className="flex-1 h-9 text-xs btn-touch"
                         >
-                          <Phone className="h-4 w-4 mr-2" />
+                          <Phone className="h-3.5 w-3.5 mr-1.5" />
                           Ligar
                         </Button>
                         <Button
@@ -431,9 +431,9 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                             e.stopPropagation();
                             abrirWhatsApp(cliente.telefone, cliente.nomeCompleto || cliente.nome || '');
                           }}
-                          className="flex-1 h-11 btn-touch bg-green-50 hover:bg-green-100"
+                          className="flex-1 h-9 text-xs btn-touch bg-green-50 hover:bg-green-100 border-green-200"
                         >
-                          <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                          <MessageCircle className="h-3.5 w-3.5 mr-1.5 text-green-600" />
                           WhatsApp
                         </Button>
                       </div>
@@ -448,7 +448,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               size="sm"
                               variant="outline"
                               onClick={(e) => e.stopPropagation()}
-                              className="h-10 text-xs btn-touch"
+                              className="h-9 text-xs btn-touch"
                             >
                               <Edit className="h-3 w-3 mr-1" />
                               Editar
@@ -461,7 +461,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               size="sm"
                               variant="outline"
                               onClick={(e) => e.stopPropagation()}
-                              className="h-10 text-xs btn-touch hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                              className="h-9 text-xs btn-touch hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
                               Excluir

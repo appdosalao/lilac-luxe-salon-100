@@ -193,46 +193,47 @@ export default function ServicosList({
               >
                 <CardContent className="p-6">
                   {/* Layout mobile */}
-                  <div className="md:hidden space-y-4">
+                  <div className="md:hidden space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <h3 className="font-semibold text-foreground flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-lilac-light/10">
-                            <Scissors className="h-4 w-4 text-primary" />
+                        <h3 className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-lilac-light/10">
+                            <Scissors className="h-3.5 w-3.5 text-primary" />
                           </div>
                           {servico.nome}
                         </h3>
                         {servico.descricao && (
-                          <p className="text-sm text-muted-foreground">{servico.descricao}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{servico.descricao}</p>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onEdit(servico)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setServicoParaExcluir(servico)}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium text-primary">{formatarValor(servico.valor)}</span>
+                        <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-medium text-primary text-sm">{formatarValor(servico.valor)}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{formatarDuracao(servico.duracao)}</span>
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground text-xs">{formatarDuracao(servico.duracao)}</span>
                       </div>
                     </div>
                   </div>
