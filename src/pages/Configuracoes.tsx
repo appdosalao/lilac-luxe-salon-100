@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ConfiguracaoHorarios } from '@/components/configuracoes/ConfiguracaoHorarios-Simple';
 import { ConfiguracaoNotificacoesAvancadas } from '@/components/configuracoes/ConfiguracaoNotificacoesAvancadas';
 import { ConfiguracaoNotificacoesPush } from '@/components/configuracoes/ConfiguracaoNotificacoesPush';
@@ -93,28 +94,31 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="horarios" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Horários
-          </TabsTrigger>
-          <TabsTrigger value="agendamento-online" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Agend. Online
-          </TabsTrigger>
-          <TabsTrigger value="notificacoes" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notificações
-          </TabsTrigger>
-          <TabsTrigger value="backup" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Backup
-          </TabsTrigger>
-          <TabsTrigger value="assinatura" className="flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Assinatura
-          </TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-5 gap-1 p-1">
+            <TabsTrigger value="horarios" className="flex items-center gap-2 min-h-[44px]">
+              <Clock className="h-4 w-4" />
+              Horários
+            </TabsTrigger>
+            <TabsTrigger value="agendamento-online" className="flex items-center gap-2 min-h-[44px]">
+              <Calendar className="h-4 w-4" />
+              Agend. Online
+            </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 min-h-[44px]">
+              <Bell className="h-4 w-4" />
+              Notificações
+            </TabsTrigger>
+            <TabsTrigger value="backup" className="flex items-center gap-2 min-h-[44px]">
+              <Download className="h-4 w-4" />
+              Backup
+            </TabsTrigger>
+            <TabsTrigger value="assinatura" className="flex items-center gap-2 min-h-[44px]">
+              <Crown className="h-4 w-4" />
+              Assinatura
+            </TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" className="md:hidden" />
+        </ScrollArea>
 
         <TabsContent value="horarios" className="space-y-6">
           <Card>

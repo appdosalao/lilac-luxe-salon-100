@@ -84,39 +84,39 @@ export default function Clientes() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light">
-              <Users className="h-6 w-6 text-primary-foreground" />
+          <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light flex-shrink-0">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{clientesAtivas}</p>
-              <p className="text-sm text-muted-foreground">Total de Clientes</p>
+              <p className="text-xl sm:text-2xl font-bold">{clientesAtivas}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
             </div>
           </CardContent>
         </Card>
         
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent">
-              <UserPlus className="h-6 w-6 text-primary-foreground" />
+          <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-lilac-primary to-pink-accent flex-shrink-0">
+              <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{novasEsteMes}</p>
-              <p className="text-sm text-muted-foreground">Visitas Este Mês</p>
+              <p className="text-xl sm:text-2xl font-bold">{novasEsteMes}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Visitas Este Mês</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-accent to-lavender">
-              <TrendingUp className="h-6 w-6 text-primary-foreground" />
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
+          <CardContent className="flex items-center gap-3 p-4 sm:p-6">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-accent to-lavender flex-shrink-0">
+              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalServicos}</p>
-              <p className="text-sm text-muted-foreground">Total de Serviços</p>
+              <p className="text-xl sm:text-2xl font-bold">{totalServicos}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total de Serviços</p>
             </div>
           </CardContent>
         </Card>

@@ -288,6 +288,23 @@ All colors MUST be HSL.
   }
 }
 
+/* Forçar tamanho mínimo de toque em mobile */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  button:not(.icon-only) {
+    min-height: 44px;
+  }
+}
+
 @layer utilities {
   /* Container responsive utility classes */
   .container-responsive {

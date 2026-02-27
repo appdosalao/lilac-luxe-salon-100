@@ -449,8 +449,9 @@ export default function Dashboard() {
                   dataKey="dia" 
                   axisLine={false}
                   tickLine={false}
-                  className="text-muted-foreground text-xs"
-                  tick={{ fontSize: 12 }}
+                  className="text-muted-foreground text-[10px] sm:text-xs"
+                  tick={{ fontSize: 10 }}
+                  interval={periodo > 7 ? 'preserveStartEnd' : 0}
                 />
                 <YAxis 
                   axisLine={false}
