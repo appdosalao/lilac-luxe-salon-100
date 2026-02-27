@@ -311,39 +311,16 @@ All colors MUST be HSL.
     width: 100%;
     max-width: 100%;
     margin: 0 auto;
-    padding: 0 clamp(0.75rem, 4vw, 2rem);
-  }
-
-  @media (min-width: 640px) {
-    .container-responsive {
-      max-width: 640px;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .container-responsive {
-      max-width: 768px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container-responsive {
-      max-width: 1024px;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .container-responsive {
-      max-width: 1200px;
-    }
+    padding: 0 clamp(0.5rem, 3vw, 2rem);
   }
 
   /* Responsive grid utilities */
   .grid-responsive {
     display: grid;
-    gap: clamp(1rem, 4vw, 2rem);
+    gap: clamp(0.5rem, 2vw, 1.5rem);
     grid-template-columns: 1fr;
   }
+
 
   @media (min-width: 768px) {
     .grid-responsive {
@@ -371,7 +348,7 @@ All colors MUST be HSL.
 
   .grid-responsive-3 {
     display: grid;
-    gap: clamp(1rem, 4vw, 2rem);
+    gap: clamp(0.5rem, 2vw, 1.5rem);
     grid-template-columns: 1fr;
   }
 
@@ -489,11 +466,11 @@ All colors MUST be HSL.
 
   /* Responsive padding utilities */
   .p-responsive {
-    padding: clamp(0.75rem, 4vw, 1.5rem);
+    padding: clamp(0.5rem, 3vw, 1.25rem);
   }
 
   .p-responsive-sm {
-    padding: clamp(0.5rem, 2vw, 1rem);
+    padding: clamp(0.25rem, 2vw, 0.75rem);
   }
 
   .p-responsive-lg {

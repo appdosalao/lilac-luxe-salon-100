@@ -180,34 +180,34 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
       </div>
 
       {/* Dias da Semana com contagem e horários disponíveis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Dias da semana">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2" role="list" aria-label="Dias da semana">
         {diasDaSemana.map((dia) => {
           const ags = getAgendamentosDoDia(dia);
           const disponiveis = getHorariosDisponiveisDoDia(dia);
           return (
             <Card key={dia.toISOString()} className="border-0 bg-card/60" role="listitem">
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-3 space-y-2">
                 <button
                   type="button"
                   className="flex items-center justify-between w-full text-left"
                   onClick={() => { setDiaSelecionado(dia); setDiaDialogAberto(true); }}
                   aria-label={`Ver todos os horários de ${format(dia, "EEEE, dd 'de' MMM", { locale: ptBR })}`}
                 >
-                  <div className="font-semibold">
+                  <div className="font-semibold text-sm sm:text-base capitalize">
                     {format(dia, "EEEE, dd 'de' MMM", { locale: ptBR })}
                   </div>
-                  <Badge variant="outline" className="border-0 bg-info/20 text-info">
+                  <Badge variant="outline" className="border-0 bg-info/20 text-info text-xs">
                     {ags.length} agend.
                   </Badge>
                 </button>
                 {ags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground" role="list" aria-label="Horários do dia">
+                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground" role="list" aria-label="Horários do dia">
                     {ags.slice(0, 6).map(a => (
                       <button
                         key={a.id}
                         type="button"
                         onClick={() => { setAgendamentoSelecionado(a); setDetalheAberto(true); }}
-                        className="px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                        className="px-2 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors text-center truncate"
                         aria-label={`Ver detalhes de ${a.clienteNome} às ${a.hora}`}
                         role="listitem"
                       >
@@ -215,7 +215,7 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
                       </button>
                     ))}
                     {ags.length > 6 && (
-                      <span className="px-2 py-1 rounded-md bg-muted">+{ags.length - 6}</span>
+                      <span className="px-2 py-1.5 rounded-md bg-muted text-center flex items-center justify-center">+{ags.length - 6}</span>
                     )}
                   </div>
                 )}
@@ -224,9 +224,9 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
                   {disponiveis.length === 0 ? (
                     <div className="text-xs text-muted-foreground">Sem horários disponíveis</div>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                       {disponiveis.slice(0, 10).map(h => {
-                        const baseCls = "px-2 py-1 rounded-full text-xs border";
+                        const baseCls = "px-1 py-1.5 rounded-md text-xs border text-center transition-colors";
                         const cls = onSlotClick
                           ? `${baseCls} cursor-pointer bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200/60 hover:bg-emerald-200`
                           : `${baseCls} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200/60`;
@@ -244,7 +244,7 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
                         );
                       })}
                       {disponiveis.length > 10 && (
-                        <span className="px-2 py-1 rounded-full text-xs bg-muted">+{disponiveis.length - 10}</span>
+                        <span className="px-1 py-1.5 rounded-md text-xs bg-muted text-center flex items-center justify-center">+{disponiveis.length - 10}</span>
                       )}
                     </div>
                   )}

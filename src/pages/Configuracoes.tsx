@@ -82,37 +82,37 @@ export default function Configuracoes() {
   }, [activeTab, setSearchParams]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Settings className="h-8 w-8" />
+    <div className="container-responsive p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="space-y-1 sm:space-y-2">
+        <h1 className="text-xl sm:text-3xl font-bold flex items-center gap-2">
+          <Settings className="h-6 w-6 sm:h-8 sm:w-8" />
           <span>Configurações</span>
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Configure os horários de atendimento, agendamento online, notificações e backup do sistema
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap">
-          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-5 gap-1 p-1">
-            <TabsTrigger value="horarios" className="flex items-center gap-2 min-h-[44px]">
+          <TabsList className="flex md:grid md:grid-cols-5 gap-1 p-1 w-full bg-muted rounded-lg">
+            <TabsTrigger value="horarios" className="flex items-center gap-2 min-h-[44px] flex-1">
               <Clock className="h-4 w-4" />
               Horários
             </TabsTrigger>
-            <TabsTrigger value="agendamento-online" className="flex items-center gap-2 min-h-[44px]">
+            <TabsTrigger value="agendamento-online" className="flex items-center gap-2 min-h-[44px] flex-1">
               <Calendar className="h-4 w-4" />
               Agend. Online
             </TabsTrigger>
-            <TabsTrigger value="notificacoes" className="flex items-center gap-2 min-h-[44px]">
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 min-h-[44px] flex-1">
               <Bell className="h-4 w-4" />
               Notificações
             </TabsTrigger>
-            <TabsTrigger value="backup" className="flex items-center gap-2 min-h-[44px]">
+            <TabsTrigger value="backup" className="flex items-center gap-2 min-h-[44px] flex-1">
               <Download className="h-4 w-4" />
               Backup
             </TabsTrigger>
-            <TabsTrigger value="assinatura" className="flex items-center gap-2 min-h-[44px]">
+            <TabsTrigger value="assinatura" className="flex items-center gap-2 min-h-[44px] flex-1">
               <Crown className="h-4 w-4" />
               Assinatura
             </TabsTrigger>

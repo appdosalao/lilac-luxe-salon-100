@@ -158,25 +158,25 @@ export default function Dashboard() {
     agendamentosFiltrados.length === 0 && lancamentos.length === 0;
 
   return (
-    <div className="space-responsive-lg">
+    <div className="space-y-3 sm:space-y-6">
       <InstallPrompt variant="card" />
       
       
       {/* Cabeçalho de boas-vindas */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-primary to-lilac-light p-responsive text-primary-foreground shadow-md">
+      <div className="relative overflow-hidden rounded-lg sm:rounded-3xl bg-gradient-to-r from-primary to-lilac-light p-4 sm:p-responsive text-primary-foreground shadow-md">
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <Sparkles className="h-5 w-5 sm:h-8 sm:w-8 flex-shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-responsive-2xl sm:text-responsive-3xl font-bold">
+              <h1 className="text-xl sm:text-responsive-3xl font-bold">
                 Olá, {usuario?.nome_completo?.split(' ')[0] || 'Profissional'}!
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="capitalize">{dataFormatada}</Badge>
+                <Badge variant="secondary" className="capitalize text-xs sm:text-sm">{dataFormatada}</Badge>
               </div>
             </div>
           </div>
-          <p className="text-responsive-sm opacity-80">
+          <p className="text-xs sm:text-responsive-sm opacity-80">
             Tenha um dia produtivo e cheio de sucesso!
           </p>
         </div>
@@ -185,154 +185,149 @@ export default function Dashboard() {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid-responsive-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">
-              Agendamentos Hoje
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">
+              Agendamentos
             </CardTitle>
-            <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {carregandoDados ? (
-              <Skeleton className="h-7 w-16 rounded-md" />
+              <Skeleton className="h-6 w-12 rounded-md" />
             ) : (
-              <div className="text-responsive-xl font-bold text-foreground">{agendamentosHoje.length}</div>
+              <div className="text-lg sm:text-2xl font-bold text-foreground">{agendamentosHoje.length}</div>
             )}
-            <p className="text-responsive-xs text-muted-foreground">
-              {agendamentosHoje.length === 0 ? 'Nenhum agendamento hoje' : 'clientes agendados'}
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Hoje
             </p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
         </Card>
 
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">
-              Total Recebido Hoje
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">
+              Recebido
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {carregandoDados ? (
-              <Skeleton className="h-7 w-24 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
             ) : (
-              <div className="text-responsive-xl font-bold text-green-600">{formatarMoeda(totalRecebidoHoje)}</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{formatarMoeda(totalRecebidoHoje)}</div>
             )}
-            <p className="text-responsive-xs text-muted-foreground">
-              Serviços concluídos
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Hoje
             </p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-green-500/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-green-500/10 to-transparent" />
         </Card>
 
-        <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm sm:col-span-1 col-span-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">
-              Agendamentos de Amanhã
+        <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm col-span-2 sm:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">
+              Amanhã
             </CardTitle>
-            <Clock className="h-4 w-4 text-lilac-primary flex-shrink-0" />
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-lilac-primary flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {agendamentosProximoDia.length > 0 ? (
               <div className="space-y-1">
-                <div className="text-responsive-lg font-bold text-foreground">
-                  {agendamentosProximoDia.length} agendamento{agendamentosProximoDia.length > 1 ? 's' : ''}
+                <div className="text-lg sm:text-2xl font-bold text-foreground">
+                  {agendamentosProximoDia.length} <span className="text-xs font-normal text-muted-foreground">agend.</span>
                 </div>
-                <div className="space-y-1 max-h-16 overflow-y-auto">
-                  {agendamentosProximoDia.slice(0, 3).map((agendamento, index) => (
-                    <p key={agendamento.id} className="text-responsive-xs text-muted-foreground truncate">
+                <div className="space-y-1 max-h-12 overflow-y-auto hidden sm:block">
+                  {agendamentosProximoDia.slice(0, 2).map((agendamento) => (
+                    <p key={agendamento.id} className="text-xs text-muted-foreground truncate">
                       {agendamento.hora} - {agendamento.clienteNome}
                     </p>
                   ))}
-                  {agendamentosProximoDia.length > 3 && (
-                    <p className="text-responsive-xs text-muted-foreground">
-                      +{agendamentosProximoDia.length - 3} mais
-                    </p>
-                  )}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-responsive-lg font-bold text-foreground">Sem agendamentos</div>
-                <p className="text-responsive-xs text-muted-foreground">para amanhã</p>
+                <div className="text-lg sm:text-2xl font-bold text-foreground">0</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Sem agendamentos</p>
               </div>
             )}
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-lilac-primary/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-lilac-primary/10 to-transparent" />
         </Card>
       </div>
 
-      <div className="grid-responsive-3 mt-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 mt-2 sm:mt-3">
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">Ticket Médio Hoje</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary flex-shrink-0" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">Ticket Médio</CardTitle>
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {carregandoDados ? (
-              <Skeleton className="h-7 w-20 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
             ) : (
-              <div className="text-responsive-xl font-bold">{formatarMoeda(ticketMedioHoje)}</div>
+              <div className="text-lg sm:text-2xl font-bold">{formatarMoeda(ticketMedioHoje)}</div>
             )}
-            <p className="text-responsive-xs text-muted-foreground">Por atendimento concluído</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Por atendimento</p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
         </Card>
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">Entradas no Mês</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">Entradas Mês</CardTitle>
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {carregandoDados ? (
-              <Skeleton className="h-7 w-24 rounded-md" />
+              <Skeleton className="h-6 w-24 rounded-md" />
             ) : (
-              <div className="text-responsive-xl font-bold text-green-600">{formatarMoeda(entradasMes)}</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{formatarMoeda(entradasMes)}</div>
             )}
-            <p className="text-responsive-xs text-muted-foreground">Receitas totais</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Receitas totais</p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-green-500/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-green-500/10 to-transparent" />
         </Card>
-        <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">Lucro no Mês</CardTitle>
-            <PiggyBank className="h-4 w-4 text-primary flex-shrink-0" />
+        <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm col-span-2 sm:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">Lucro Mês</CardTitle>
+            <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
             {carregandoDados ? (
-              <Skeleton className="h-7 w-24 rounded-md" />
+              <Skeleton className="h-6 w-24 rounded-md" />
             ) : (
-              <div className="text-responsive-xl font-bold">{formatarMoeda(lucroMes)}</div>
+              <div className="text-lg sm:text-2xl font-bold">{formatarMoeda(lucroMes)}</div>
             )}
-            <p className="text-responsive-xs text-muted-foreground">Entradas – Saídas</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Entradas – Saídas</p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
         </Card>
       </div>
 
-      <div className="grid-responsive-3 mt-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 mt-2 sm:mt-3">
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">Clientes Hoje</CardTitle>
-            <Users className="h-4 w-4 text-primary flex-shrink-0" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">Clientes Hoje</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
-            <div className="text-responsive-xl font-bold">{clientesUnicosHoje}</div>
-            <p className="text-responsive-xs text-muted-foreground">Únicos do dia</p>
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{clientesUnicosHoje}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Únicos do dia</p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
         </Card>
         <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-responsive-sm">
-            <CardTitle className="text-responsive-xs font-medium text-muted-foreground">Saídas no Mês</CardTitle>
-            <DollarSign className="h-4 w-4 text-destructive flex-shrink-0" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground truncate">Saídas Mês</CardTitle>
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-destructive flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-responsive-sm pt-0">
-            <div className="text-responsive-xl font-bold text-destructive">{formatarMoeda(saidasMes)}</div>
-            <p className="text-responsive-xs text-muted-foreground">Despesas totais</p>
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-destructive">{formatarMoeda(saidasMes)}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Despesas totais</p>
           </CardContent>
-          <div className="absolute -right-2 -top-2 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-red-500/10 to-transparent" />
+          <div className="absolute -right-2 -top-2 h-8 w-8 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-red-500/10 to-transparent" />
         </Card>
       </div>
 
