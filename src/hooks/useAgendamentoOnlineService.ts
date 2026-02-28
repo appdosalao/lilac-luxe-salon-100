@@ -70,7 +70,7 @@ export const useAgendamentoOnlineService = () => {
       const horariosFormatados = (horariosResult || [])
         .filter(item => item.horario && item.disponivel === true)
         .map(item => ({
-          horario: item.horario,
+          horario: String(item.horario).slice(0, 5),
           disponivel: true
         }));
 
@@ -119,7 +119,8 @@ export const useAgendamentoOnlineService = () => {
         const horariosDisponiveis = await calcularHorariosDisponiveis(dados.servico_id, dados.data);
         // Se a lista de horários não estiver vazia, verificamos se o horário escolhido ainda está lá
         if (horariosDisponiveis.length > 0) {
-          const horarioDisponivel = horariosDisponiveis.find(h => h.horario === dados.horario && h.disponivel);
+          const alvo = String(dados.horario).slice(0, 5);
+          const horarioDisponivel = horariosDisponiveis.find(h => h.disponivel && String(h.horario).slice(0, 5) === alvo);
           if (!horarioDisponivel) {
             toast.error("Este horário acabou de ser reservado. Por favor, selecione outro.");
             return false;
