@@ -156,18 +156,14 @@ export default function AgendamentoForm({
     }
     
     // Validar se o agendamento está dentro dos horários de trabalho
+    // A validação de horário deve ser opcional para o administrador
+    // ou apenas informativa, permitindo agendamento fora do horário se desejado
     const agendamentoValido = isAgendamentoValido(data.data, data.hora, data.duracao);
-    console.log('Agendamento válido?', agendamentoValido, {
-      data: data.data,
-      hora: data.hora,
-      duracao: data.duracao,
-      configuracoes: configuracoes
-    });
     
     if (!agendamentoValido) {
-      console.log('Agendamento não válido segundo validação');
-      toast.error('Este horário não está disponível para agendamento!');
-      return;
+      console.log('Agendamento fora do horário padrão, mas permitindo criação manual');
+      // Apenas um toast informativo, não bloqueante
+      toast.info('Agendamento criado fora do horário de funcionamento padrão.');
     }
 
     const clienteNome = clientes.find(c => c.id === data.clienteId)?.nomeCompleto || '';
@@ -303,36 +299,36 @@ export default function AgendamentoForm({
                       <Clock className="h-4 w-4" />
                       Hora
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um horário" />
-                        </SelectTrigger>
-                      </FormControl>
-                       <SelectContent>
-                         {horariosDisponiveis.length > 0 ? (
-                           horariosDisponiveis.map((horario) => (
-                             <SelectItem key={horario} value={horario}>
-                               {horario}
+                    <div className="flex gap-2">
+                      <Input 
+                        type="time" 
+                        {...field}
+                        className="flex-1"
+                      />
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={horariosDisponiveis.includes(field.value) ? field.value : ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Sugeridos" />
+                          </SelectTrigger>
+                        </FormControl>
+                         <SelectContent>
+                           {horariosDisponiveis.length > 0 ? (
+                             horariosDisponiveis.map((horario) => (
+                               <SelectItem key={horario} value={horario}>
+                                 {horario}
+                               </SelectItem>
+                             ))
+                           ) : (
+                             <SelectItem value="no-horarios" disabled>
+                               Sem sugestões
                              </SelectItem>
-                           ))
-                         ) : (
-                           <SelectItem value="no-horarios-disponiveis" disabled>
-                             {form.watch('data') ? (
-                               configuracoes && configuracoes.length > 0 
-                                 ? (() => {
-                                     const dataObj = new Date(form.watch('data') + 'T12:00:00');
-                                     const diaSemana = dataObj.getDay();
-                                     return !isDiaAtivo(diaSemana) 
-                                       ? 'Dia não disponível para atendimento'
-                                       : 'Nenhum horário disponível';
-                                   })()
-                                 : 'Configure os horários de trabalho primeiro'
-                             ) : 'Selecione uma data primeiro'}
-                           </SelectItem>
-                         )}
-                       </SelectContent>
-                    </Select>
+                           )}
+                         </SelectContent>
+                      </Select>
+                    </div>
                     <FormMessage />
                     {conflito && (
                       <p className="text-sm text-destructive font-medium">
