@@ -109,12 +109,20 @@ export const useAgendamentoOnlineService = () => {
       }
 
       // Validação final de disponibilidade antes de criar
-      const horariosDisponiveis = await calcularHorariosDisponiveis(dados.servico_id, dados.data);
-      const horarioDisponivel = horariosDisponiveis.find(h => h.horario === dados.horario && h.disponivel);
-      
-      if (!horarioDisponivel) {
-        toast.error("Este horário não está mais disponível. Por favor, selecione outro horário.");
-        return false;
+      // Se não for possível calcular horários (ex: erro de rede), tentamos prosseguir
+      // A trigger no banco de dados fará a validação final se necessário
+      try {
+        const horariosDisponiveis = await calcularHorariosDisponiveis(dados.servico_id, dados.data);
+        // Se a lista de horários não estiver vazia, verificamos se o horário escolhido ainda está lá
+        if (horariosDisponiveis.length > 0) {
+          const horarioDisponivel = horariosDisponiveis.find(h => h.horario === dados.horario && h.disponivel);
+          if (!horarioDisponivel) {
+            toast.error("Este horário acabou de ser reservado. Por favor, selecione outro.");
+            return false;
+          }
+        }
+      } catch (error) {
+        console.warn('Erro ao validar disponibilidade final (prosseguindo mesmo assim):', error);
       }
 
       // Criar ou encontrar cliente
