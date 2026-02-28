@@ -400,8 +400,57 @@ export function useSupabaseAgendamentos() {
 
       if (error) {
         console.error('Erro ao criar agendamento:', error);
-        toast.error(`Erro ao criar agendamento: ${error.message}`);
-        return false;
+        const msg = String(error.message || '');
+        // Fallback: erro em trigger usando split_part no tipo TIME - criar via fluxo online e converter
+        if (msg.includes('split_part') || msg.includes('time without time zone')) {
+          try {
+            const { data: cliente } = await supabase
+              .from('clientes')
+              .select('nome, telefone, email')
+              .eq('id', novoAgendamento.clienteId)
+              .single();
+            const nomeCompleto = (cliente as any)?.nome || 'Cliente';
+            const telefone = (cliente as any)?.telefone || '0000000000';
+            const email = (cliente as any)?.email || 'nao-informado@local';
+            const { data: online, error: e1 } = await supabase
+              .from('agendamentos_online')
+              .insert({
+                nome_completo: nomeCompleto,
+                email,
+                telefone,
+                servico_id: novoAgendamento.servicoId,
+                data: novoAgendamento.data,
+                horario: horaNorm,
+                observacoes: novoAgendamento.observacoes || null,
+                valor,
+                duracao,
+                status: 'confirmado',
+                origem: 'manual_via_agenda',
+                user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'agenda-app'
+              })
+              .select()
+              .single();
+            if (e1) throw e1;
+            const onlineId = (online as any)?.id;
+            if (onlineId) {
+              const { error: e2 } = await supabase.rpc('converter_agendamento_online', {
+                agendamento_online_id: onlineId,
+                user_id: user.id
+              });
+              if (e2) throw e2;
+              await carregarAgendamentos();
+              toast.success('Agendamento criado com sucesso (via conversão).');
+              return true;
+            }
+          } catch (fbErr: any) {
+            console.error('Fallback de criação falhou:', fbErr);
+            toast.error(`Erro ao criar agendamento (fallback): ${fbErr?.message || fbErr}`);
+            return false;
+          }
+        } else {
+          toast.error(`Erro ao criar agendamento: ${error.message}`);
+          return false;
+        }
       }
 
       await carregarAgendamentos();
