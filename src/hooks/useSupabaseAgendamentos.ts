@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { supabasePublic } from '@/integrations/supabase/publicClient';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Agendamento, AgendamentoFiltros } from '@/types/agendamento';
 import { toast } from 'sonner';
@@ -412,7 +413,8 @@ export function useSupabaseAgendamentos() {
             const nomeCompleto = (cliente as any)?.nome || 'Cliente';
             const telefone = (cliente as any)?.telefone || '0000000000';
             const email = (cliente as any)?.email || 'nao-informado@local';
-            const { data: online, error: e1 } = await supabase
+            // Usar cliente ANON (sem sessão) para obedecer políticas RLS de 'agendamentos_online'
+            const { data: online, error: e1 } = await supabasePublic
               .from('agendamentos_online')
               .insert({
                 nome_completo: nomeCompleto,
