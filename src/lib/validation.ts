@@ -16,9 +16,8 @@ export const agendamentoOnlineSchema = z.object({
     .toLowerCase(),
   
   telefone: z.string()
-    .trim()
-    .regex(/^\+?[1-9][0-9]{7,14}$/, 'Telefone inválido')
-    .transform(val => val.replace(/\D/g, '')),
+    .transform(val => val.replace(/\D/g, ''))
+    .refine(val => val.length >= 10 && val.length <= 15, 'Telefone inválido'),
   
   servico_id: z.string().uuid('Serviço inválido'),
   

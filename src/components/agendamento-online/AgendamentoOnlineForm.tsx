@@ -103,9 +103,34 @@ export function AgendamentoOnlineForm() {
       return;
     }
 
-    const horariosDisponiveis = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
-    console.log('Horários disponíveis considerando duração:', horariosDisponiveis);
-    setHorariosDisponiveis(horariosDisponiveis);
+    try {
+      const horariosDisponiveis = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
+      console.log('Horários disponíveis considerando duração:', horariosDisponiveis);
+      
+      // Garantir que horariosDisponiveis é um array antes de mapear
+      if (!Array.isArray(horariosDisponiveis)) {
+        console.error('Horários disponíveis não é um array:', horariosDisponiveis);
+        setHorariosDisponiveis([]);
+        return;
+      }
+
+      // Transformar array de strings em array de objetos HorarioDisponivel
+      const horariosFormatados: HorarioDisponivel[] = horariosDisponiveis.map((h: any) => {
+        if (typeof h === 'string') {
+          return { horario: h, disponivel: true };
+        }
+        // Se já for um objeto HorarioDisponivel
+        if (h && typeof h === 'object' && 'horario' in h) {
+          return h as HorarioDisponivel;
+        }
+        return { horario: String(h), disponivel: false }; // Fallback seguro
+      });
+
+      setHorariosDisponiveis(horariosFormatados);
+    } catch (error) {
+      console.error('Erro ao carregar horários:', error);
+      setHorariosDisponiveis([]);
+    }
   };
 
   const formatarTelefone = (valor: string): string => {
