@@ -66,12 +66,14 @@ export const useAgendamentoOnlineService = () => {
       console.log(`Horários para serviço ${servico.nome} (${servico.duracao}min):`, horariosResult);
 
       // Filtrar apenas horários disponíveis e formatar corretamente
-      return (horariosResult || [])
+      const horariosFormatados = (horariosResult || [])
         .filter(item => item.horario && item.disponivel === true)
         .map(item => ({
           horario: item.horario,
           disponivel: true
         }));
+
+      return horariosFormatados;
     } catch (error) {
       console.error('Erro ao calcular horários disponíveis:', error);
       return [];
