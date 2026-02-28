@@ -105,15 +105,18 @@ export function useAgendamentos() {
       return false;
     }
 
-    // Verificar se horário está dentro das configurações usando as funções do Supabase
-    const horarioDisponivel = await agendamentosData.verificarHorarioDisponivel?.(
-      novoAgendamento.data, 
-      novoAgendamento.hora
-    );
-    
-    if (!horarioDisponivel) {
-      console.error('Horário não está disponível nas configurações de trabalho');
-      return false;
+    // Verificar disponibilidade somente para origens NÃO manuais
+    const origem = novoAgendamento.origem ?? 'manual';
+    if (origem !== 'manual') {
+      const horarioDisponivel = await agendamentosData.verificarHorarioDisponivel?.(
+        novoAgendamento.data, 
+        novoAgendamento.hora
+      );
+      
+      if (!horarioDisponivel) {
+        console.error('Horário não está disponível nas configurações de trabalho');
+        return false;
+      }
     }
 
     const agendamentoCompleto = {
