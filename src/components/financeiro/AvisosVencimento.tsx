@@ -162,43 +162,49 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
       )}
 
       {/* Lista de Contas Vencendo */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="p-4 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Bell className="h-5 w-5" />
             Contas Vencendo
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="space-y-3">
             {contasVencendo.map((conta) => (
-              <div key={conta.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-medium">{conta.nome}</h3>
-                    <Badge className={getSituacaoColor(conta.situacao)}>
-                      {getSituacaoTexto(conta)}
-                    </Badge>
+              <div key={conta.id} className="flex flex-col gap-3 p-3 border border-border/50 rounded-lg bg-background/50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-medium truncate">{conta.nome}</h3>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {conta.categoria || 'Sem categoria'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <Badge className={`flex-shrink-0 ${getSituacaoColor(conta.situacao)}`}>
+                    {getSituacaoTexto(conta)}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-3 text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-3.5 w-3.5" />
                       {formatDate(conta.dataVencimento)}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
+                    <span className="flex items-center gap-1 font-medium text-foreground">
+                      <DollarSign className="h-3.5 w-3.5" />
                       {formatCurrency(conta.valor)}
                     </span>
-                    <span>Categoria: {conta.categoria}</span>
                   </div>
                 </div>
+
                 <Button
                   onClick={() => onPagarConta(conta.id)}
-                  className={
+                  className={`w-full h-9 text-xs sm:text-sm btn-touch ${
                     conta.situacao === 'vencido' || conta.situacao === 'venceHoje'
                       ? 'bg-destructive hover:bg-destructive/90'
                       : 'bg-success hover:bg-success/90'
-                  }
+                  }`}
                 >
                   Pagar Agora
                 </Button>

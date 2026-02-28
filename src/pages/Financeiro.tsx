@@ -134,8 +134,8 @@ export default function Financeiro() {
 
   return (
     <div className="space-y-4 sm:space-y-8 p-3 sm:p-0">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header - Hidden on mobile as Layout already shows title */}
+      <div className="hidden sm:flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="text-xl sm:text-3xl font-bold text-foreground">Financeiro</h1>
           <p className="text-xs sm:text-base text-muted-foreground mt-1">
