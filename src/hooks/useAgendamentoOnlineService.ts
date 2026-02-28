@@ -36,6 +36,7 @@ export const useAgendamentoOnlineService = () => {
     }
 
     try {
+      const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
       // Buscar configurações mais recentes para garantir sincronização
       const { data: configuracoes, error: configError } = await supabase
         .from('configuracoes_horarios')
@@ -55,7 +56,7 @@ export const useAgendamentoOnlineService = () => {
       const { data: horariosResult, error } = await supabase.rpc('buscar_horarios_com_multiplos_intervalos', {
         data_selecionada: data,
         user_id_param: userId,
-        duracao_servico: servico.duracao
+        duracao_servico: duracaoEfetiva
       });
 
       if (error) {
@@ -63,7 +64,7 @@ export const useAgendamentoOnlineService = () => {
         return [];
       }
 
-      console.log(`Horários para serviço ${servico.nome} (${servico.duracao}min):`, horariosResult);
+      console.log(`Horários para serviço ${servico.nome} (${duracaoEfetiva}min):`, horariosResult);
 
       // Filtrar apenas horários disponíveis e formatar corretamente
       const horariosFormatados = (horariosResult || [])
@@ -108,6 +109,9 @@ export const useAgendamentoOnlineService = () => {
         throw new Error('Serviço não encontrado');
       }
 
+      const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
+      const valorEfetivo = typeof servico.valor === 'number' && servico.valor >= 0 ? servico.valor : 0;
+
       // Validação final de disponibilidade antes de criar
       // Se não for possível calcular horários (ex: erro de rede), tentamos prosseguir
       // A trigger no banco de dados fará a validação final se necessário
@@ -139,8 +143,8 @@ export const useAgendamentoOnlineService = () => {
           data: dados.data,
           horario: dados.horario,
           observacoes: dados.observacoes,
-          valor: servico.valor,
-          duracao: servico.duracao,
+          valor: valorEfetivo,
+          duracao: duracaoEfetiva,
           status: 'pendente',
           origem: 'formulario_online',
           user_agent: navigator.userAgent
