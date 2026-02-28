@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,7 @@ export function AgendamentoOnlineForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const steps = ['Dados', 'Agendamento', 'Finalização'];
 
@@ -316,6 +317,73 @@ Você receberá uma confirmação em breve.
     return isDiaAtivo(diaSemana);
   };
 
+  // Auto Test Runner: preenche e submete automaticamente quando ?autoTest=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const autoTest = params.get('autoTest');
+    if (!autoTest) return;
+    if (success) return;
+
+    // Etapa 1: preencher dados pessoais
+    if (currentStep === 1) {
+      setFormData(prev => ({
+        ...prev,
+        nome_completo: prev.nome_completo || 'Cliente Teste',
+        email: prev.email || 'cliente.teste@example.com',
+        telefone: prev.telefone || '(11) 99999-9999',
+      }));
+      setTimeout(() => setCurrentStep(2), 200);
+      return;
+    }
+
+    // Etapa 2: escolher serviço, data e horário
+    if (currentStep === 2 && servicos.length > 0) {
+      const escolherPrimeiraDataDisponivel = (): string | null => {
+        for (let i = 1; i <= 14; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() + i);
+          const iso = d.toISOString().split('T')[0];
+          if (isDataDisponivel(iso)) return iso;
+        }
+        return null;
+      };
+
+      const primeiroServico = servicos[0];
+      const dataEscolhida = escolherPrimeiraDataDisponivel();
+
+      if (primeiroServico && dataEscolhida) {
+        setFormData(prev => ({
+          ...prev,
+          servico_id: primeiroServico.id,
+          data: dataEscolhida
+        }));
+
+        // Aguarda horários carregarem e seleciona o primeiro disponível
+        const tentarSelecao = async (tentativas = 0) => {
+          if (tentativas > 20) return;
+          if (horariosDisponiveis.length > 0) {
+            const h = horariosDisponiveis.find(h => h.disponivel) || horariosDisponiveis[0];
+            setFormData(prev => ({ ...prev, horario: h.horario }));
+            setTimeout(() => setCurrentStep(3), 150);
+          } else {
+            setTimeout(() => tentarSelecao(tentativas + 1), 250);
+          }
+        };
+        tentarSelecao();
+      }
+      return;
+    }
+
+    // Etapa 3: aceitar termos e submeter
+    if (currentStep === 3) {
+      if (!termsAccepted) setTermsAccepted(true);
+      if (!taxaAccepted) setTaxaAccepted(true);
+      setTimeout(() => {
+        formRef.current?.requestSubmit();
+      }, 200);
+    }
+  }, [currentStep, servicos, horariosDisponiveis, termsAccepted, taxaAccepted, success]);
+
   if (success) {
     return (
       <>
@@ -384,7 +452,7 @@ Você receberá uma confirmação em breve.
               <ProgressSteps currentStep={currentStep} steps={steps} />
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 {/* Step 1: Dados Pessoais */}
                 {currentStep === 1 && (
                   <div className="space-y-4">
