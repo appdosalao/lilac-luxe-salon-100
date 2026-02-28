@@ -353,11 +353,15 @@ export function useSupabaseAgendamentos() {
       return false;
     }
 
-    // Verificar se horário está dentro das configurações de funcionamento
-    const horarioDisponivel = await verificarHorarioDisponivel(novoAgendamento.data, novoAgendamento.hora);
-    if (!horarioDisponivel) {
-      toast.error('Horário não disponível para agendamento');
-      return false;
+    // Permitir criação MANUAL mesmo fora do expediente; validar apenas para outras origens
+    const origem = novoAgendamento.origem ?? 'manual';
+    if (origem !== 'manual') {
+      const alvo = String(novoAgendamento.hora).slice(0, 5);
+      const horarioDisponivel = await verificarHorarioDisponivel(novoAgendamento.data, alvo);
+      if (!horarioDisponivel) {
+        toast.error('Horário não disponível para agendamento');
+        return false;
+      }
     }
 
     setLoading(true);
@@ -369,7 +373,7 @@ export function useSupabaseAgendamentos() {
           cliente_id: novoAgendamento.clienteId,
           servico_id: novoAgendamento.servicoId,
           data: novoAgendamento.data,
-          hora: novoAgendamento.hora,
+          hora: String(novoAgendamento.hora).slice(0, 5),
           duracao: novoAgendamento.duracao,
           valor: novoAgendamento.valor,
           valor_pago: novoAgendamento.valorPago || 0,
