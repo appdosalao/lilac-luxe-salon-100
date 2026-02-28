@@ -366,6 +366,16 @@ export function useSupabaseAgendamentos() {
 
     setLoading(true);
     try {
+      const duracao = Number(novoAgendamento.duracao) > 0 ? Number(novoAgendamento.duracao) : 60;
+      const valor = Number(novoAgendamento.valor ?? 0);
+      const valorPago = Number(novoAgendamento.valorPago ?? 0);
+      const valorDevido = Number(novoAgendamento.valorDevido ?? Math.max(0, valor - valorPago));
+      const horaNorm = String(novoAgendamento.hora).slice(0, 5);
+      const formaPagamento = novoAgendamento.formaPagamento || 'fiado';
+      const statusPagamento = novoAgendamento.statusPagamento || (valorPago >= valor ? 'pago' : (valorPago > 0 ? 'parcial' : 'em_aberto'));
+      const status = novoAgendamento.status || 'agendado';
+      const origemFinal = origem || 'manual';
+
       const { data, error } = await supabase
         .from('agendamentos')
         .insert({
@@ -373,16 +383,16 @@ export function useSupabaseAgendamentos() {
           cliente_id: novoAgendamento.clienteId,
           servico_id: novoAgendamento.servicoId,
           data: novoAgendamento.data,
-          hora: String(novoAgendamento.hora).slice(0, 5),
-          duracao: novoAgendamento.duracao,
-          valor: novoAgendamento.valor,
-          valor_pago: novoAgendamento.valorPago || 0,
-          valor_devido: novoAgendamento.valorDevido || novoAgendamento.valor,
-          forma_pagamento: novoAgendamento.formaPagamento || 'fiado',
-          status_pagamento: novoAgendamento.statusPagamento || 'em_aberto',
-          status: novoAgendamento.status || 'agendado',
-          origem: novoAgendamento.origem || 'manual',
-          confirmado: novoAgendamento.confirmado ?? false,
+          hora: horaNorm,
+          duracao,
+          valor,
+          valor_pago: valorPago,
+          valor_devido: valorDevido,
+          forma_pagamento: formaPagamento,
+          status_pagamento: statusPagamento,
+          status,
+          origem: origemFinal,
+          confirmado: novoAgendamento.confirmado ?? true,
           observacoes: novoAgendamento.observacoes || null
         })
         .select()
@@ -390,7 +400,7 @@ export function useSupabaseAgendamentos() {
 
       if (error) {
         console.error('Erro ao criar agendamento:', error);
-        toast.error('Erro ao criar agendamento');
+        toast.error(`Erro ao criar agendamento: ${error.message}`);
         return false;
       }
 

@@ -109,8 +109,10 @@ export default function MinhaAgenda() {
     setVisualizacaoAtual("detalhes");
     setTab("lista");
   };
-  const handleSubmitFormulario = (data: any) => {
-    const sucesso = agendamentoSelecionado ? atualizarAgendamento(agendamentoSelecionado.id, data) : criarAgendamento(data);
+  const handleSubmitFormulario = async (data: any) => {
+    const sucesso = agendamentoSelecionado 
+      ? await atualizarAgendamento(agendamentoSelecionado.id, data) 
+      : await criarAgendamento({ ...data, origem: 'manual' });
     if (sucesso) {
       setVisualizacaoAtual("lista");
       setAgendamentoSelecionado(null);
