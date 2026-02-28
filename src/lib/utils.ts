@@ -8,7 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 export function toISODate(date: Date | string): string {
   if (typeof date === 'string') return date;
   const d = new Date(date);
-  return d.toISOString().split('T')[0];
+  // Retornar data no fuso LOCAL, não UTC, para evitar mudança de dia
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export function safeToDate(value: any): Date {
@@ -30,4 +34,3 @@ export function timeToMinutes(time: string): number {
 export function overlaps(start1: number, end1: number, start2: number, end2: number): boolean {
   return start1 < end2 && start2 < end1;
 }
-

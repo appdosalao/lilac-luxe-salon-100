@@ -272,7 +272,7 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
                   </Badge>
                 </DialogTitle>
                 <DialogDescription>
-                  {format(new Date(String(agendamentoSelecionado.data)), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {format(safeToDate(String(agendamentoSelecionado.data)), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </DialogDescription>
               </DialogHeader>
 
