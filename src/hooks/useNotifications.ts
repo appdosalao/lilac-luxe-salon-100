@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { toast } from 'sonner';
 
 interface NotificationSettings {
@@ -48,14 +49,16 @@ export const useNotifications = () => {
   const [lastChecked, setLastChecked] = useState<string>(new Date().toISOString());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shownNotificationsRef = useRef<Set<string>>(new Set());
+  const { configuracaoNotificacoes } = useSupabaseConfiguracoes();
 
   // Inicializar áudio
   useEffect(() => {
     if (settings.soundEnabled) {
-      // Garantir que soundType existe e tem um valor válido
+      const custom = configuracaoNotificacoes?.som_personalizado;
       const soundType = settings.soundType || 'notification';
       const soundFile = soundType === 'notification' ? 'notification' : soundType;
-      audioRef.current = new Audio(`/sounds/${soundFile}.mp3`);
+      const src = custom ? `/sounds/${custom}` : `/sounds/${soundFile}.mp3`;
+      audioRef.current = new Audio(src);
       audioRef.current.volume = 0.5;
       audioRef.current.preload = 'auto';
     }
@@ -65,7 +68,7 @@ export const useNotifications = () => {
         audioRef.current = null;
       }
     };
-  }, [settings.soundEnabled, settings.soundType]);
+  }, [settings.soundEnabled, settings.soundType, configuracaoNotificacoes?.som_personalizado]);
 
   // Salvar configurações
   useEffect(() => {

@@ -243,6 +243,15 @@ export function ConfiguracaoNotificacoesAvancadas() {
                     <Volume2 className="h-4 w-4" />
                   </Button>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="som-custom">Arquivo personalizado em /sounds</Label>
+                  <Input
+                    id="som-custom"
+                    placeholder="ex.: meu_som.mp3"
+                    value={localConfig.som_personalizado}
+                    onChange={(e) => setLocalConfig(prev => ({ ...prev, som_personalizado: e.target.value }))}
+                  />
+                </div>
               </div>
             )}
           </div>
