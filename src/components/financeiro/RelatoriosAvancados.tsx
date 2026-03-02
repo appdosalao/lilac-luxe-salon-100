@@ -12,6 +12,8 @@ import { useRelatoriosFinanceiros } from "@/hooks/useRelatoriosFinanceiros";
 import FiltrosRelatorio from "./FiltrosRelatorio";
 import GraficosAvancados from "./GraficosAvancados";
 import TabelaDetalhada from "./TabelaDetalhada";
+import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF } from "@/lib/export";
+import type { RelatorioExportacao } from "@/types/relatorio";
 
 export default function RelatoriosAvancados() {
   const { lancamentos } = useLancamentos();
@@ -40,11 +42,20 @@ export default function RelatoriosAvancados() {
   };
 
   const exportarRelatorioCompleto = () => {
-    console.log('Exportando relatório completo...', {
+    const relatorio: RelatorioExportacao = {
+      titulo: "Relatório Financeiro",
       periodo: formatarPeriodo(),
-      dados: dadosRelatorio,
-      detalhes: dadosFiltrados
-    });
+      dadosResumo: dadosRelatorio,
+      dadosDetalhados: {
+        lancamentos: dadosFiltrados.lancamentos,
+        contasFixas: dadosFiltrados.contasFixas,
+        agendamentos: dadosFiltrados.agendamentos,
+      },
+      geradoEm: new Date(),
+    };
+    exportRelatorioJSON(relatorio);
+    exportRelatorioCSV(relatorio);
+    exportRelatorioPDF(relatorio);
   };
 
   return (

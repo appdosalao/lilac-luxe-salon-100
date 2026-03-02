@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Eye } from "lucide-react";
+import { exportLancamentosCSV, exportContasFixasCSV, exportAgendamentosCSV, exportRelatorioPDF } from "@/lib/export";
 import { DadosRelatorio } from "@/types/relatorio";
 import { Lancamento } from "@/types/lancamento";
 import { ContaFixa } from "@/types/contaFixa";
@@ -54,13 +55,19 @@ export default function TabelaDetalhada({ dados, dadosDetalhados }: TabelaDetalh
   };
 
   const exportarPDF = () => {
-    // Implementar exportação para PDF
-    console.log('Exportando relatório para PDF...');
+    exportRelatorioPDF({
+      titulo: 'Relatório Financeiro',
+      periodo: 'Detalhado',
+      dadosResumo: dados,
+      dadosDetalhados,
+      geradoEm: new Date(),
+    });
   };
 
   const exportarExcel = () => {
-    // Implementar exportação para Excel
-    console.log('Exportando relatório para Excel...');
+    exportLancamentosCSV(dadosDetalhados.lancamentos, 'lancamentos.csv');
+    exportContasFixasCSV(dadosDetalhados.contasFixas, 'contas_fixas.csv');
+    exportAgendamentosCSV(dadosDetalhados.agendamentos, 'agendamentos.csv');
   };
 
   // Paginação para lançamentos
