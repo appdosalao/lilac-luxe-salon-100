@@ -6,20 +6,20 @@ export function AuthFooter() {
     <div className="mt-4 text-center space-y-2 text-muted-foreground">
       <div className="flex items-center justify-center gap-4 text-xs">
         <a
-          href="mailto:suporte@lilacluxe.app"
+          href="mailto:resellr7@gmail.com"
           className="inline-flex items-center gap-1 hover:text-primary transition-colors"
         >
           <Mail className="h-3 w-3" />
-          suporte@lilacluxe.app
+          resellr7@gmail.com
         </a>
         <a
-          href="https://wa.me/5599999999999?text=Olá%20suporte%2C%20preciso%20de%20ajuda"
+          href="https://wa.me/5533998542100?text=Ol%C3%A1%20suporte%2C%20preciso%20de%20ajuda"
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-1 hover:text-primary transition-colors"
         >
           <MessageCircle className="h-3 w-3" />
-          WhatsApp
+          WhatsApp (+55 33 99854-2100)
         </a>
       </div>
       <div className="text-xs">
