@@ -22,10 +22,20 @@ export const useEnhancedNotifications = () => {
 
     try {
       const soundFile = soundType === 'notification' ? 'notification' : soundType;
-      if (!audioRef.current || audioRef.current.src !== `/sounds/${soundFile}.mp3`) {
-        audioRef.current = new Audio(`/sounds/${soundFile}.mp3`);
+      const sondSrc = `/sond/${soundFile}.mp3`;
+      const soundsSrc = `/sounds/${soundFile}.mp3`;
+      const targetSrc = audioRef.current?.src?.includes(sondSrc) || audioRef.current?.src?.includes(soundsSrc)
+        ? audioRef.current!.src
+        : sondSrc;
+      if (!audioRef.current || audioRef.current.src !== targetSrc) {
+        audioRef.current = new Audio(targetSrc);
         audioRef.current.volume = 0.7;
         audioRef.current.preload = 'auto';
+        audioRef.current.onerror = () => {
+          audioRef.current = new Audio(soundsSrc);
+          audioRef.current.volume = 0.7;
+          audioRef.current.preload = 'auto';
+        };
       }
       
       audioRef.current.currentTime = 0;

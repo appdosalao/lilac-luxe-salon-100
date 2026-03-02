@@ -103,11 +103,16 @@ export function ConfiguracaoNotificacoesAvancadas() {
 
   const playTestSound = () => {
     try {
-      const audio = new Audio(`/sounds/${localConfig.som_personalizado}`);
-      audio.play().catch(error => {
-        console.log('Erro ao reproduzir som:', error);
-        toast.error('Não foi possível reproduzir o som selecionado');
-      });
+      const sond = new Audio(`/sond/${localConfig.som_personalizado}`);
+      sond.oncanplaythrough = () => sond.play();
+      sond.onerror = () => {
+        const fallback = new Audio(`/sounds/${localConfig.som_personalizado}`);
+        fallback.play().catch(error => {
+          console.log('Erro ao reproduzir som:', error);
+          toast.error('Não foi possível reproduzir o som selecionado');
+        });
+      };
+      sond.load();
     } catch (error) {
       console.log('Erro ao criar áudio:', error);
     }
