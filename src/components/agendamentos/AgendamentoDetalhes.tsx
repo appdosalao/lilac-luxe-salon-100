@@ -25,6 +25,8 @@ import { Agendamento } from '@/types/agendamento';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
+import { printAgendamentoRecibo } from '@/lib/receipt';
 
 interface AgendamentoDetalhesProps {
   agendamento: Agendamento;
@@ -74,6 +76,7 @@ export default function AgendamentoDetalhes({
   onMarcarPagamento,
 }: AgendamentoDetalhesProps) {
   const { user } = useSupabaseAuth();
+  const { config } = useConfigAgendamentoOnline();
   const [pontos, setPontos] = useState<number | null>(null);
   const [pontosPotenciais, setPontosPotenciais] = useState<number | null>(null);
   
@@ -169,6 +172,19 @@ export default function AgendamentoDetalhes({
         </Button>
         
         <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => printAgendamentoRecibo({
+              agendamento,
+              cliente,
+              servico,
+              salonName: config.nome_salao,
+              logoUrl: config.logo_url || undefined
+            })}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Imprimir Recibo
+          </Button>
           {agendamento.status === 'agendado' && agendamento.statusPagamento !== 'pago' && onMarcarPagamento && (
             <Button 
               variant="default" 

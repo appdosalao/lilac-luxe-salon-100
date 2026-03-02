@@ -109,6 +109,12 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
     const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
   };
+  const enviarEmail = (email?: string) => {
+    if (!email) return;
+    const assunto = `${config.nome_salao || 'Seu Salão'} - Atendimento`;
+    const corpo = `${config.nome_salao || 'Seu Salão'}\n${window.location.origin}\n${config.logo_url ? `Logo: ${config.logo_url}\n` : ''}\nOlá ${cliente?.nomeCompleto || cliente?.nome || ''}!`;
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  };
 
   const ligar = (telefone: string) => {
     window.open(`tel:${telefone}`, '_self');
@@ -192,6 +198,13 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
                   {cliente.servicoFrequente}
                 </Badge>
               </div>
+              {cliente.email && (
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => enviarEmail(cliente.email)}>
+                    Enviar E-mail
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
