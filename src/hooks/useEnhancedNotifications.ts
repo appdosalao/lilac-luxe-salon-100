@@ -22,19 +22,28 @@ export const useEnhancedNotifications = () => {
 
     try {
       const soundFile = soundType === 'notification' ? 'notification' : soundType;
+      const sundsSrc = `/sunds/${soundFile}.mp3`;
       const sondSrc = `/sond/${soundFile}.mp3`;
       const soundsSrc = `/sounds/${soundFile}.mp3`;
-      const targetSrc = audioRef.current?.src?.includes(sondSrc) || audioRef.current?.src?.includes(soundsSrc)
+      const targetSrc = audioRef.current?.src?.includes(sundsSrc) || audioRef.current?.src?.includes(sondSrc) || audioRef.current?.src?.includes(soundsSrc)
         ? audioRef.current!.src
-        : sondSrc;
+        : sundsSrc;
       if (!audioRef.current || audioRef.current.src !== targetSrc) {
         audioRef.current = new Audio(targetSrc);
         audioRef.current.volume = 0.7;
         audioRef.current.preload = 'auto';
-        audioRef.current.onerror = () => {
-          audioRef.current = new Audio(soundsSrc);
+        const toSond = () => {
+          audioRef.current = new Audio(sondSrc);
           audioRef.current.volume = 0.7;
           audioRef.current.preload = 'auto';
+          audioRef.current.onerror = () => {
+            audioRef.current = new Audio(soundsSrc);
+            audioRef.current.volume = 0.7;
+            audioRef.current.preload = 'auto';
+          };
+        };
+        audioRef.current.onerror = () => {
+          toSond();
         };
       }
       

@@ -14,18 +14,26 @@ export const TesteSom = () => {
     setIsPlaying(true);
     
     try {
-      const sond = new Audio(`/sond/${soundType}.mp3`);
-      sond.volume = 0.7;
-      await sond.play();
+      const sunds = new Audio(`/sunds/${soundType}.mp3`);
+      sunds.volume = 0.7;
+      await sunds.play();
     } catch {
       try {
-        const audio = new Audio(`/sounds/${soundType}.mp3`);
-        audio.volume = 0.7;
-        await audio.play();
+        const sond = new Audio(`/sond/${soundType}.mp3`);
+        sond.volume = 0.7;
+        await sond.play();
+      } catch {
+        try {
+          const audio = new Audio(`/sounds/${soundType}.mp3`);
+          audio.volume = 0.7;
+          await audio.play();
+        } catch (error) {
+          console.error('Erro ao reproduzir som:', error);
+          setIsPlaying(false);
+          return;
+        }
       } catch (error) {
-        console.error('Erro ao reproduzir som:', error);
-        setIsPlaying(false);
-        return;
+        // handled above
       }
     }
       

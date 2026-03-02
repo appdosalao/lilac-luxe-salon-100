@@ -58,16 +58,23 @@ export const useNotifications = () => {
       const soundType = settings.soundType || 'notification';
       const base = soundType === 'notification' ? 'notification' : soundType;
       const filename = custom || `${base}.mp3`;
+      const sundsSrc = `/sunds/${filename}`;
       const sondSrc = `/sond/${filename}`;
       const soundsSrc = `/sounds/${filename}`;
-      const audio = new Audio(sondSrc);
+      const audio = new Audio(sundsSrc);
       audio.volume = 0.5;
       audio.preload = 'auto';
       audio.onerror = () => {
-        const fallback = new Audio(soundsSrc);
-        fallback.volume = 0.5;
-        fallback.preload = 'auto';
-        audioRef.current = fallback;
+        const toSond = new Audio(sondSrc);
+        toSond.volume = 0.5;
+        toSond.preload = 'auto';
+        toSond.onerror = () => {
+          const fallback = new Audio(soundsSrc);
+          fallback.volume = 0.5;
+          fallback.preload = 'auto';
+          audioRef.current = fallback;
+        };
+        audioRef.current = toSond;
       };
       audioRef.current = audio;
     }
