@@ -48,6 +48,32 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+  const signInFacebook = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: window.location.origin + '/'
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const signInApple = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: window.location.origin + '/'
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onSubmit = async (data: UsuarioLogin) => {
     setIsLoading(true);
@@ -164,6 +190,26 @@ const Login = () => {
             >
               Entrar com Google
             </Button>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <Button 
+                type="button"
+                variant="outline"
+                className="w-full btn-touch text-responsive-sm"
+                onClick={signInFacebook}
+                disabled={isLoading}
+              >
+                Entrar com Facebook
+              </Button>
+              <Button 
+                type="button"
+                variant="outline"
+                className="w-full btn-touch text-responsive-sm"
+                onClick={signInApple}
+                disabled={isLoading}
+              >
+                Entrar com Apple
+              </Button>
+            </div>
 
             <div className="text-center space-responsive-sm">
               <div className="text-responsive-xs text-muted-foreground">
