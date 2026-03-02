@@ -23,6 +23,8 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import Privacidade from "./pages/Privacidade";
+import Termos from "./pages/Termos";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
@@ -51,6 +53,8 @@ const App = () => {
                     <Route path="/agendamento-online" element={<AgendamentoOnline />} />
                     <Route path="/agendamento-publico" element={<AgendamentoOnline />} />
                     <Route path="/agendar" element={<AgendamentoOnline />} />
+                    <Route path="/privacidade" element={<Privacidade />} />
+                    <Route path="/termos" element={<Termos />} />
                     
                     {/* Rotas protegidas com Layout */}
                     <Route path="/" element={
