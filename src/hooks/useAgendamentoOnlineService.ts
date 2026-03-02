@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export const useAgendamentoOnlineService = () => {
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
-  const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number }[]>([]);
+  const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string }[]>([]);
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
@@ -29,7 +29,7 @@ export const useAgendamentoOnlineService = () => {
       // Tenta view pública se existir
       let { data, error } = await supabase
         .from('produtos_public')
-        .select('id, nome, valor, ativo')
+        .select('id, nome, valor, ativo, categoria')
         .eq('ativo', true);
 
       if (error) {
@@ -41,7 +41,7 @@ export const useAgendamentoOnlineService = () => {
         data = alt.data;
       }
 
-      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor })));
+      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor, categoria: p.categoria })));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
       setProdutos([]);

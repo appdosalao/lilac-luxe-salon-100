@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, AlertTriangle, Search, Filter, PackagePlus, PackageMinus } from 'lucide-react';
+import { Plus, Pencil, Trash2, AlertTriangle, Search, Filter, PackagePlus, PackageMinus, ChevronDown } from 'lucide-react';
 import { useSupabaseProdutos } from '@/hooks/useSupabaseProdutos';
 import { Badge } from '@/components/ui/badge';
 import { ProdutoForm } from './ProdutoForm';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 export function ProdutosList() {
   const { produtos, loading, deleteProduto, movimentarEstoque } = useSupabaseProdutos();
@@ -15,6 +17,8 @@ export function ProdutosList() {
   const [busca, setBusca] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'uso_profissional' | 'revenda' | 'consumo'>('todos');
   const [somenteBaixoEstoque, setSomenteBaixoEstoque] = useState(false);
+  const [movOpenId, setMovOpenId] = useState<string | null>(null);
+  const [movs, setMovs] = useState<Record<string, any[]>>({});
 
   const handleDelete = async (id: string, nome: string) => {
     if (confirm(`Desativar o produto "${nome}"? Ele ficará oculto mas o histórico será preservado.`)) {
@@ -200,6 +204,28 @@ export function ProdutosList() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={async () => {
+                    const open = movOpenId === produto.id ? null : produto.id;
+                    setMovOpenId(open);
+                    if (open && !movs[produto.id]) {
+                      const { data } = await supabase
+                        .from('movimentacoes_estoque')
+                        .select('*')
+                        .eq('produto_id', produto.id)
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+                      setMovs(prev => ({ ...prev, [produto.id]: data || [] }));
+                    }
+                  }}
+                  className="flex-1 sm:flex-none h-10 btn-touch"
+                  title="Ver movimentações recentes"
+                >
+                  <ChevronDown className="h-3 w-3 sm:mr-2" />
+                  <span className="hidden sm:inline">Movimentações</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDelete(produto.id, produto.nome)}
                   className="flex-1 sm:flex-none h-10 btn-touch hover:bg-destructive/10 hover:text-destructive"
                 >
@@ -208,6 +234,22 @@ export function ProdutosList() {
                 </Button>
               </div>
             </div>
+            {movOpenId === produto.id && (
+              <div className="mt-4">
+                <Separator className="my-3" />
+                <div className="space-y-2">
+                  {(movs[produto.id] || []).map((m) => (
+                    <div key={m.id} className="flex justify-between text-sm">
+                      <span>{m.tipo} • {new Date(m.created_at).toLocaleString('pt-BR')}</span>
+                      <span>Qtd: {m.quantidade} • R$ {Number(m.valor_total || 0).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  {(movs[produto.id] || []).length === 0 && (
+                    <div className="text-sm text-muted-foreground">Sem movimentações recentes</div>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
         ))}
 

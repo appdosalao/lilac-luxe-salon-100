@@ -65,6 +65,8 @@ export function AgendamentoOnlineForm() {
   const [produtoQtd, setProdutoQtd] = useState<number>(1);
   const [produtoForma, setProdutoForma] = useState<string>('pix');
   const [produtoEnabled, setProdutoEnabled] = useState<boolean>(false);
+  const [produtoCategoria, setProdutoCategoria] = useState<string>('todas');
+  const [produtoOrdenacao, setProdutoOrdenacao] = useState<'nome' | 'preco'>('nome');
 
   const steps = ['Dados', 'Agendamento', 'Finalização'];
 
@@ -672,13 +674,49 @@ Você receberá uma confirmação em breve.
                       </div>
                       {produtoEnabled && (
                         <>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                              <Label>Categoria</Label>
+                              <Select value={produtoCategoria} onValueChange={(v) => setProdutoCategoria(v)}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Todas" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="todas">Todas</SelectItem>
+                                  {[...new Set(produtos.map(p => p.categoria).filter(Boolean))].map((c) => (
+                                    <SelectItem key={String(c)} value={String(c)}>{String(c)}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Ordenar por</Label>
+                              <Select value={produtoOrdenacao} onValueChange={(v: any) => setProdutoOrdenacao(v)}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="nome">Nome</SelectItem>
+                                  <SelectItem value="preco">Preço</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <Select value={produtoId} onValueChange={setProdutoId}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione um produto" />
                               </SelectTrigger>
                               <SelectContent>
-                                {produtos.map((p) => (
+                                {produtos
+                                  .filter(p => produtoCategoria === 'todas' || String(p.categoria) === produtoCategoria)
+                                  .sort((a, b) => {
+                                    if (produtoOrdenacao === 'nome') return a.nome.localeCompare(b.nome);
+                                    const av = typeof a.valor === 'number' ? a.valor! : 0;
+                                    const bv = typeof b.valor === 'number' ? b.valor! : 0;
+                                    return av - bv;
+                                  })
+                                  .map((p) => (
                                   <SelectItem key={p.id} value={p.id}>
                                     {p.nome}{typeof p.valor === 'number' ? ` — R$ ${p.valor.toFixed(2)}` : ''}
                                   </SelectItem>

@@ -3,7 +3,14 @@
 
 -- 1) View pública de produtos (somente ativos)
 CREATE OR REPLACE VIEW public.produtos_public AS
-SELECT id, nome, valor, ativo, usuario_id
+SELECT 
+  id, 
+  nome, 
+  preco_venda AS valor, 
+  ativo, 
+  usuario_id,
+  categoria,
+  categoria_id
 FROM public.produtos
 WHERE ativo = true;
 

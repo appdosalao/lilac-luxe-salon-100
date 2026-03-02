@@ -12,8 +12,9 @@ import { useRelatoriosFinanceiros } from "@/hooks/useRelatoriosFinanceiros";
 import FiltrosRelatorio from "./FiltrosRelatorio";
 import GraficosAvancados from "./GraficosAvancados";
 import TabelaDetalhada from "./TabelaDetalhada";
-import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF } from "@/lib/export";
+import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF, exportVendasPorProdutoCSV, exportVendasPorProdutoPDF } from "@/lib/export";
 import type { RelatorioExportacao } from "@/types/relatorio";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function RelatoriosAvancados() {
   const { lancamentos } = useLancamentos();
@@ -58,6 +59,48 @@ export default function RelatoriosAvancados() {
     exportRelatorioPDF(relatorio);
   };
 
+  const exportarVendasPorProduto = async () => {
+    const inicioISO = new Date(intervaloData.inicio.getTime()).toISOString().slice(0, 10);
+    const fimISO = new Date(intervaloData.fim.getTime()).toISOString().slice(0, 10);
+    const { data: vendas } = await supabase
+      .from('vendas_produtos')
+      .select('id, valor_total, data_venda')
+      .gte('data_venda', inicioISO)
+      .lte('data_venda', fimISO);
+    const ids = (vendas || []).map(v => v.id);
+    let itens: any[] = [];
+    if (ids.length > 0) {
+      const { data: itensData } = await supabase
+        .from('itens_venda')
+        .select('venda_id, produto_id, quantidade, valor_total')
+        .in('venda_id', ids);
+      itens = itensData || [];
+    }
+    const produtoIds = [...new Set(itens.map(i => i.produto_id))];
+    let produtos: any[] = [];
+    if (produtoIds.length > 0) {
+      const { data: prods } = await supabase
+        .from('produtos')
+        .select('id,nome')
+        .in('id', produtoIds);
+      produtos = prods || [];
+    }
+    const nomeMap: Record<string, string> = {};
+    produtos.forEach(p => { nomeMap[p.id] = p.nome; });
+    const agregados: Record<string, { produto: string; quantidade: number; valor_total: number }> = {};
+    itens.forEach(i => {
+      const nome = nomeMap[i.produto_id] || 'Produto';
+      if (!agregados[i.produto_id]) {
+        agregados[i.produto_id] = { produto: nome, quantidade: 0, valor_total: 0 };
+      }
+      agregados[i.produto_id].quantidade += Number(i.quantidade || 0);
+      agregados[i.produto_id].valor_total += Number(i.valor_total || 0);
+    });
+    const rows = Object.values(agregados).sort((a, b) => b.valor_total - a.valor_total);
+    exportVendasPorProdutoCSV(rows, `vendas-por-produto-${formatarPeriodo().replace(/\s+/g,'_')}.csv`);
+    exportVendasPorProdutoPDF(rows, formatarPeriodo());
+  };
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
@@ -71,6 +114,10 @@ export default function RelatoriosAvancados() {
         <Button onClick={exportarRelatorioCompleto} className="flex items-center gap-2">
           <Download className="h-4 w-4" />
           Exportar Relatório Completo
+        </Button>
+        <Button onClick={exportarVendasPorProduto} variant="outline" className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Exportar Vendas por Produto
         </Button>
       </div>
 

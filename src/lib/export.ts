@@ -155,3 +155,40 @@ export function exportRelatorioPDF(relatorio: RelatorioExportacao) {
   win.document.write(html);
   win.document.close();
 }
+
+export function exportVendasPorProdutoCSV(rows: Array<{ produto: string; quantidade: number; valor_total: number }>, filename = 'vendas_por_produto.csv') {
+  const csv = toCSV(rows.map(r => ({
+    produto: r.produto,
+    quantidade: r.quantidade,
+    valor_total: r.valor_total
+  })));
+  downloadBlob(csv, filename, 'text/csv;charset=utf-8');
+}
+
+export function exportVendasPorProdutoPDF(rows: Array<{ produto: string; quantidade: number; valor_total: number }>, periodo: string) {
+  const win = window.open('', '_blank');
+  if (!win) return;
+  const style = `
+    body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  `;
+  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  const html = `
+    <html><head><meta charset="utf-8"/><style>${style}</style><title>Vendas por Produto</title></head>
+    <body>
+      <h1>Vendas por Produto • ${periodo}</h1>
+      <table>
+        <thead><tr><th>Produto</th><th>Quantidade</th><th>Total</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr><td>${r.produto}</td><td>${r.quantidade}</td><td>${fmt(r.valor_total)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <script>window.print();</script>
+    </body></html>
+  `;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
