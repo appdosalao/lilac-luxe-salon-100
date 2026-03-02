@@ -83,6 +83,57 @@ BEGIN
         status = 'convertido',
         updated_at = now()
     WHERE id = NEW.id;
+
+    -- Criar venda de produto se houver intenção em observações
+    IF NEW.observacoes IS NOT NULL AND POSITION('Compra de produto:' IN NEW.observacoes) > 0 THEN
+      DECLARE
+        v_json_text text;
+        v_compra jsonb;
+        v_produto_id uuid;
+        v_qtd int;
+        v_forma text;
+        v_unit numeric;
+        v_total numeric;
+        v_venda_id uuid;
+      BEGIN
+        -- Extrair JSON após o marcador
+        v_json_text := SUBSTRING(NEW.observacoes FROM POSITION('Compra de produto:' IN NEW.observacoes) + CHAR_LENGTH('Compra de produto:'));
+        -- Truncar em eventual quebra de linha
+        IF POSITION(E'\n' IN v_json_text) > 0 THEN
+          v_json_text := SUBSTRING(v_json_text FROM 1 FOR POSITION(E'\n' IN v_json_text)-1);
+        END IF;
+        v_compra := v_json_text::jsonb;
+        v_produto_id := (v_compra->>'produto_id')::uuid;
+        v_qtd := COALESCE((v_compra->>'quantidade')::int, 1);
+        v_forma := COALESCE(NULLIF(v_compra->>'forma_pagamento_produto',''), 'fiado');
+
+        -- Buscar preço de venda do produto
+        SELECT preco_venda INTO v_unit FROM public.produtos WHERE id = v_produto_id;
+        v_total := COALESCE(v_unit, 0) * v_qtd;
+        v_venda_id := gen_random_uuid();
+
+        -- Inserir venda
+        INSERT INTO public.vendas_produtos (
+          id, user_id, cliente_id, agendamento_id,
+          data_venda, forma_pagamento, status_pagamento,
+          valor_total, observacoes
+        ) VALUES (
+          v_venda_id, v_user_id, v_cliente_id, v_ag_id,
+          NOW()::date, v_forma, 'pendente',
+          v_total, 'Criada via agendamento online'
+        );
+
+        -- Inserir item
+        INSERT INTO public.itens_venda (
+          id, venda_id, produto_id, quantidade, valor_unitario, valor_total, created_at
+        ) VALUES (
+          gen_random_uuid(), v_venda_id, v_produto_id, v_qtd, COALESCE(v_unit,0), v_total, NOW()
+        );
+      EXCEPTION WHEN OTHERS THEN
+        -- Em caso de erro na venda, apenas registra e prossegue
+        RAISE NOTICE 'Falha ao criar venda_produtos vinculada: %', SQLERRM;
+      END;
+    END IF;
   END IF;
 
   RETURN NEW;
@@ -94,4 +145,3 @@ CREATE TRIGGER trg_sync_online_para_agendamento
 AFTER INSERT OR UPDATE OF status ON public.agendamentos_online
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_online_para_agendamento();
-
