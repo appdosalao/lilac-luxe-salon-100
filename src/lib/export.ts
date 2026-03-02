@@ -192,3 +192,44 @@ export function exportVendasPorProdutoPDF(rows: Array<{ produto: string; quantid
   win.document.write(html);
   win.document.close();
 }
+
+export function exportMovimentacoesEstoqueCSV(rows: Array<{ id: string; tipo: string; data: string; valor: number; descricao: string; status?: string; itens?: number }>, filename = 'movimentacoes_produtos.csv') {
+  const csv = toCSV(rows.map(r => ({
+    id: r.id,
+    tipo: r.tipo,
+    data: r.data,
+    valor: r.valor,
+    descricao: r.descricao,
+    status: r.status || '',
+    itens: r.itens || 0
+  })));
+  downloadBlob(csv, filename, 'text/csv;charset=utf-8');
+}
+
+export function exportMovimentacoesEstoquePDF(rows: Array<{ id: string; tipo: string; data: string; valor: number; descricao: string; status?: string; itens?: number }>, periodo?: string) {
+  const win = window.open('', '_blank');
+  if (!win) return;
+  const style = `
+    body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  `;
+  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  const html = `
+    <html><head><meta charset="utf-8"/><style>${style}</style><title>Movimentações de Produtos</title></head>
+    <body>
+      <h1>Movimentações de Produtos${periodo ? ` • ${periodo}` : ''}</h1>
+      <table>
+        <thead><tr><th>Tipo</th><th>Data</th><th>Valor</th><th>Descrição</th><th>Status</th><th>Itens</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr><td>${r.tipo}</td><td>${r.data}</td><td>${fmt(r.valor)}</td><td>${r.descricao}</td><td>${r.status || ''}</td><td>${r.itens || 0}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <script>window.print();</script>
+    </body></html>
+  `;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}

@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, ShoppingCart, Search, Filter, TrendingUp, TrendingDown } from "lucide-react";
+import { Package, ShoppingCart, Search, Filter, TrendingUp, TrendingDown, Download } from "lucide-react";
 import { useSupabaseCompras } from "@/hooks/useSupabaseCompras";
 import { useSupabaseVendas } from "@/hooks/useSupabaseVendas";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { exportMovimentacoesEstoqueCSV, exportMovimentacoesEstoquePDF } from "@/lib/export";
 
 type MovimentacaoTipo = 'compra' | 'venda';
 
@@ -211,6 +212,20 @@ export default function MovimentacoesProdutos() {
                 <SelectItem value="venda">Vendas</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline" 
+              className="h-12 gap-2"
+              onClick={() => exportMovimentacoesEstoqueCSV(movimentacoesFiltradas)}
+            >
+              <Download className="h-4 w-4" /> CSV
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 gap-2"
+              onClick={() => exportMovimentacoesEstoquePDF(movimentacoesFiltradas)}
+            >
+              <Download className="h-4 w-4" /> PDF
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -25,6 +25,12 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
   ]);
 
   const produtosRevenda = produtos.filter(p => p.categoria === 'revenda' && p.ativo);
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todas');
+  const categoriasDisponiveis = Array.from(new Set(produtosRevenda.map(p => p.categoria_id).filter(Boolean))).map(id => {
+    const cat = id as string;
+    return cat;
+  });
+  const produtosFiltrados = produtosRevenda.filter(p => categoriaFiltro === 'todas' || String(p.categoria_id || '') === categoriaFiltro);
 
   const adicionarItem = () => {
     setItens([...itens, { produto_id: '', quantidade: 1, valor_unitario: 0, valor_total: 0 }]);
@@ -148,6 +154,25 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
           </p>
         )}
 
+        <div className="grid gap-4 md:grid-cols-3 mb-4">
+          <div>
+            <Label>Filtrar por Categoria</Label>
+            <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {categoriasDisponiveis.map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="space-y-4">
           {itens.map((item, index) => (
             <Card key={index} className="p-4">
@@ -162,7 +187,7 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
                       <SelectValue placeholder="Selecione o produto" />
                     </SelectTrigger>
                     <SelectContent>
-                      {produtosRevenda.map((p) => (
+                      {produtosFiltrados.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.nome} - R$ {p.preco_venda.toFixed(2)}
                         </SelectItem>

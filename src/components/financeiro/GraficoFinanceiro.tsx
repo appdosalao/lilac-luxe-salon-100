@@ -4,7 +4,8 @@ import { TrendingUp } from "lucide-react";
 import { Lancamento } from "@/types/lancamento";
 import { useSupabaseCompras } from "@/hooks/useSupabaseCompras";
 import { useSupabaseVendas } from "@/hooks/useSupabaseVendas";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GraficoFinanceiroProps {
   lancamentos: Lancamento[];
@@ -104,6 +105,41 @@ export default function GraficoFinanceiro({ lancamentos }: GraficoFinanceiroProp
 
   const temDados = totalEntradas > 0 || totalSaidas > 0;
 
+  // Top produtos (por valor) no mês
+  const [produtoNomes, setProdutoNomes] = useState<Record<string, string>>({});
+  const itensMes = useMemo(() => {
+    return vendasDoMes.flatMap(v => v.itens_venda || []);
+  }, [vendasDoMes]);
+  const agregadosProdutos = useMemo(() => {
+    const agg: Record<string, { id: string; quantidade: number; valor: number }> = {};
+    itensMes.forEach((i) => {
+      const id = i.produto_id;
+      if (!agg[id]) agg[id] = { id, quantidade: 0, valor: 0 };
+      agg[id].quantidade += Number(i.quantidade || 0);
+      agg[id].valor += Number(i.valor_total || 0);
+    });
+    return Object.values(agg).sort((a, b) => b.valor - a.valor).slice(0, 5);
+  }, [itensMes]);
+  useEffect(() => {
+    const carregarNomes = async () => {
+      const ids = agregadosProdutos.map(a => a.id);
+      if (ids.length === 0) return;
+      const { data } = await supabase
+        .from('produtos')
+        .select('id,nome')
+        .in('id', ids);
+      const map: Record<string, string> = {};
+      (data || []).forEach((p: any) => { map[p.id] = p.nome; });
+      setProdutoNomes(map);
+    };
+    carregarNomes();
+  }, [agregadosProdutos]);
+  const dadosTopProdutos = agregadosProdutos.map(a => ({
+    produto: produtoNomes[a.id] || a.id.slice(0, 6),
+    quantidade: a.quantidade,
+    valor: a.valor,
+  }));
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Gráfico de Pizza */}
@@ -185,6 +221,38 @@ export default function GraficoFinanceiro({ lancamentos }: GraficoFinanceiroProp
                 <Legend />
                 <Bar dataKey="entradas" fill="#22c55e" name="Entradas" animationDuration={800} />
                 <Bar dataKey="saidas" fill="#ef4444" name="Saídas" animationDuration={800} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Top Produtos (Valor) */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm animate-fade-in md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Top Produtos (mês)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {dadosTopProdutos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[300px] gap-3 animate-fade-in">
+              <TrendingUp className="h-12 w-12 text-muted-foreground/50" />
+              <div className="text-center">
+                <p className="text-base font-medium text-foreground">Sem vendas de produtos neste mês</p>
+              </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dadosTopProdutos}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="produto" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value, name) => name === 'valor' ? formatarValor(Number(value)) : value} />
+                <Legend />
+                <Bar dataKey="valor" fill="#7c3aed" name="Valor" animationDuration={800} />
+                <Bar dataKey="quantidade" fill="#06b6d4" name="Quantidade" animationDuration={800} />
               </BarChart>
             </ResponsiveContainer>
           )}
