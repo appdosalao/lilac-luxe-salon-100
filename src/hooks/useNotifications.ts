@@ -58,9 +58,10 @@ export const useNotifications = () => {
       const soundType = settings.soundType || 'notification';
       const base = soundType === 'notification' ? 'notification' : soundType;
       const filename = custom || `${base}.mp3`;
-      const sundsSrc = `/sunds/${filename}`;
-      const sondSrc = `/sond/${filename}`;
-      const soundsSrc = `/sounds/${filename}`;
+      const encoded = encodeURIComponent(filename);
+      const sundsSrc = `/sunds/${encoded}`;
+      const sondSrc = `/sond/${encoded}`;
+      const soundsSrc = `/sounds/${encoded}`;
       const audio = new Audio(sundsSrc);
       audio.volume = 0.5;
       audio.preload = 'auto';
@@ -115,10 +116,11 @@ export const useNotifications = () => {
     const soundType = settings.soundType || 'notification';
     const base = soundType === 'notification' ? 'notification' : soundType;
     const filename = custom || `${base}.mp3`;
+    const encoded = encodeURIComponent(filename);
     const candidates = [
-      `/sunds/${filename}`,
-      `/sond/${filename}`,
-      `/sounds/${filename}`,
+      `/sunds/${encoded}`,
+      `/sond/${encoded}`,
+      `/sounds/${encoded}`,
     ];
 
     await tryPlay(candidates);

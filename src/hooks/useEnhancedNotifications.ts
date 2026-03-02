@@ -22,9 +22,10 @@ export const useEnhancedNotifications = () => {
 
     try {
       const soundFile = soundType === 'notification' ? 'notification' : soundType;
-      const sundsSrc = `/sunds/${soundFile}.mp3`;
-      const sondSrc = `/sond/${soundFile}.mp3`;
-      const soundsSrc = `/sounds/${soundFile}.mp3`;
+      const encoded = encodeURIComponent(`${soundFile}.mp3`);
+      const sundsSrc = `/sunds/${encoded}`;
+      const sondSrc = `/sond/${encoded}`;
+      const soundsSrc = `/sounds/${encoded}`;
       const targetSrc = audioRef.current?.src?.includes(sundsSrc) || audioRef.current?.src?.includes(sondSrc) || audioRef.current?.src?.includes(soundsSrc)
         ? audioRef.current!.src
         : sundsSrc;

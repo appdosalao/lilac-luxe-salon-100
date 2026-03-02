@@ -14,17 +14,20 @@ export const TesteSom = () => {
     setIsPlaying(true);
     
     try {
-      const sunds = new Audio(`/sunds/${soundType}.mp3`);
+      const encoded = encodeURIComponent(`${soundType}.mp3`);
+      const sunds = new Audio(`/sunds/${encoded}`);
       sunds.volume = 0.7;
       await sunds.play();
     } catch {
       try {
-        const sond = new Audio(`/sond/${soundType}.mp3`);
+        const encoded = encodeURIComponent(`${soundType}.mp3`);
+        const sond = new Audio(`/sond/${encoded}`);
         sond.volume = 0.7;
         await sond.play();
       } catch {
         try {
-          const audio = new Audio(`/sounds/${soundType}.mp3`);
+          const encoded = encodeURIComponent(`${soundType}.mp3`);
+          const audio = new Audio(`/sounds/${encoded}`);
           audio.volume = 0.7;
           await audio.play();
         } catch (error) {
