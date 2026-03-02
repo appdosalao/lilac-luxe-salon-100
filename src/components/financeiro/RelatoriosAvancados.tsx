@@ -15,6 +15,8 @@ import TabelaDetalhada from "./TabelaDetalhada";
 import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF, exportVendasPorProdutoCSV, exportVendasPorProdutoPDF, exportDespesasUsoCSV, exportDespesasUsoPDF } from "@/lib/export";
 import type { RelatorioExportacao } from "@/types/relatorio";
 import { supabase } from "@/integrations/supabase/client";
+import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
+import { useEffect, useState } from "react";
 
 export default function RelatoriosAvancados() {
   const { lancamentos } = useLancamentos();
@@ -28,6 +30,26 @@ export default function RelatoriosAvancados() {
     intervaloData,
     dadosFiltrados
   } = useRelatoriosFinanceiros(lancamentos, contasFixas, agendamentos);
+
+  const { config: configOnline } = useConfigAgendamentoOnline();
+  const brand = { salonName: configOnline?.nome_salao, logoUrl: configOnline?.logo_url || undefined };
+  const [usoTotals, setUsoTotals] = useState<{ prof: number; pessoal: number }>({ prof: 0, pessoal: 0 });
+  useEffect(() => {
+    const loadUsoTotals = async () => {
+      const inicioISO = new Date(intervaloData.inicio.getTime()).toISOString().slice(0, 10);
+      const fimISO = new Date(intervaloData.fim.getTime()).toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from('lancamentos')
+        .select('categoria, valor')
+        .gte('data', inicioISO)
+        .lte('data', fimISO)
+        .in('categoria', ['Uso Profissional', 'Uso Pessoal']);
+      const prof = (data || []).filter((l: any) => l.categoria === 'Uso Profissional').reduce((s, l: any) => s + Number(l.valor || 0), 0);
+      const pessoal = (data || []).filter((l: any) => l.categoria === 'Uso Pessoal').reduce((s, l: any) => s + Number(l.valor || 0), 0);
+      setUsoTotals({ prof, pessoal });
+    };
+    loadUsoTotals();
+  }, [intervaloData]);
 
   const formatarValor = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -56,7 +78,7 @@ export default function RelatoriosAvancados() {
     };
     exportRelatorioJSON(relatorio);
     exportRelatorioCSV(relatorio);
-    exportRelatorioPDF(relatorio);
+    exportRelatorioPDF(relatorio, brand);
   };
 
   const exportarVendasPorProduto = async () => {
@@ -98,7 +120,7 @@ export default function RelatoriosAvancados() {
     });
     const rows = Object.values(agregados).sort((a, b) => b.valor_total - a.valor_total);
     exportVendasPorProdutoCSV(rows, `vendas-por-produto-${formatarPeriodo().replace(/\s+/g,'_')}.csv`);
-    exportVendasPorProdutoPDF(rows, formatarPeriodo());
+    exportVendasPorProdutoPDF(rows, formatarPeriodo(), brand);
   };
 
   const exportarDespesasDeUso = async () => {
@@ -117,7 +139,7 @@ export default function RelatoriosAvancados() {
       descricao: l.descricao
     }));
     exportDespesasUsoCSV(rows, `despesas-uso-${formatarPeriodo().replace(/\s+/g, '_')}.csv`);
-    exportDespesasUsoPDF(rows, formatarPeriodo());
+    exportDespesasUsoPDF(rows, formatarPeriodo(), brand);
   };
 
   return (
@@ -206,6 +228,34 @@ export default function RelatoriosAvancados() {
                 {formatarValor(dadosRelatorio.contasAPagar)}
               </p>
               <p className="text-sm text-muted-foreground">Contas a Pagar</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+              <FileText className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-2xl font-bold text-primary">
+                {formatarValor(usoTotals.prof)}
+              </p>
+              <p className="text-sm text-muted-foreground">Uso Profissional</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+              <FileText className="h-6 w-6 text-secondary-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-2xl font-bold text-secondary">
+                {formatarValor(usoTotals.pessoal)}
+              </p>
+              <p className="text-sm text-muted-foreground">Uso Pessoal</p>
             </div>
           </CardContent>
         </Card>

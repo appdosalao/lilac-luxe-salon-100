@@ -99,11 +99,14 @@ export function exportRelatorioCSV(relatorio: RelatorioExportacao) {
   exportAgendamentosCSV(relatorio.dadosDetalhados.agendamentos, `agendamentos-${relatorio.periodo.replace(/\s+/g, '_')}.csv`);
 }
 
-export function exportRelatorioPDF(relatorio: RelatorioExportacao) {
+export function exportRelatorioPDF(relatorio: RelatorioExportacao, brand?: { salonName?: string; logoUrl?: string }) {
   const win = window.open('', '_blank');
   if (!win) return;
   const style = `
     body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .logo { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid #d6b2e7; }
+    .brand { font-size: 16px; font-weight: 700; }
     h1 { font-size: 18px; margin: 0 0 8px; }
     h2 { font-size: 14px; margin: 12px 0 6px; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
@@ -115,6 +118,10 @@ export function exportRelatorioPDF(relatorio: RelatorioExportacao) {
   const html = `
     <html><head><meta charset="utf-8"/><style>${style}</style><title>Relatório Financeiro</title></head>
     <body>
+      <div class="header">
+        ${brand?.logoUrl ? `<img class="logo" src="${brand.logoUrl}" />` : ''}
+        <div class="brand">${brand?.salonName || 'Relatório Financeiro'}</div>
+      </div>
       <h1>Relatório Financeiro • ${relatorio.periodo}</h1>
       <div class="summary">
         <div><strong>Entradas:</strong> ${fmt(relatorio.dadosResumo.totalEntradas)}</div>
@@ -166,11 +173,14 @@ export function exportDespesasUsoCSV(rows: Array<{ data: string; categoria: stri
   downloadBlob(csv, filename, 'text/csv;charset=utf-8');
 }
 
-export function exportDespesasUsoPDF(rows: Array<{ data: string; categoria: string; valor: number; descricao: string }>, periodo: string) {
+export function exportDespesasUsoPDF(rows: Array<{ data: string; categoria: string; valor: number; descricao: string }>, periodo: string, brand?: { salonName?: string; logoUrl?: string }) {
   const win = window.open('', '_blank');
   if (!win) return;
   const style = `
     body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .logo { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid #d6b2e7; }
+    .brand { font-size: 16px; font-weight: 700; }
     h1 { font-size: 18px; margin: 0 0 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
     th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -179,6 +189,10 @@ export function exportDespesasUsoPDF(rows: Array<{ data: string; categoria: stri
   const html = `
     <html><head><meta charset="utf-8"/><style>${style}</style><title>Despesas de Uso</title></head>
     <body>
+      <div class="header">
+        ${brand?.logoUrl ? `<img class="logo" src="${brand.logoUrl}" />` : ''}
+        <div class="brand">${brand?.salonName || 'Despesas de Uso'}</div>
+      </div>
       <h1>Despesas de Uso • ${periodo}</h1>
       <table>
         <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Descrição</th></tr></thead>
@@ -202,11 +216,14 @@ export function exportVendasPorProdutoCSV(rows: Array<{ produto: string; quantid
   downloadBlob(csv, filename, 'text/csv;charset=utf-8');
 }
 
-export function exportVendasPorProdutoPDF(rows: Array<{ produto: string; quantidade: number; valor_total: number }>, periodo: string) {
+export function exportVendasPorProdutoPDF(rows: Array<{ produto: string; quantidade: number; valor_total: number }>, periodo: string, brand?: { salonName?: string; logoUrl?: string }) {
   const win = window.open('', '_blank');
   if (!win) return;
   const style = `
     body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .logo { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid #d6b2e7; }
+    .brand { font-size: 16px; font-weight: 700; }
     h1 { font-size: 18px; margin: 0 0 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
     th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -215,6 +232,10 @@ export function exportVendasPorProdutoPDF(rows: Array<{ produto: string; quantid
   const html = `
     <html><head><meta charset="utf-8"/><style>${style}</style><title>Vendas por Produto</title></head>
     <body>
+      <div class="header">
+        ${brand?.logoUrl ? `<img class="logo" src="${brand.logoUrl}" />` : ''}
+        <div class="brand">${brand?.salonName || 'Vendas por Produto'}</div>
+      </div>
       <h1>Vendas por Produto • ${periodo}</h1>
       <table>
         <thead><tr><th>Produto</th><th>Quantidade</th><th>Total</th></tr></thead>
@@ -243,11 +264,14 @@ export function exportMovimentacoesEstoqueCSV(rows: Array<{ id: string; tipo: st
   downloadBlob(csv, filename, 'text/csv;charset=utf-8');
 }
 
-export function exportMovimentacoesEstoquePDF(rows: Array<{ id: string; tipo: string; data: string; valor: number; descricao: string; status?: string; itens?: number }>, periodo?: string) {
+export function exportMovimentacoesEstoquePDF(rows: Array<{ id: string; tipo: string; data: string; valor: number; descricao: string; status?: string; itens?: number }>, periodo?: string, brand?: { salonName?: string; logoUrl?: string }) {
   const win = window.open('', '_blank');
   if (!win) return;
   const style = `
     body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .logo { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid #d6b2e7; }
+    .brand { font-size: 16px; font-weight: 700; }
     h1 { font-size: 18px; margin: 0 0 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
     th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -256,6 +280,10 @@ export function exportMovimentacoesEstoquePDF(rows: Array<{ id: string; tipo: st
   const html = `
     <html><head><meta charset="utf-8"/><style>${style}</style><title>Movimentações de Produtos</title></head>
     <body>
+      <div class="header">
+        ${brand?.logoUrl ? `<img class="logo" src="${brand.logoUrl}" />` : ''}
+        <div class="brand">${brand?.salonName || 'Movimentações de Produtos'}</div>
+      </div>
       <h1>Movimentações de Produtos${periodo ? ` • ${periodo}` : ''}</h1>
       <table>
         <thead><tr><th>Tipo</th><th>Data</th><th>Valor</th><th>Descrição</th><th>Status</th><th>Itens</th></tr></thead>

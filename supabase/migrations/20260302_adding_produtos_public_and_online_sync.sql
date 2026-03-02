@@ -175,6 +175,7 @@ AS $$
 DECLARE
   v_lanc_id uuid;
   v_item RECORD;
+  v_cmv numeric;
 BEGIN
   IF TG_OP = 'UPDATE' AND NEW.status_pagamento = 'pago' AND (OLD.status_pagamento IS DISTINCT FROM 'pago') THEN
     -- Lançamento financeiro
@@ -199,6 +200,20 @@ BEGIN
         NEW.id, 'venda', 'Venda de produto (pagamento confirmado)', v_item.valor_unitario, v_item.valor_total, NOW()
       );
     END LOOP;
+
+    -- CMV (custo dos produtos vendidos)
+    SELECT COALESCE(SUM(iv.quantidade * p.preco_custo), 0) INTO v_cmv
+    FROM public.itens_venda iv
+    JOIN public.produtos p ON p.id = iv.produto_id
+    WHERE iv.venda_id = NEW.id;
+    IF v_cmv > 0 THEN
+      INSERT INTO public.lancamentos (
+        id, user_id, tipo, valor, data, descricao, categoria, origem_id, origem_tipo, created_at, updated_at
+      ) VALUES (
+        gen_random_uuid(), NEW.user_id, 'saida', v_cmv, NOW()::date,
+        'CMV - Custo de Mercadorias Vendidas', 'CMV', NEW.id, 'venda', NOW(), NOW()
+      );
+    END IF;
   END IF;
   RETURN NEW;
 END
