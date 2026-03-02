@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Check, Calendar, Users, DollarSign, Gift, Bell, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
+import { AppLogo } from '@/components/branding/AppLogo';
 
 const onboardingSteps = [
   {
@@ -110,6 +111,7 @@ export default function Onboarding() {
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <AppLogo size={40} rounded="xl" />
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <StepIcon className="h-6 w-6 text-primary" />
               </div>

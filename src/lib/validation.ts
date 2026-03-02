@@ -19,7 +19,8 @@ export const agendamentoOnlineSchema = z.object({
     .transform(val => val.replace(/\D/g, ''))
     .refine(val => val.length >= 10 && val.length <= 15, 'Telefone inválido'),
   
-  servico_id: z.string().uuid('Serviço inválido'),
+  // Nem todas as fontes garantem UUID; aceitar qualquer string não vazia
+  servico_id: z.string().trim().min(1, 'Selecione um serviço'),
   
   data: z.string().refine((date) => {
     const selected = new Date(date);
@@ -28,7 +29,10 @@ export const agendamentoOnlineSchema = z.object({
     return selected >= today;
   }, 'Data deve ser hoje ou no futuro'),
   
-  horario: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Horário inválido'),
+  // Aceitar HH:MM ou HH:MM:SS e normalizar para HH:MM
+  horario: z.string()
+    .regex(/^([0-1]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, 'Horário inválido')
+    .transform(h => h.length >= 5 ? h.slice(0, 5) : h),
   
   observacoes: z.string()
     .trim()

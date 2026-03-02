@@ -35,9 +35,6 @@ export const TesteSom = () => {
           setIsPlaying(false);
           return;
         }
-      } catch (error) {
-        // handled above
-      }
     }
       
       setTimeout(() => setIsPlaying(false), 2000);
