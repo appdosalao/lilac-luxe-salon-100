@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useSoundLibrary } from '@/hooks/useSoundLibrary';
 import { 
   Bell, 
   Smartphone, 
@@ -34,6 +35,7 @@ export function ConfiguracaoNotificacoesAvancadas() {
     sendTestNotification,
     isLoading: pushLoading 
   } = usePushNotifications();
+  const { sounds, loading: soundsLoading, addIfExists, reload } = useSoundLibrary();
 
   const [localConfig, setLocalConfig] = useState({
     notificacoes_push: true,
@@ -236,12 +238,12 @@ export function ConfiguracaoNotificacoesAvancadas() {
                     }
                   >
                     <SelectTrigger className="flex-1">
-                      <SelectValue />
+                      <SelectValue placeholder={soundsLoading ? 'Carregando sons...' : 'Selecione um som'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="notification.mp3">Som Padrão</SelectItem>
-                      <SelectItem value="notification2.mp3">Som Campainha</SelectItem>
-                      <SelectItem value="notification3.mp3">Som Suave</SelectItem>
+                      {sounds.map(s => (
+                        <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button variant="outline" onClick={playTestSound}>
@@ -256,6 +258,26 @@ export function ConfiguracaoNotificacoesAvancadas() {
                     value={localConfig.som_personalizado}
                     onChange={(e) => setLocalConfig(prev => ({ ...prev, som_personalizado: e.target.value }))}
                   />
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={async () => {
+                        const ok = await addIfExists(localConfig.som_personalizado);
+                        if (ok) {
+                          toast.success('Som adicionado à biblioteca');
+                          await reload();
+                        } else {
+                          toast.error('Arquivo não encontrado em /sond ou /sounds');
+                        }
+                      }}
+                    >
+                      Adicionar à lista
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={reload}>
+                      Recarregar sons
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
