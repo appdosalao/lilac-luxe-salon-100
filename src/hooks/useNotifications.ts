@@ -93,15 +93,35 @@ export const useNotifications = () => {
 
   // Função para tocar som de notificação
   const playNotificationSound = useCallback(async () => {
-    if (!settings.soundEnabled || !audioRef.current) return;
+    if (!settings.soundEnabled) return;
 
-    try {
-      audioRef.current.currentTime = 0;
-      await audioRef.current.play();
-    } catch (error) {
-      // Falha silenciosa - alguns navegadores bloqueiam autoplay
-      console.log('Não foi possível reproduzir som de notificação:', error);
-    }
+    const tryPlay = async (srcs: string[]) => {
+      for (const src of srcs) {
+        try {
+          const a = new Audio(src);
+          a.volume = 0.5;
+          a.preload = 'auto';
+          await a.play();
+          audioRef.current = a;
+          return true;
+        } catch {
+          continue;
+        }
+      }
+      return false;
+    };
+
+    const custom = configuracaoNotificacoes?.som_personalizado;
+    const soundType = settings.soundType || 'notification';
+    const base = soundType === 'notification' ? 'notification' : soundType;
+    const filename = custom || `${base}.mp3`;
+    const candidates = [
+      `/sunds/${filename}`,
+      `/sond/${filename}`,
+      `/sounds/${filename}`,
+    ];
+
+    await tryPlay(candidates);
   }, [settings.soundEnabled]);
 
   // Função para adicionar nova notificação
