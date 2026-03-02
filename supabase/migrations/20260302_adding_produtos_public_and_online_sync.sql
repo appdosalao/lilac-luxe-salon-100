@@ -8,7 +8,7 @@ SELECT
   nome, 
   preco_venda AS valor, 
   ativo, 
-  usuario_id,
+  user_id,
   categoria,
   categoria_id
 FROM public.produtos
