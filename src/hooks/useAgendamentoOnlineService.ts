@@ -36,12 +36,13 @@ export const useAgendamentoOnlineService = () => {
         // Fallback para tabela produtos (se RLS permitir)
         const alt = await supabase
           .from('produtos')
-          .select('id, nome, valor, ativo')
-          .eq('ativo', true);
+          .select('id, nome, preco_venda, ativo, categoria')
+          .eq('ativo', true)
+          .eq('categoria', 'revenda');
         data = alt.data;
       }
 
-      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor, categoria: p.categoria })));
+      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor ?? p.preco_venda, categoria: p.categoria })));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
       setProdutos([]);

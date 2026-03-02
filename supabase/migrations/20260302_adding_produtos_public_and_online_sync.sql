@@ -12,7 +12,7 @@ SELECT
   categoria,
   categoria_id
 FROM public.produtos
-WHERE ativo = true;
+WHERE ativo = true AND categoria = 'revenda';
 
 -- 2) RLS e políticas de leitura pública de produtos (somente ativos)
 ALTER TABLE public.produtos ENABLE ROW LEVEL SECURITY;
@@ -209,3 +209,41 @@ CREATE TRIGGER trg_on_vendas_produtos_pago
 AFTER UPDATE OF status_pagamento ON public.vendas_produtos
 FOR EACH ROW
 EXECUTE FUNCTION public.on_vendas_produtos_pago();
+
+CREATE OR REPLACE FUNCTION public.on_compras_pago()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_user uuid;
+  v_prof numeric;
+  v_pessoal numeric;
+BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.status_pagamento = 'pago' AND (OLD.status_pagamento IS DISTINCT FROM 'pago') THEN
+    SELECT user_id INTO v_user FROM public.compras WHERE id = NEW.id;
+    SELECT COALESCE(SUM(ic.valor_total), 0) INTO v_prof
+    FROM public.itens_compra ic
+    JOIN public.produtos p ON p.id = ic.produto_id
+    WHERE ic.compra_id = NEW.id AND p.categoria = 'uso_profissional';
+    SELECT COALESCE(SUM(ic.valor_total), 0) INTO v_pessoal
+    FROM public.itens_compra ic
+    JOIN public.produtos p ON p.id = ic.produto_id
+    WHERE ic.compra_id = NEW.id AND p.categoria = 'consumo';
+    IF v_prof > 0 THEN
+      INSERT INTO public.lancamentos (id, user_id, tipo, valor, data, descricao, categoria, origem_id, origem_tipo, created_at, updated_at)
+      VALUES (gen_random_uuid(), v_user, 'saida', v_prof, NEW.data_compra, 'Compra uso profissional', 'Uso Profissional', NEW.id, 'compra', NOW(), NOW());
+    END IF;
+    IF v_pessoal > 0 THEN
+      INSERT INTO public.lancamentos (id, user_id, tipo, valor, data, descricao, categoria, origem_id, origem_tipo, created_at, updated_at)
+      VALUES (gen_random_uuid(), v_user, 'saida', v_pessoal, NEW.data_compra, 'Compra uso pessoal', 'Uso Pessoal', NEW.id, 'compra', NOW(), NOW());
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+DROP TRIGGER IF EXISTS trg_on_compras_pago ON public.compras;
+CREATE TRIGGER trg_on_compras_pago
+AFTER UPDATE OF status_pagamento ON public.compras
+FOR EACH ROW
+EXECUTE FUNCTION public.on_compras_pago();
