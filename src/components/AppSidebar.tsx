@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
+import { AppLogo } from "@/components/branding/AppLogo";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const navigationItems = [
@@ -130,9 +131,7 @@ export function AppSidebar() {
     >
       <SidebarHeader className="border-b border-border/50">
         <div className="flex items-center gap-2 p-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-lilac-light flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <AppLogo size={32} rounded="xl" />
           {state === "expanded" && (
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-bold bg-gradient-to-r from-primary to-lilac-primary bg-clip-text text-transparent truncate">

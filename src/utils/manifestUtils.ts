@@ -39,6 +39,7 @@ export const updateManifest = (usuario: Usuario | null) => {
     appName.substring(0, 12).trim() + '...' : 
     appName;
 
+  const logo = (usuario as any)?.logo_url || '/icons/icon-192x192.png';
   const manifest: CustomManifest = {
     name: appName,
     short_name: shortName,
@@ -52,42 +53,12 @@ export const updateManifest = (usuario: Usuario | null) => {
     lang: "pt-BR",
     categories: ["business", "productivity"],
     icons: [
-      {
-        src: "/icons/icon-48x48.png",
-        sizes: "48x48",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/icons/icon-72x72.png",
-        sizes: "72x72",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/icons/icon-96x96.png",
-        sizes: "96x96",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/icons/icon-144x144.png",
-        sizes: "144x144",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/icons/icon-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any maskable"
-      },
-      {
-        src: "/icons/icon-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any maskable"
-      }
+      { src: logo, sizes: "48x48",  type: "image/png", purpose: "any" },
+      { src: logo, sizes: "72x72",  type: "image/png", purpose: "any" },
+      { src: logo, sizes: "96x96",  type: "image/png", purpose: "any" },
+      { src: logo, sizes: "144x144",type: "image/png", purpose: "any" },
+      { src: logo, sizes: "192x192",type: "image/png", purpose: "any maskable" },
+      { src: logo, sizes: "512x512",type: "image/png", purpose: "any maskable" },
     ],
     shortcuts: [
       {
@@ -210,11 +181,6 @@ const updateMetaTags = (appName: string) => {
       iosIconLink.setAttribute('sizes', size);
       document.head.appendChild(iosIconLink);
     }
-    // Usar o ícone mais próximo disponível
-    if (size.includes('192') || size.includes('180') || size.includes('152')) {
-      iosIconLink.href = '/icons/icon-192x192.png';
-    } else {
-      iosIconLink.href = '/icons/icon-144x144.png';
-    }
+    iosIconLink.href = logo;
   });
 };
