@@ -56,11 +56,20 @@ export const useNotifications = () => {
     if (settings.soundEnabled) {
       const custom = configuracaoNotificacoes?.som_personalizado;
       const soundType = settings.soundType || 'notification';
-      const soundFile = soundType === 'notification' ? 'notification' : soundType;
-      const src = custom ? `/sounds/${custom}` : `/sounds/${soundFile}.mp3`;
-      audioRef.current = new Audio(src);
-      audioRef.current.volume = 0.5;
-      audioRef.current.preload = 'auto';
+      const base = soundType === 'notification' ? 'notification' : soundType;
+      const filename = custom || `${base}.mp3`;
+      const sondSrc = `/sond/${filename}`;
+      const soundsSrc = `/sounds/${filename}`;
+      const audio = new Audio(sondSrc);
+      audio.volume = 0.5;
+      audio.preload = 'auto';
+      audio.onerror = () => {
+        const fallback = new Audio(soundsSrc);
+        fallback.volume = 0.5;
+        fallback.preload = 'auto';
+        audioRef.current = fallback;
+      };
+      audioRef.current = audio;
     }
 
     return () => {

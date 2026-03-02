@@ -14,15 +14,22 @@ export const TesteSom = () => {
     setIsPlaying(true);
     
     try {
-      const audio = new Audio(`/sounds/${soundType}.mp3`);
-      audio.volume = 0.7;
-      await audio.play();
+      const sond = new Audio(`/sond/${soundType}.mp3`);
+      sond.volume = 0.7;
+      await sond.play();
+    } catch {
+      try {
+        const audio = new Audio(`/sounds/${soundType}.mp3`);
+        audio.volume = 0.7;
+        await audio.play();
+      } catch (error) {
+        console.error('Erro ao reproduzir som:', error);
+        setIsPlaying(false);
+        return;
+      }
+    }
       
       setTimeout(() => setIsPlaying(false), 2000);
-    } catch (error) {
-      console.error('Erro ao reproduzir som:', error);
-      setIsPlaying(false);
-    }
   };
 
   const testNotificationWithSound = async (type: 'appointment' | 'service' | 'expense') => {

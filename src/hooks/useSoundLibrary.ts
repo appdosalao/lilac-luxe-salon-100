@@ -26,7 +26,7 @@ export function useSoundLibrary() {
           const list = await res.json();
           if (Array.isArray(list)) {
             const items = list
-              .filter((n) => typeof n === 'string' && n.toLowerCase().endsWith('.mp3'))
+              .filter((n) => typeof n === 'string' && (n.toLowerCase().endsWith('.mp3') || n.toLowerCase().endsWith('.wav')))
               .map((n) => ({ name: n, src: `/sond/${n}` }));
             addUnique(items);
             break;
