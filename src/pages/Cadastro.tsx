@@ -11,6 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioCadastro } from '@/types/usuario';
 import { AppLogo } from '@/components/branding/AppLogo';
+import { Eye, EyeOff } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const cadastroSchema = z.object({
   nome_personalizado_app: z.string().min(1, 'Nome da profissional/salão é obrigatório'),
@@ -40,6 +43,19 @@ const Cadastro = () => {
   });
 
   const temaEscolhido = watch('tema_preferencia');
+  const senhaValor = watch('senha') || '';
+  const [showSenha, setShowSenha] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const calcStrength = (s: string) => {
+    let score = 0;
+    if (s.length >= 6) score += 25;
+    if (/[A-Z]/.test(s)) score += 25;
+    if (/[0-9]/.test(s)) score += 25;
+    if (/[^A-Za-z0-9]/.test(s)) score += 25;
+    return score;
+  };
+  const strength = calcStrength(senhaValor);
 
   // Aplicar tema em tempo real quando o usuário escolhe
   useEffect(() => {
@@ -55,6 +71,11 @@ const Cadastro = () => {
     setError('');
 
     try {
+      if (!termsAccepted) {
+        setError('Você precisa aceitar os termos de uso para continuar.');
+        setIsLoading(false);
+        return;
+      }
       const { error } = await signUp(data.email, data.senha, {
         nome_completo: data.nome_completo,
         nome_personalizado_app: data.nome_personalizado_app,
@@ -261,13 +282,30 @@ const Cadastro = () => {
 
             <div className="space-y-2">
               <Label htmlFor="senha">Senha *</Label>
-              <Input
-                id="senha"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                {...register('senha')}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="senha"
+                  type={showSenha ? 'text' : 'password'}
+                  placeholder="Mínimo 6 caracteres"
+                  {...register('senha')}
+                  disabled={isLoading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowSenha(v => !v)}
+                >
+                  {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="space-y-2">
+                <Progress value={strength} className="h-2" />
+                <p className="text-xs text-muted-foreground">
+                  Força da senha: {strength <= 25 ? 'fraca' : strength <= 50 ? 'média' : strength <= 75 ? 'boa' : 'excelente'}
+                </p>
+              </div>
               {errors.senha && (
                 <p className="text-sm text-destructive">{errors.senha.message}</p>
               )}
@@ -275,16 +313,34 @@ const Cadastro = () => {
 
             <div className="space-y-2">
               <Label htmlFor="confirmar_senha">Confirmar Senha *</Label>
-              <Input
-                id="confirmar_senha"
-                type="password"
-                placeholder="Digite a senha novamente"
-                {...register('confirmar_senha')}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmar_senha"
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Digite a senha novamente"
+                  {...register('confirmar_senha')}
+                  disabled={isLoading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowConfirm(v => !v)}
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.confirmar_senha && (
                 <p className="text-sm text-destructive">{errors.confirmar_senha.message}</p>
               )}
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(c) => setTermsAccepted(!!c)} />
+              <Label htmlFor="terms" className="text-sm text-muted-foreground">
+                Aceito os termos de uso e políticas de privacidade
+              </Label>
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
