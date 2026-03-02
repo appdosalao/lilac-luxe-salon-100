@@ -13,6 +13,8 @@ import { UsuarioLogin } from '@/types/usuario';
 import { AppLogo } from '@/components/branding/AppLogo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
+import { AuthFooter } from '@/components/branding/AuthFooter';
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -32,6 +34,20 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  const signInGoogle = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/'
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onSubmit = async (data: UsuarioLogin) => {
     setIsLoading(true);
@@ -134,6 +150,21 @@ const Login = () => {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
 
+            <div className="grid grid-cols-3 items-center gap-2 my-2">
+              <div className="h-px bg-border" />
+              <div className="text-center text-xs text-muted-foreground">ou</div>
+              <div className="h-px bg-border" />
+            </div>
+            <Button 
+              type="button"
+              variant="outline"
+              className="w-full btn-touch text-responsive-sm"
+              onClick={signInGoogle}
+              disabled={isLoading}
+            >
+              Entrar com Google
+            </Button>
+
             <div className="text-center space-responsive-sm">
               <div className="text-responsive-xs text-muted-foreground">
                 Não tem uma conta?{' '}
@@ -143,6 +174,7 @@ const Login = () => {
               </div>
             </div>
           </form>
+          <AuthFooter />
         </CardContent>
       </Card>
     </div>

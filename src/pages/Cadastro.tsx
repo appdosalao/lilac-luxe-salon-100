@@ -14,6 +14,7 @@ import { AppLogo } from '@/components/branding/AppLogo';
 import { Eye, EyeOff } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AuthFooter } from '@/components/branding/AuthFooter';
 
 const cadastroSchema = z.object({
   nome_personalizado_app: z.string().min(1, 'Nome da profissional/salão é obrigatório'),
@@ -358,6 +359,7 @@ const Cadastro = () => {
             </div>
           </form>
         </CardContent>
+        <AuthFooter />
       </Card>
     </div>
   );
