@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export const useAgendamentoOnlineService = () => {
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
+  const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number }[]>([]);
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
@@ -19,6 +20,31 @@ export const useAgendamentoOnlineService = () => {
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
       toast.error("Não foi possível carregar a lista de serviços disponíveis.");
+    }
+  }, []);
+
+  // Carregar produtos disponíveis (públicos ou fallback)
+  const carregarProdutosPublicos = useCallback(async () => {
+    try {
+      // Tenta view pública se existir
+      let { data, error } = await supabase
+        .from('produtos_public')
+        .select('id, nome, valor, ativo')
+        .eq('ativo', true);
+
+      if (error) {
+        // Fallback para tabela produtos (se RLS permitir)
+        const alt = await supabase
+          .from('produtos')
+          .select('id, nome, valor, ativo')
+          .eq('ativo', true);
+        data = alt.data;
+      }
+
+      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor })));
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+      setProdutos([]);
     }
   }, []);
 
@@ -134,6 +160,7 @@ export const useAgendamentoOnlineService = () => {
       const clienteId = await criarClienteSeNaoExistir(dados);
 
       // Criar agendamento online
+      // Se houver campos de compra anexados no observações, manter
       const { error } = await supabase
         .from('agendamentos_online')
         .insert({
@@ -168,7 +195,9 @@ export const useAgendamentoOnlineService = () => {
   return {
     loading,
     servicos,
+    produtos,
     carregarServicos,
+    carregarProdutosPublicos,
     calcularHorariosDisponiveis,
     criarAgendamento
   };

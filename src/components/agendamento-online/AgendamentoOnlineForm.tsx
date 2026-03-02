@@ -26,7 +26,9 @@ export function AgendamentoOnlineForm() {
   const {
     loading,
     servicos,
+    produtos,
     carregarServicos,
+    carregarProdutosPublicos,
     calcularHorariosDisponiveis,
     criarAgendamento
   } = useAgendamentoOnlineService();
@@ -59,12 +61,16 @@ export function AgendamentoOnlineForm() {
   const [success, setSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const formRef = useRef<HTMLFormElement>(null);
+  const [produtoId, setProdutoId] = useState<string>('');
+  const [produtoQtd, setProdutoQtd] = useState<number>(1);
+  const [produtoForma, setProdutoForma] = useState<string>('pix');
 
   const steps = ['Dados', 'Agendamento', 'Finalização'];
 
   useEffect(() => {
     carregarServicos();
-  }, [carregarServicos]);
+    carregarProdutosPublicos();
+  }, [carregarServicos, carregarProdutosPublicos]);
 
   useEffect(() => {
     console.log('Configurações carregadas:', { 
@@ -228,6 +234,17 @@ export function AgendamentoOnlineForm() {
     // Validate and sanitize input with zod
     try {
       const validatedData = agendamentoOnlineSchema.parse(formData);
+      if (produtoId) {
+        const pSel = produtos.find(p => p.id === produtoId);
+        const compra = {
+          produto_id: produtoId,
+          produto_nome: pSel?.nome || '',
+          quantidade: produtoQtd,
+          forma_pagamento_produto: produtoForma
+        };
+        const prefix = validatedData.observacoes ? validatedData.observacoes + '\n' : '';
+        validatedData.observacoes = `${prefix}Compra de produto: ${JSON.stringify(compra)}`;
+      }
       setIsSubmitting(true);
       const sucesso = await criarAgendamento(validatedData as AgendamentoOnlineData);
       
@@ -623,6 +640,52 @@ Você receberá uma confirmação em breve.
                 {/* Step 3: Condições e Finalização */}
                 {currentStep === 3 && (
                   <div className="space-y-6">
+                    {/* Produtos opcionais */}
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5" />
+                        Produtos (opcional)
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Select value={produtoId} onValueChange={setProdutoId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um produto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {produtos.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.nome}{typeof p.valor === 'number' ? ` — R$ ${p.valor.toFixed(2)}` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input 
+                          type="number" 
+                          min={1} 
+                          value={produtoQtd} 
+                          onChange={(e) => setProdutoQtd(Math.max(1, Number(e.target.value)))}
+                          placeholder="Quantidade"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Label className="sm:col-span-1">Forma de pagamento do produto</Label>
+                        <div className="sm:col-span-2">
+                          <Select value={produtoForma} onValueChange={setProdutoForma}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a forma de pagamento" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pix">PIX</SelectItem>
+                              <SelectItem value="cartao">Cartão</SelectItem>
+                              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        O pagamento do produto será finalizado no atendimento. Seleção aqui registra sua intenção de compra.
+                      </p>
+                    </div>
                     {/* Resumo do Agendamento */}
                     <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
