@@ -129,6 +129,20 @@ BEGIN
         ) VALUES (
           gen_random_uuid(), v_venda_id, v_produto_id, v_qtd, COALESCE(v_unit,0), v_total, NOW()
         );
+
+        -- Anexar no histórico do cliente
+        UPDATE public.clientes
+        SET historico_servicos = COALESCE(historico_servicos, '[]'::jsonb) || jsonb_build_array(
+          jsonb_build_object(
+            'tipo', 'compra_produto',
+            'produto_id', v_produto_id,
+            'produto_nome', (SELECT nome FROM public.produtos WHERE id = v_produto_id),
+            'quantidade', v_qtd,
+            'valor_total', v_total,
+            'data', NOW()
+          )
+        )
+        WHERE id = v_cliente_id;
       EXCEPTION WHEN OTHERS THEN
         -- Em caso de erro na venda, apenas registra e prossegue
         RAISE NOTICE 'Falha ao criar venda_produtos vinculada: %', SQLERRM;
@@ -145,3 +159,46 @@ CREATE TRIGGER trg_sync_online_para_agendamento
 AFTER INSERT OR UPDATE OF status ON public.agendamentos_online
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_online_para_agendamento();
+
+-- 4) Lançamento e baixa de estoque quando a venda for paga
+CREATE OR REPLACE FUNCTION public.on_vendas_produtos_pago()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_lanc_id uuid;
+  v_item RECORD;
+BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.status_pagamento = 'pago' AND (OLD.status_pagamento IS DISTINCT FROM 'pago') THEN
+    -- Lançamento financeiro
+    INSERT INTO public.lancamentos (
+      id, user_id, tipo, valor, data, descricao, categoria, origem_id, origem_tipo, cliente_id, created_at, updated_at
+    ) VALUES (
+      gen_random_uuid(), NEW.user_id, 'entrada', NEW.valor_total, NOW()::date,
+      'Venda de produto (agendamento) ', 'Produtos Vendidos', NEW.id, 'venda', NEW.cliente_id, NOW(), NOW()
+    )
+    RETURNING id INTO v_lanc_id;
+
+    UPDATE public.vendas_produtos
+    SET lancamento_id = v_lanc_id
+    WHERE id = NEW.id;
+
+    -- Baixa de estoque para cada item
+    FOR v_item IN SELECT * FROM public.itens_venda WHERE venda_id = NEW.id LOOP
+      INSERT INTO public.movimentacoes_estoque (
+        id, user_id, produto_id, quantidade, tipo, origem_id, origem_tipo, motivo, valor_unitario, valor_total, created_at
+      ) VALUES (
+        gen_random_uuid(), NEW.user_id, v_item.produto_id, v_item.quantidade, 'saida',
+        NEW.id, 'venda', 'Venda de produto (pagamento confirmado)', v_item.valor_unitario, v_item.valor_total, NOW()
+      );
+    END LOOP;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+DROP TRIGGER IF EXISTS trg_on_vendas_produtos_pago ON public.vendas_produtos;
+CREATE TRIGGER trg_on_vendas_produtos_pago
+AFTER UPDATE OF status_pagamento ON public.vendas_produtos
+FOR EACH ROW
+EXECUTE FUNCTION public.on_vendas_produtos_pago();

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { z } from 'zod';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
@@ -423,6 +423,19 @@ Você receberá uma confirmação em breve.
                 <p><strong>Data:</strong> {new Date(formData.data).toLocaleDateString('pt-BR')}</p>
                 <p><strong>Horário:</strong> {formData.horario}</p>
                 <p><strong>Valor:</strong> R$ {servicoSelecionado?.valor.toFixed(2)}</p>
+                {produtoEnabled && produtoId && (
+                  <div className="mt-2 border-t pt-2">
+                    <p className="flex items-center gap-2"><ShoppingBag className="w-4 h-4" /><strong>Produto selecionado</strong></p>
+                    <p>
+                      {(() => {
+                        const p = produtos.find(pr => pr.id === produtoId);
+                        const unit = typeof p?.valor === 'number' ? p!.valor : 0;
+                        const total = unit * produtoQtd;
+                        return `${p?.nome || 'Produto'} • Qtd: ${produtoQtd} • Forma: ${produtoForma.toUpperCase()}${unit ? ` • Total estimado: R$ ${total.toFixed(2)}` : ''}`;
+                      })()}
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div className="flex flex-col gap-2">
