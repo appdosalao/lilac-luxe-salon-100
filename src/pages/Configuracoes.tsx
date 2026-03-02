@@ -38,8 +38,9 @@ export default function Configuracoes() {
         }
       });
       if (!error && data?.url) {
+        window.open(data.url, '_blank');
         setPortalUrl(data.url);
-        setPortalOpen(true);
+        setPortalOpen(false);
       } else {
         window.open(data?.url || '/assinatura', '_blank');
       }
@@ -224,24 +225,15 @@ export default function Configuracoes() {
                   Portal de Assinatura
                 </DialogTitle>
                 <DialogDescription>
-                  Gerencie pagamento, faturas e informações da sua assinatura
+                  Gerencie pagamento, faturas e informações da sua assinatura. 
+                  Por segurança do Stripe, o portal abre em uma nova aba.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex-1 min-h-0">
-                {portalUrl ? (
-                  <iframe
-                    src={portalUrl}
-                    className="w-full h-full rounded-md border"
-                    title="Portal de Assinatura"
-                  />
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Não foi possível carregar o portal embutido. 
-                    <a href="/configuracoes?tab=assinatura" className="inline-flex items-center gap-1 text-primary underline ml-1" target="_blank" rel="noreferrer">
-                      Abrir em nova aba <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                )}
+                <div className="text-sm text-muted-foreground">
+                  Ao clicar em “Gerenciar Assinatura”, o portal do Stripe será aberto em nova aba.
+                  Caso não abra, verifique se o bloqueador de pop‑ups está desativado para este site.
+                </div>
                 <div className="mt-2">
                   {portalUrl && (
                     <a href={portalUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline inline-flex items-center gap-1">
