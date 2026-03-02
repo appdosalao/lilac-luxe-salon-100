@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioCadastro } from '@/types/usuario';
+import { AppLogo } from '@/components/branding/AppLogo';
 
 const cadastroSchema = z.object({
   nome_personalizado_app: z.string().min(1, 'Nome da profissional/salão é obrigatório'),
@@ -84,6 +85,9 @@ const Cadastro = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-2">
+            <AppLogo size={56} rounded="xl" />
+          </div>
           <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
           <CardDescription>
             Cadastre-se para começar a usar o sistema
