@@ -9,6 +9,7 @@ import { Check, Loader2, Crown, Calendar, CreditCard, Sparkles, Clock, DollarSig
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AppLogo } from '@/components/branding/AppLogo';
 
 export default function Assinatura() {
   const navigate = useNavigate();
@@ -130,6 +131,9 @@ export default function Assinatura() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto py-12 px-4 max-w-5xl">
         <div className="text-center mb-12">
+          <div className="flex justify-center mb-3">
+            <AppLogo size={56} rounded="xl" />
+          </div>
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Sua Assinatura
           </h1>

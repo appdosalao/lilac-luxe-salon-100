@@ -4,6 +4,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppLogo } from '@/components/branding/AppLogo';
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
@@ -69,6 +70,9 @@ export default function CheckoutSuccess() {
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-primary/10">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
+            <div className="mx-auto mb-2">
+              <AppLogo size={48} rounded="xl" />
+            </div>
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -93,6 +97,9 @@ export default function CheckoutSuccess() {
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-green-100">
         <Card className="w-full max-w-md border-green-200">
           <CardHeader className="text-center">
+            <div className="mx-auto mb-2">
+              <AppLogo size={48} rounded="xl" />
+            </div>
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <Check className="h-8 w-8 text-green-600" />
             </div>
@@ -123,6 +130,9 @@ export default function CheckoutSuccess() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-orange-100">
       <Card className="w-full max-w-md border-orange-200">
         <CardHeader className="text-center">
+          <div className="mx-auto mb-2">
+            <AppLogo size={48} rounded="xl" />
+          </div>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
             <AlertCircle className="h-8 w-8 text-orange-600" />
           </div>

@@ -12,6 +12,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGri
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { AppLogo } from "@/components/branding/AppLogo";
 
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -166,7 +167,10 @@ export default function Dashboard() {
       <div className="relative overflow-hidden rounded-lg sm:rounded-3xl bg-gradient-to-r from-primary to-lilac-light p-4 sm:p-responsive text-primary-foreground shadow-md">
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <Sparkles className="h-5 w-5 sm:h-8 sm:w-8 flex-shrink-0" />
+            <div className="flex items-center gap-2">
+              <AppLogo size={28} rounded="xl" />
+              <Sparkles className="h-5 w-5 sm:h-8 sm:w-8 flex-shrink-0" />
+            </div>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-responsive-3xl font-bold">
                 Olá, {usuario?.nome_completo?.split(' ')[0] || 'Profissional'}!
