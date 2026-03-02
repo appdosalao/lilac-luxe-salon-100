@@ -12,7 +12,7 @@ import { useRelatoriosFinanceiros } from "@/hooks/useRelatoriosFinanceiros";
 import FiltrosRelatorio from "./FiltrosRelatorio";
 import GraficosAvancados from "./GraficosAvancados";
 import TabelaDetalhada from "./TabelaDetalhada";
-import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF, exportVendasPorProdutoCSV, exportVendasPorProdutoPDF } from "@/lib/export";
+import { exportRelatorioJSON, exportRelatorioCSV, exportRelatorioPDF, exportVendasPorProdutoCSV, exportVendasPorProdutoPDF, exportDespesasUsoCSV, exportDespesasUsoPDF } from "@/lib/export";
 import type { RelatorioExportacao } from "@/types/relatorio";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -101,6 +101,25 @@ export default function RelatoriosAvancados() {
     exportVendasPorProdutoPDF(rows, formatarPeriodo());
   };
 
+  const exportarDespesasDeUso = async () => {
+    const inicioISO = new Date(intervaloData.inicio.getTime()).toISOString().slice(0, 10);
+    const fimISO = new Date(intervaloData.fim.getTime()).toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from('lancamentos')
+      .select('data, categoria, valor, descricao')
+      .gte('data', inicioISO)
+      .lte('data', fimISO)
+      .in('categoria', ['Uso Profissional', 'Uso Pessoal']);
+    const rows = (data || []).map((l: any) => ({
+      data: new Date(l.data).toLocaleDateString('pt-BR'),
+      categoria: l.categoria,
+      valor: Number(l.valor),
+      descricao: l.descricao
+    }));
+    exportDespesasUsoCSV(rows, `despesas-uso-${formatarPeriodo().replace(/\s+/g, '_')}.csv`);
+    exportDespesasUsoPDF(rows, formatarPeriodo());
+  };
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
@@ -118,6 +137,10 @@ export default function RelatoriosAvancados() {
         <Button onClick={exportarVendasPorProduto} variant="outline" className="flex items-center gap-2">
           <Download className="h-4 w-4" />
           Exportar Vendas por Produto
+        </Button>
+        <Button onClick={exportarDespesasDeUso} variant="outline" className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Exportar Despesas de Uso
         </Button>
       </div>
 

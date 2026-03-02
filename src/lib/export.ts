@@ -156,6 +156,43 @@ export function exportRelatorioPDF(relatorio: RelatorioExportacao) {
   win.document.close();
 }
 
+export function exportDespesasUsoCSV(rows: Array<{ data: string; categoria: string; valor: number; descricao: string }>, filename = 'despesas_de_uso.csv') {
+  const csv = toCSV(rows.map(r => ({
+    data: r.data,
+    categoria: r.categoria,
+    valor: r.valor,
+    descricao: r.descricao
+  })));
+  downloadBlob(csv, filename, 'text/csv;charset=utf-8');
+}
+
+export function exportDespesasUsoPDF(rows: Array<{ data: string; categoria: string; valor: number; descricao: string }>, periodo: string) {
+  const win = window.open('', '_blank');
+  if (!win) return;
+  const style = `
+    body { font-family: Arial, sans-serif; padding: 16px; color: #111; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  `;
+  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  const html = `
+    <html><head><meta charset="utf-8"/><style>${style}</style><title>Despesas de Uso</title></head>
+    <body>
+      <h1>Despesas de Uso • ${periodo}</h1>
+      <table>
+        <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Descrição</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr><td>${r.data}</td><td>${r.categoria}</td><td>${fmt(r.valor)}</td><td>${r.descricao}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <script>window.print();</script>
+    </body></html>
+  `;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
 export function exportVendasPorProdutoCSV(rows: Array<{ produto: string; quantidade: number; valor_total: number }>, filename = 'vendas_por_produto.csv') {
   const csv = toCSV(rows.map(r => ({
     produto: r.produto,

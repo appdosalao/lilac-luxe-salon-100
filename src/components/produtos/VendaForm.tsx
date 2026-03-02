@@ -9,12 +9,14 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useSupabaseVendas } from '@/hooks/useSupabaseVendas';
 import { useSupabaseProdutos } from '@/hooks/useSupabaseProdutos';
 import { useSupabaseClientes } from '@/hooks/useSupabaseClientes';
+import { useSupabaseCategorias } from '@/hooks/useSupabaseCategorias';
 import { NovoItemVenda } from '@/types/venda';
 
 export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
   const { createVenda } = useSupabaseVendas();
   const { produtos } = useSupabaseProdutos();
   const { clientes } = useSupabaseClientes();
+  const { categorias } = useSupabaseCategorias();
   
   const [clienteId, setClienteId] = useState('');
   const [dataVenda, setDataVenda] = useState(new Date().toISOString().split('T')[0]);
@@ -26,10 +28,11 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
 
   const produtosRevenda = produtos.filter(p => p.categoria === 'revenda' && p.ativo);
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todas');
-  const categoriasDisponiveis = Array.from(new Set(produtosRevenda.map(p => p.categoria_id).filter(Boolean))).map(id => {
-    const cat = id as string;
-    return cat;
-  });
+  const categoriasDisponiveis = Array.from(new Set(produtosRevenda.map(p => p.categoria_id).filter(Boolean)))
+    .map(id => {
+      const cat = categorias.find(c => c.id === id);
+      return { id: String(id), nome: cat ? cat.nome : String(id) };
+    });
   const produtosFiltrados = produtosRevenda.filter(p => categoriaFiltro === 'todas' || String(p.categoria_id || '') === categoriaFiltro);
 
   const adicionarItem = () => {
@@ -163,9 +166,9 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas</SelectItem>
-                {categoriasDisponiveis.map((id) => (
-                  <SelectItem key={id} value={id}>
-                    {id}
+                {categoriasDisponiveis.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
