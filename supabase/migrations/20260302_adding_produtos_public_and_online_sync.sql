@@ -2,7 +2,8 @@
 -- Executar no Supabase: esta migration cria a view, políticas e a sincronização do online -> agendamentos
 
 -- 1) View pública de produtos (somente ativos)
-CREATE OR REPLACE VIEW public.produtos_public AS
+DROP VIEW IF EXISTS public.produtos_public CASCADE;
+CREATE VIEW public.produtos_public AS
 SELECT 
   id, 
   nome, 
