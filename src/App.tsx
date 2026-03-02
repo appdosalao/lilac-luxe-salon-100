@@ -25,6 +25,7 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Privacidade from "./pages/Privacidade";
 import Termos from "./pages/Termos";
+import Sobre from "./pages/Sobre";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
@@ -55,6 +56,7 @@ const App = () => {
                     <Route path="/agendar" element={<AgendamentoOnline />} />
                     <Route path="/privacidade" element={<Privacidade />} />
                     <Route path="/termos" element={<Termos />} />
+                    <Route path="/sobre" element={<Sobre />} />
                     
                     {/* Rotas protegidas com Layout */}
                     <Route path="/" element={
