@@ -40,6 +40,7 @@ import { ptBR } from "date-fns/locale";
 import { Cliente } from "@/types/cliente";
 import ClienteForm from "./ClienteForm";
 import { toast } from "@/hooks/use-toast";
+import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
 
 interface ClientesListProps {
   clientes: Cliente[];
@@ -124,6 +125,7 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const { config } = useConfigAgendamentoOnline();
 
   // Busca otimizada com suporte a múltiplos termos e campos
   const filteredClientes = useMemo(() => {
@@ -170,7 +172,9 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
 
   const abrirWhatsApp = (telefone: string, nome: string) => {
     const numeroLimpo = telefone.replace(/\D/g, '');
-    const mensagem = `Olá ${nome}! Tudo bem?`;
+    const header = `${config.nome_salao || 'Seu Salão'} • ${window.location.origin}`;
+    const logoLine = config.logo_url ? `Logo: ${config.logo_url}` : '';
+    const mensagem = `${header}\n${logoLine}\n\nOlá ${nome}! Tudo bem?`;
     const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
   };

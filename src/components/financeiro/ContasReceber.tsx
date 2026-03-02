@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { MessageCircle, Search, DollarSign } from 'lucide-react';
 import { Agendamento } from '@/types/agendamento';
+import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 
 interface ContasReceberProps {
   agendamentos: Agendamento[];
@@ -13,6 +14,7 @@ interface ContasReceberProps {
 
 export default function ContasReceber({ agendamentos }: ContasReceberProps) {
   const [busca, setBusca] = useState('');
+  const { config } = useConfigAgendamentoOnline();
 
   // Filtrar agendamentos com saldo devedor
   const contasReceber = agendamentos.filter(agendamento => 
@@ -36,7 +38,9 @@ export default function ContasReceber({ agendamentos }: ContasReceberProps) {
   };
 
   const enviarCobrancaWhatsApp = (agendamento: Agendamento) => {
-    const mensagem = `Olá ${agendamento.clienteNome}! 
+    const header = `${config.nome_salao || 'Seu Salão'} • ${window.location.origin}`;
+    const logoLine = config.logo_url ? `Logo: ${config.logo_url}` : '';
+    const mensagem = `${header}\n${logoLine}\n\nOlá ${agendamento.clienteNome}! 
     
 Você tem um saldo pendente de ${formatCurrency(agendamento.valorDevido)} referente ao serviço de ${agendamento.servicoNome} realizado em ${formatDate(agendamento.data)}.
 

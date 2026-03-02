@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { Cliente } from "@/types/cliente";
 import ClienteForm from "./ClienteForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
 
 interface ClienteDetalhesProps {
   cliente: Cliente | null;
@@ -22,6 +23,7 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
   const [vendasCliente, setVendasCliente] = useState<any[]>([]);
   const [loadingVendas, setLoadingVendas] = useState(true);
   const [historicoServicosLocal, setHistoricoServicosLocal] = useState(cliente?.historicoServicos || []);
+  const { config } = useConfigAgendamentoOnline();
 
   useEffect(() => {
     if (cliente && open) {
@@ -101,7 +103,10 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
 
   const abrirWhatsApp = (telefone: string) => {
     const numeroLimpo = telefone.replace(/\D/g, '');
-    const url = `https://wa.me/55${numeroLimpo}`;
+    const header = `${config.nome_salao || 'Seu Salão'} • ${window.location.origin}`;
+    const logoLine = config.logo_url ? `Logo: ${config.logo_url}` : '';
+    const mensagem = `${header}\n${logoLine}\n\nOlá ${cliente?.nomeCompleto || cliente?.nome || ''}!`;
+    const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
   };
 
