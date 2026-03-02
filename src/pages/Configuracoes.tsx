@@ -208,6 +208,10 @@ export default function Configuracoes() {
                       <CreditCard className="h-4 w-4" />
                       {portalLoading ? 'Abrindo...' : 'Gerenciar Assinatura'}
                     </Button>
+                    <Button variant="outline" className="gap-2" onClick={openPortal}>
+                      <ExternalLink className="h-4 w-4" />
+                      Abrir Portal em nova aba
+                    </Button>
                     <Button variant="outline" onClick={testStripeConnection}>
                       Testar Conexão Stripe
                     </Button>
