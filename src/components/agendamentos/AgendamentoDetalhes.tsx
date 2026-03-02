@@ -19,6 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Agendamento } from '@/types/agendamento';
@@ -27,6 +28,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 import { printAgendamentoRecibo } from '@/lib/receipt';
+import { ShoppingBag, MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AgendamentoDetalhesProps {
   agendamento: Agendamento;
@@ -79,6 +82,10 @@ export default function AgendamentoDetalhes({
   const { config } = useConfigAgendamentoOnline();
   const [pontos, setPontos] = useState<number | null>(null);
   const [pontosPotenciais, setPontosPotenciais] = useState<number | null>(null);
+  const [venda, setVenda] = useState<any | null>(null);
+  const [itens, setItens] = useState<any[]>([]);
+  const [produtosMap, setProdutosMap] = useState<Record<string, any>>({});
+  const [vendaForma, setVendaForma] = useState<string>('pix');
   
   useEffect(() => {
     const carregarPontos = async () => {
@@ -161,6 +168,79 @@ export default function AgendamentoDetalhes({
   };
 
   const StatusIcon = statusConfig[agendamento.status].icon;
+
+  useEffect(() => {
+    const carregarVenda = async () => {
+      if (!user) return;
+      const { data: v } = await supabase
+        .from('vendas_produtos')
+        .select('*')
+        .eq('agendamento_id', agendamento.id)
+        .limit(1)
+        .maybeSingle();
+      setVenda(v || null);
+      if (v) {
+        setVendaForma(v.forma_pagamento || 'pix');
+        const { data: iv } = await supabase
+          .from('itens_venda')
+          .select('*')
+          .eq('venda_id', v.id);
+        setItens(iv || []);
+        const ids = (iv || []).map((i: any) => i.produto_id);
+        if (ids.length > 0) {
+          const { data: prods } = await supabase
+            .from('produtos')
+            .select('id,nome,preco_venda')
+            .in('id', ids);
+          const map: Record<string, any> = {};
+          (prods || []).forEach((p: any) => { map[p.id] = p; });
+          setProdutosMap(map);
+        }
+      }
+    };
+    carregarVenda();
+  }, [agendamento.id, user]);
+
+  const marcarVendaPaga = async () => {
+    if (!venda) return;
+    const { error } = await supabase
+      .from('vendas_produtos')
+      .update({ status_pagamento: 'pago', forma_pagamento: vendaForma })
+      .eq('id', venda.id);
+    if (!error) {
+      toast.success('Venda marcada como paga');
+      const vAtual = { ...venda, status_pagamento: 'pago', forma_pagamento: vendaForma };
+      setVenda(vAtual);
+    } else {
+      toast.error('Falha ao marcar venda como paga');
+    }
+  };
+
+  const enviarResumoWhatsApp = () => {
+    const numero = cliente.telefone.replace(/\D/g, '');
+    const itensTxt = itens.map(i => {
+      const nome = produtosMap[i.produto_id]?.nome || 'Produto';
+      const qtd = i.quantidade;
+      const total = i.valor_total;
+      return `• ${nome} x${qtd} — R$ ${Number(total).toFixed(2)}`;
+    }).join('\n');
+    const msg = `Resumo do atendimento\nCliente: ${cliente.nome}\nServiço: ${servico.nome}\nData: ${agendamento.data}\nHora: ${formatarHora(agendamento.hora)}\n${itens.length ? `Produtos:\n${itensTxt}` : ''}\nTotal serviço: R$ ${Number(agendamento.valor).toFixed(2)}${venda ? `\nTotal produtos: R$ ${Number(venda.valor_total || 0).toFixed(2)}` : ''}`;
+    const url = `https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  };
+
+  const enviarResumoEmail = () => {
+    if (!cliente.email) return;
+    const itensTxt = itens.map(i => {
+      const nome = produtosMap[i.produto_id]?.nome || 'Produto';
+      const qtd = i.quantidade;
+      const total = i.valor_total;
+      return `• ${nome} x${qtd} — R$ ${Number(total).toFixed(2)}`;
+    }).join('%0D%0A');
+    const assunto = `Resumo do atendimento`;
+    const corpo = `Cliente: ${cliente.nome}%0D%0AServiço: ${servico.nome}%0D%0AData: ${agendamento.data}%0D%0AHora: ${formatarHora(agendamento.hora)}%0D%0A${itens.length ? `Produtos:%0D%0A${itensTxt}%0D%0A` : ''}Total serviço: R$ ${Number(agendamento.valor).toFixed(2)}${venda ? `%0D%0ATotal produtos: R$ ${Number(venda.valor_total || 0).toFixed(2)}` : ''}`;
+    window.location.href = `mailto:${cliente.email}?subject=${encodeURIComponent(assunto)}&body=${corpo}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -336,6 +416,60 @@ export default function AgendamentoDetalhes({
           </div>
 
           <Separator />
+
+          {venda && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  Produtos vinculados
+                </h3>
+                <div className="pl-7 space-y-3">
+                  <div className="space-y-2">
+                    {itens.map((i) => (
+                      <div key={i.id} className="flex justify-between">
+                        <span>{produtosMap[i.produto_id]?.nome || 'Produto'} x{i.quantidade}</span>
+                        <span>R$ {Number(i.valor_total).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-muted-foreground">Total produtos</Label>
+                    <p className="text-lg font-semibold">R$ {Number(venda.valor_total || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-1">
+                      <Label className="text-sm font-medium text-muted-foreground">Forma de pagamento</Label>
+                      <Select value={vendaForma} onValueChange={setVendaForma}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="cartao">Cartão</SelectItem>
+                          <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="fiado">Fiado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="md:col-span-2 flex items-end gap-2">
+                      <Button onClick={marcarVendaPaga} className="bg-success hover:bg-success/90">
+                        Marcar venda como paga
+                      </Button>
+                      <Button variant="outline" onClick={enviarResumoWhatsApp} className="gap-2">
+                        <MessageCircle className="h-4 w-4" />
+                        WhatsApp
+                      </Button>
+                      <Button variant="outline" onClick={enviarResumoEmail}>
+                        E-mail
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* Informações do cliente */}
           <div className="space-y-4">
