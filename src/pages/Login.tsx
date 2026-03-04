@@ -29,11 +29,6 @@ const FacebookIcon = () => (
     <path fill="#fff" d="M18.513 31.813V20.625h4.437L23.66 16h-4.437v-2.967c0-1.265.616-2.5 2.606-2.5h2.02V6.588s-1.832-.313-3.586-.313c-3.663 0-6.053 2.213-6.053 6.225V16h-4.062v4.625H14.5v11.188a16.058 16.058 0 0 0 4.013 0z"/>
   </svg>
 );
-const AppleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 mr-2">
-    <path fill="currentColor" d="M16.365 1.43c.115 1.12-.33 2.25-.98 3.08-.708.9-1.873 1.6-3.057 1.56-.14-1.05.35-2.18.95-2.97.74-.99 2.02-1.67 3.087-1.67zM20.83 16.59c-.6 1.29-1.31 2.56-2.37 3.57-.72.68-1.55 1.38-2.56 1.41-1.01.03-1.3-.45-2.42-.45-1.12 0-1.43.44-2.44.48-1.01.04-1.79-.73-2.51-1.41-1.72-1.62-3.04-4.56-2.63-7.26.29-1.93 1.53-3.56 3.19-3.6 1.05-.02 2.04.72 2.59.72.55 0 1.59-.89 2.68-.76.46.02 1.77.19 2.6 1.54-.07.04-1.55.91-1.53 2.73.02 2.18 1.99 2.89 2.02 2.9-.02.04-.31 1.09.28 2.29z"/>
-  </svg>
-);
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -72,19 +67,6 @@ const Login = () => {
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'facebook',
-        options: {
-          redirectTo: window.location.origin + '/'
-        }
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const signInApple = async () => {
-    setIsLoading(true);
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'apple',
         options: {
           redirectTo: window.location.origin + '/'
         }
@@ -210,7 +192,7 @@ const Login = () => {
               <GoogleIcon />
               Entrar com Google
             </Button>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-1 gap-2 mt-2">
               <Button 
                 type="button"
                 variant="outline"
@@ -220,16 +202,6 @@ const Login = () => {
               >
                 <FacebookIcon />
                 Entrar com Facebook
-              </Button>
-              <Button 
-                type="button"
-                variant="outline"
-                className="w-full btn-touch text-responsive-sm"
-                onClick={signInApple}
-                disabled={isLoading}
-              >
-                <AppleIcon />
-                Entrar com Apple
               </Button>
             </div>
 
