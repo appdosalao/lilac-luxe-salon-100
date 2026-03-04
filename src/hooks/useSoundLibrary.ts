@@ -9,6 +9,10 @@ export function useSoundLibrary() {
   const [sounds, setSounds] = useState<SoundItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fileToUrl = useCallback((base: '/sunds' | '/sond' | '/sounds', filename: string) => {
+    return `${base}/${encodeURIComponent(filename)}`;
+  }, []);
+
   const addUnique = (items: SoundItem[]) => {
     setSounds(prev => {
       const map = new Map<string, SoundItem>();
@@ -25,30 +29,30 @@ export function useSoundLibrary() {
         if (res.ok) {
           const list = await res.json();
           if (Array.isArray(list)) {
+            const base = m.startsWith('/sunds') ? '/sunds' : m.startsWith('/sond') ? '/sond' : '/sounds';
             const items = list
               .filter((n) => typeof n === 'string' && (n.toLowerCase().endsWith('.mp3') || n.toLowerCase().endsWith('.wav')))
-              .map((n) => ({ name: n, src: m.startsWith('/sunds') ? `/sunds/${n}` : m.startsWith('/sond') ? `/sond/${n}` : `/sounds/${n}` }));
+              .map((n) => ({ name: n, src: fileToUrl(base, n) }));
             addUnique(items);
-            break;
           }
         }
       } catch { /* ignore */ }
     }
-  }, []);
+  }, [fileToUrl]);
 
   const loadDefaults = useCallback(() => {
-    addUnique(DEFAULTS.map(n => ({ name: n, src: `/sunds/${n}` })));
-  }, []);
+    addUnique(DEFAULTS.map(n => ({ name: n, src: fileToUrl('/sounds', n) })));
+  }, [fileToUrl]);
 
   const loadCustomStorage = useCallback(() => {
     try {
       const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
       if (raw) {
         const list: string[] = JSON.parse(raw);
-        addUnique(list.map(n => ({ name: n, src: `/sond/${n}` })));
+        addUnique(list.map(n => ({ name: n, src: fileToUrl('/sond', n) })));
       }
     } catch { /* ignore */ }
-  }, []);
+  }, [fileToUrl]);
 
   useEffect(() => {
     (async () => {
@@ -63,7 +67,7 @@ export function useSoundLibrary() {
   const addIfExists = useCallback(async (filename: string) => {
     const clean = filename.trim();
     if (!clean) return false;
-    const urls = [`/sunds/${clean}`, `/sond/${clean}`, `/sounds/${clean}`];
+    const urls = [fileToUrl('/sunds', clean), fileToUrl('/sond', clean), fileToUrl('/sounds', clean)];
     for (const u of urls) {
       try {
         const res = await fetch(u, { method: 'HEAD' });
@@ -82,7 +86,7 @@ export function useSoundLibrary() {
       } catch { /* ignore */ }
     }
     return false;
-  }, []);
+  }, [fileToUrl]);
 
   const reload = useCallback(async () => {
     setLoading(true);
