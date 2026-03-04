@@ -74,7 +74,7 @@ export function useSupabaseAgendamentos() {
     try {
       const { data, error } = await supabase
         .from('agendamentos')
-        .select('*')
+        .select('*, clientes(nome, nome_completo), servicos(nome)')
         .eq('user_id', user.id)
         .order('data')
         .order('hora');
@@ -87,9 +87,9 @@ export function useSupabaseAgendamentos() {
       return (data || []).map(item => ({
         id: item.id,
         clienteId: item.cliente_id,
-        clienteNome: 'Cliente', // Será resolvido depois
+        clienteNome: item.clientes?.nome || item.clientes?.nome_completo || item.clienteNome || 'Cliente não encontrado',
         servicoId: item.servico_id,
-        servicoNome: 'Serviço', // Será resolvido depois
+        servicoNome: item.servicos?.nome || item.servicoNome || 'Serviço não encontrado',
         data: item.data,
         hora: item.hora,
         duracao: item.duracao,
@@ -117,7 +117,7 @@ export function useSupabaseAgendamentos() {
     try {
       const { data, error } = await supabase
         .from('agendamentos_online')
-        .select('*')
+        .select('*, servicos(nome)')
         .in('status', ['pendente', 'confirmado'])
         .order('created_at', { ascending: false });
 
@@ -132,6 +132,7 @@ export function useSupabaseAgendamentos() {
         email: item.email,
         telefone: item.telefone,
         servico_id: item.servico_id,
+        servico_nome: (item as any).servicos?.nome, // Added this field internally
         data: item.data,
         horario: item.horario,
         observacoes: item.observacoes,
@@ -148,13 +149,13 @@ export function useSupabaseAgendamentos() {
   };
 
   // Converter agendamento online para o formato de agendamento regular
-  const converterAgendamentoOnline = (agendamentoOnline: AgendamentoOnlineData): Agendamento => {
+  const converterAgendamentoOnline = (agendamentoOnline: AgendamentoOnlineData & { servico_nome?: string }): Agendamento => {
     return {
       id: `online_${agendamentoOnline.id}`,
       clienteId: '', // Não há cliente cadastrado
       clienteNome: agendamentoOnline.nome_completo,
       servicoId: agendamentoOnline.servico_id,
-      servicoNome: 'Serviço Online', // Será resolvido depois
+      servicoNome: agendamentoOnline.servico_nome || 'Serviço Online',
       data: agendamentoOnline.data,
       hora: agendamentoOnline.horario,
       duracao: agendamentoOnline.duracao,

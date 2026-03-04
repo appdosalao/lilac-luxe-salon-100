@@ -8,17 +8,17 @@ export function useAgendamentos() {
   const { todosServicos: servicos } = useServicos();
   const { clientes } = useSupabaseClientes();
 
-  // Enriquecer agendamentos com nomes completos de clientes e serviços
+  // Agendamentos já vêm enriquecidos da consulta do Supabase,
+  // mas mantemos o fallback e os campos extras para a agenda
   const todosAgendamentos = useMemo(() => {
     const agendamentos = agendamentosData.todosAgendamentos || [];
     return agendamentos.map(agendamento => {
+      // Find extra info not mapped in Supabase query yet
       const cliente = clientes.find(c => c.id === agendamento.clienteId);
       const servico = servicos.find(s => s.id === agendamento.servicoId);
       
       return {
         ...agendamento,
-        clienteNome: cliente?.nome || cliente?.nomeCompleto || agendamento.clienteNome || 'Cliente não encontrado',
-        servicoNome: servico?.nome || agendamento.servicoNome || 'Serviço não encontrado',
         servicoValor: servico?.valor || agendamento.valor || 0,
         servicoDuracao: servico?.duracao || agendamento.duracao || 30,
         // Informações adicionais para a agenda
@@ -38,19 +38,17 @@ export function useAgendamentos() {
       .trim();
   };
 
-  // Agendamentos filtrados também com nomes completos e busca por texto
+  // Agendamentos filtrados com base na busca por texto
   const agendamentosFiltradosEnriquecidos = useMemo(() => {
     const agendamentos = agendamentosData.agendamentosFiltrados || [];
     
-    // Primeiro enriquecer com nomes reais
+    // Nomes já vêm resolvidos pelo Supabase Join, pegamos info extra:
     let resultado = agendamentos.map(agendamento => {
       const cliente = clientes.find(c => c.id === agendamento.clienteId);
       const servico = servicos.find(s => s.id === agendamento.servicoId);
       
       return {
         ...agendamento,
-        clienteNome: cliente?.nome || cliente?.nomeCompleto || agendamento.clienteNome || 'Cliente não encontrado',
-        servicoNome: servico?.nome || agendamento.servicoNome || 'Serviço não encontrado',
         servicoValor: servico?.valor || agendamento.valor || 0,
         servicoDuracao: servico?.duracao || agendamento.duracao || 30,
         // Informações adicionais para a agenda
