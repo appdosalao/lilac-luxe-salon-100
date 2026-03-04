@@ -157,12 +157,27 @@ export const useSupabaseConfiguracoes = () => {
     if (!user?.id) return;
 
     try {
+      const payload = {
+        notificacoes_push: !!notificacoes.notificacoes_push,
+        notificacoes_email: !!notificacoes.notificacoes_email,
+        notificacoes_som: !!notificacoes.notificacoes_som,
+        som_personalizado: notificacoes.som_personalizado || null,
+        lembrete_agendamento_minutos: notificacoes.lembrete_agendamento_minutos ?? 60,
+        lembrete_vencimento_dias: notificacoes.lembrete_vencimento_dias ?? 3,
+        lembrete_contas_fixas_dias: notificacoes.lembrete_contas_fixas_dias ?? 7,
+        notificar_cancelamentos: !!notificacoes.notificar_cancelamentos,
+        notificar_reagendamentos: !!notificacoes.notificar_reagendamentos,
+        notificar_pagamentos: !!notificacoes.notificar_pagamentos,
+        notificar_novos_agendamentos: !!notificacoes.notificar_novos_agendamentos,
+        horario_inicio_notificacoes: notificacoes.horario_inicio_notificacoes || '08:00',
+        horario_fim_notificacoes: notificacoes.horario_fim_notificacoes || '20:00',
+        user_id: user.id,
+        updated_at: new Date().toISOString(),
+      };
+
       const { data, error } = await supabase
         .from('configuracoes_notificacoes')
-        .upsert({
-          ...notificacoes,
-          user_id: user.id,
-        })
+        .upsert(payload, { onConflict: 'user_id' })
         .select();
 
       if (error) throw error;
