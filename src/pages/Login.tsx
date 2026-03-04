@@ -15,20 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthFooter } from '@/components/branding/AuthFooter';
 import { supabase } from '@/integrations/supabase/client';
-const GoogleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-4 w-4 mr-2">
-    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.9 0-12.5-5.6-12.5-12.5S17.1 11 24 11c3.1 0 6 1.1 8.2 3l5.7-5.7C34.6 5.6 29.6 4 24 4 12.3 4 2.9 13.4 2.9 25.1S12.3 46.2 24 46.2c11.7 0 21.1-9.4 21.1-21.1 0-1.1-.1-2.2-.5-3.3z"/>
-    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.3 18.9 14 24 14c3.1 0 6 1.1 8.2 3l5.7-5.7C34.6 5.6 29.6 4 24 4 15.5 4 8.4 8.8 6.3 14.7z"/>
-    <path fill="#4CAF50" d="M24 46.2c5.4 0 10.4-1.8 14.3-4.9l-6.6-5.4c-2.1 1.4-4.9 2.2-7.7 2.2-5.3 0-9.8-3.4-11.4-8.1l-6.6 5.1c2.4 6 8.3 10.1 15.6 10.1z"/>
-    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.3 5.5-6.1 6.9l6.6 5.4c3.8-3.5 6-8.5 6-14.3 0-1.1-.1-2.2-.2-3.3z"/>
-  </svg>
-);
-const FacebookIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="h-4 w-4 mr-2">
-    <path fill="#1877F2" d="M32 16C32 7.163 24.837 0 16 0S0 7.163 0 16c0 7.987 5.851 14.627 13.5 15.813V20.625H9.438V16H13.5v-3.5c0-4.012 2.39-6.225 6.053-6.225 1.754 0 3.586.313 3.586.313v3.945h-2.02c-1.99 0-2.606 1.235-2.606 2.5V16h4.437l-.71 4.625H18.513v11.188C26.149 30.627 32 23.987 32 16z"/>
-    <path fill="#fff" d="M18.513 31.813V20.625h4.437L23.66 16h-4.437v-2.967c0-1.265.616-2.5 2.606-2.5h2.02V6.588s-1.832-.313-3.586-.313c-3.663 0-6.053 2.213-6.053 6.225V16h-4.062v4.625H14.5v11.188a16.058 16.058 0 0 0 4.013 0z"/>
-  </svg>
-);
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -48,40 +34,6 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-
-  const signInGoogle = async () => {
-    setIsLoading(true);
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          // Simplificação: usar a URL atual como callback sem parâmetros extras complexos
-          redirectTo: window.location.origin,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        }
-      });
-    } catch (error) {
-      console.error('Erro no login com Google:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const signInFacebook = async () => {
-    setIsLoading(true);
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: window.location.origin,
-        }
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const onSubmit = async (data: UsuarioLogin) => {
     setIsLoading(true);
@@ -183,34 +135,6 @@ const Login = () => {
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
-
-            <div className="grid grid-cols-3 items-center gap-2 my-2">
-              <div className="h-px bg-border" />
-              <div className="text-center text-xs text-muted-foreground">ou</div>
-              <div className="h-px bg-border" />
-            </div>
-            <Button 
-              type="button"
-              variant="outline"
-              className="w-full btn-touch text-responsive-sm"
-              onClick={signInGoogle}
-              disabled={isLoading}
-            >
-              <GoogleIcon />
-              Entrar com Google
-            </Button>
-            <div className="grid grid-cols-1 gap-2 mt-2">
-              <Button 
-                type="button"
-                variant="outline"
-                className="w-full btn-touch text-responsive-sm"
-                onClick={signInFacebook}
-                disabled={isLoading}
-              >
-                <FacebookIcon />
-                Entrar com Facebook
-              </Button>
-            </div>
 
             <div className="text-center space-responsive-sm">
               <div className="text-responsive-xs text-muted-foreground">
