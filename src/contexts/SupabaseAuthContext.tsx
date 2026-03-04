@@ -151,8 +151,12 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           console.log('🟡 [AUTH] Usuário logado, buscando perfil...');
           // Verificar se é primeiro login
           const onboardingCompleted = localStorage.getItem('onboarding-completed');
-          if (!onboardingCompleted && event === 'SIGNED_IN') {
-            setTimeout(() => navigate('/onboarding'), 500);
+          // Verificar se veio de OAuth redirect (hash na URL) ou se acabou de logar
+          const isOAuthRedirect = window.location.hash && window.location.hash.includes('access_token');
+          
+          if (!onboardingCompleted && (event === 'SIGNED_IN' || isOAuthRedirect)) {
+            // Se for login via OAuth, pode precisar de um tempo extra para o perfil ser criado
+            setTimeout(() => navigate('/onboarding'), 1000);
           }
           // Defer para evitar deadlock
           setTimeout(async () => {
