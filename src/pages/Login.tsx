@@ -55,7 +55,11 @@ const Login = () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/'
+          redirectTo: window.location.origin, // Removido o '/' extra que pode causar problemas
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         }
       });
     } finally {
@@ -68,7 +72,7 @@ const Login = () => {
       await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: window.location.origin + '/'
+          redirectTo: window.location.origin,
         }
       });
     } finally {
