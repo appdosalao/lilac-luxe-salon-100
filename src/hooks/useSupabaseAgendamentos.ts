@@ -413,8 +413,11 @@ export function useSupabaseAgendamentos() {
             const nomeCompleto = (cliente as any)?.nome || 'Cliente';
             const telefone = (cliente as any)?.telefone || '0000000000';
             const email = (cliente as any)?.email || 'nao-informado@local';
-            // Usar cliente ANON (sem sessão) para obedecer políticas RLS de 'agendamentos_online'
-            const { data: online, error: e1 } = await supabasePublic
+            
+            console.warn('Tentando fallback de criação via tabela agendamentos_online devido a erro:', msg);
+            
+            // Usar cliente AUTENTICADO para garantir permissões, já que estamos logados
+            const { data: online, error: e1 } = await supabase
               .from('agendamentos_online')
               .insert({
                 nome_completo: nomeCompleto,
@@ -427,7 +430,7 @@ export function useSupabaseAgendamentos() {
                 valor,
                 duracao,
                 status: 'confirmado',
-                origem: 'manual_via_agenda',
+                // origem: 'manual_via_agenda', // Removido pois pode não existir na tabela agendamentos_online
                 user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'agenda-app'
               })
               .select()

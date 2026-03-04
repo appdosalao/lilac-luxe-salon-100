@@ -30,6 +30,7 @@ import { NotificationProviderAvancado } from "./components/notificacoes/Notifica
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
 import TesteSomPage from "./pages/TesteSomPage";
+import TesteAgendamentosPage from "./pages/TesteAgendamentosPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => {
                     <Route path="/privacidade" element={<Privacidade />} />
                     <Route path="/termos" element={<Termos />} />
                     <Route path="/teste-som" element={<TesteSomPage />} />
+                    <Route path="/teste-agendamentos" element={<TesteAgendamentosPage />} />
                     <Route path="/sobre" element={<Sobre />} />
                     
                     {/* Rotas protegidas com Layout */}
