@@ -56,39 +56,65 @@ const Login = () => {
 
   const signInGoogle = async () => {
     setIsLoading(true);
+    setError('');
     try {
-      await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + '/'
         }
       });
+      if (error) {
+        console.error('Erro Google OAuth:', error.message);
+        setError('Erro ao logar com Google: ' + error.message);
+      }
+    } catch (err: any) {
+      console.error('Exceção Google OAuth:', err);
+      setError('Falha inesperada ao logar com Google.');
     } finally {
       setIsLoading(false);
     }
   };
+
   const signInFacebook = async () => {
     setIsLoading(true);
+    setError('');
     try {
-      await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
           redirectTo: window.location.origin + '/'
         }
       });
+      if (error) {
+        console.error('Erro Facebook OAuth:', error.message);
+        setError('Erro ao logar com Facebook: ' + error.message);
+      }
+    } catch (err: any) {
+      console.error('Exceção Facebook OAuth:', err);
+      setError('Falha inesperada ao logar com Facebook.');
     } finally {
       setIsLoading(false);
     }
   };
+
   const signInApple = async () => {
     setIsLoading(true);
+    setError('');
     try {
-      await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
           redirectTo: window.location.origin + '/'
         }
       });
+      if (error) {
+        console.error('Erro Apple OAuth:', error.message);
+        setError('Erro ao logar com Apple: ' + error.message);
+      }
+    } catch (err: any) {
+      console.error('Exceção Apple OAuth:', err);
+      setError('Falha inesperada ao logar com Apple.');
     } finally {
       setIsLoading(false);
     }
