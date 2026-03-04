@@ -55,13 +55,16 @@ const Login = () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin, // Removido o '/' extra que pode causar problemas
+          // Simplificação: usar a URL atual como callback sem parâmetros extras complexos
+          redirectTo: window.location.origin,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
           },
         }
       });
+    } catch (error) {
+      console.error('Erro no login com Google:', error);
     } finally {
       setIsLoading(false);
     }
