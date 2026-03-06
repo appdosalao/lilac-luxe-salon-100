@@ -12,7 +12,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioLogin } from '@/types/usuario';
 import { AppLogo } from '@/components/branding/AppLogo';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { AuthFooter } from '@/components/branding/AuthFooter';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -133,7 +133,14 @@ const Login = () => {
               className="w-full btn-touch text-responsive-sm bg-gradient-to-r from-primary to-lilac-primary hover:opacity-90" 
               disabled={isLoading}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </Button>
 
             <div className="text-center space-responsive-sm">
