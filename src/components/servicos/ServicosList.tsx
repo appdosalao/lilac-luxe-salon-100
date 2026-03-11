@@ -210,6 +210,7 @@ export default function ServicosList({
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label={`Editar serviço ${servico.nome}`}
                           onClick={() => onEdit(servico)}
                           className="h-8 w-8 p-0"
                         >
@@ -218,6 +219,7 @@ export default function ServicosList({
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label={`Excluir serviço ${servico.nome}`}
                           onClick={() => setServicoParaExcluir(servico)}
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
                         >
@@ -269,6 +271,7 @@ export default function ServicosList({
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Editar serviço ${servico.nome}`}
                         onClick={() => onEdit(servico)}
                       >
                         <Edit className="h-4 w-4" />
@@ -276,6 +279,7 @@ export default function ServicosList({
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Excluir serviço ${servico.nome}`}
                         onClick={() => setServicoParaExcluir(servico)}
                         className="text-destructive hover:text-destructive"
                       >
