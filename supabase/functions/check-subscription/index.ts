@@ -137,9 +137,11 @@ serve(async (req) => {
       statuses: subscriptions.data.map(s => ({ id: s.id, status: s.status }))
     });
     
-    // Filtrar apenas assinaturas "active" ou "trialing"
+    // Filtrar apenas assinaturas "active", "trialing" ou "canceled" mas ainda válidas
     const validSubscriptions = subscriptions.data.filter(sub => 
-      sub.status === 'active' || sub.status === 'trialing'
+      sub.status === 'active' || 
+      sub.status === 'trialing' ||
+      (sub.status === 'canceled' && sub.current_period_end > Date.now() / 1000)
     );
     
     const hasActiveSub = validSubscriptions.length > 0;
@@ -177,6 +179,15 @@ serve(async (req) => {
         status = isTrialExpired ? 'expired' : 'trial';
       } else if (subscription.status === 'active') {
         status = 'active';
+      } else if (subscription.status === 'canceled') {
+         // Se cancelou mas ainda está no período pago (ou trial), manter acesso
+         if (subscription.trial_end && subscription.trial_end > Date.now() / 1000) {
+            status = 'trial';
+         } else if (subscription.current_period_end > Date.now() / 1000) {
+            status = 'active';
+         } else {
+            status = 'expired';
+         }
       }
       
       logStep("Valid subscription found", { 
