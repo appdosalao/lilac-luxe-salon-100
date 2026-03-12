@@ -7,6 +7,9 @@ export interface Usuario {
   tema_preferencia: 'feminino' | 'masculino';
   created_at: string;
   updated_at: string;
+  subscription_status?: 'trial' | 'active' | 'expired' | 'inactive';
+  trial_start_date?: string;
+  trial_used?: boolean;
 }
 
 export interface UsuarioCadastro {

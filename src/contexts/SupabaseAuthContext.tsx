@@ -43,9 +43,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
-  const checkSubscription = async (currentSession?: Session | null) => {
+  const checkSubscription = async (currentSession?: Session | null, userData?: Usuario | null) => {
     const sessionToUse = currentSession || session;
     const userToUse = sessionToUse?.user || user;
+    const profileToUse = userData || usuario;
     
     if (!sessionToUse || !userToUse) {
       console.log('[AUTH] ❌ Sem sessão ou usuário, pulando verificação');
@@ -98,28 +99,61 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         body: {} // Enviar body vazio para garantir que é um POST válido
       });
 
-      if (error) {
-        console.error('[AUTH] ❌ Erro ao verificar assinatura:', error);
-        setSubscription({
-          subscribed: false,
-          status: 'inactive',
-          is_trial_expired: false
-        });
-        setIsSubscriptionLoading(false);
-        return;
+      let finalStatus: SubscriptionStatus = {
+        subscribed: false,
+        status: 'inactive',
+        is_trial_expired: false
+      };
+
+      if (!error && data) {
+        console.log('[AUTH] ✅ Status recebido do Stripe:', data);
+        finalStatus = {
+          subscribed: data.subscribed,
+          status: data.status,
+          trial_days_remaining: data.trial_days_remaining,
+          trial_end_date: data.trial_end_date,
+          is_trial_expired: data.is_trial_expired || false,
+          subscription_end: data.subscription_end,
+          product_id: data.product_id
+        };
+      } else {
+        console.error('[AUTH] ❌ Erro ao verificar assinatura (Stripe):', error);
+      }
+
+      // ✅ FALLBACK: Verificar Trial Local se o Stripe retornar inativo/não inscrito
+      // Isso garante que os 7 dias grátis funcionem mesmo sem registro no Stripe
+      if ((finalStatus.status === 'inactive' || !finalStatus.subscribed) && profileToUse?.subscription_status === 'trial') {
+        console.log('[AUTH] ⚠️ Stripe inativo, verificando trial local...', profileToUse);
+        
+        const trialStart = profileToUse.trial_start_date ? new Date(profileToUse.trial_start_date) : null;
+        
+        if (trialStart) {
+          const now = new Date();
+          const diffTime = now.getTime() - trialStart.getTime();
+          const diffDays = diffTime / (1000 * 60 * 60 * 24); // Dias corridos (float)
+          
+          const isExpired = diffDays > 7;
+          const daysRemaining = Math.max(0, Math.ceil(7 - diffDays));
+          
+          if (!isExpired) {
+            console.log(`[AUTH] ✅ Trial local VÁLIDO. Dias restantes: ${daysRemaining}`);
+            finalStatus = {
+              subscribed: true, // Consideramos subscrito durante o trial
+              status: 'trial',
+              trial_days_remaining: daysRemaining,
+              trial_end_date: new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              is_trial_expired: false
+            };
+          } else {
+            console.log('[AUTH] ❌ Trial local EXPIRADO.');
+            finalStatus.status = 'expired';
+            finalStatus.is_trial_expired = true;
+          }
+        }
       }
       
-      console.log('[AUTH] ✅ Status recebido:', data);
-      
-      setSubscription({
-        subscribed: data.subscribed,
-        status: data.status,
-        trial_days_remaining: data.trial_days_remaining,
-        trial_end_date: data.trial_end_date,
-        is_trial_expired: data.is_trial_expired || false,
-        subscription_end: data.subscription_end,
-        product_id: data.product_id
-      });
+      setSubscription(finalStatus);
+
     } catch (error) {
       console.error('[AUTH] ❌ Exceção ao verificar assinatura:', error);
       setSubscription({ 
@@ -161,6 +195,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
           // Defer para evitar deadlock
           setTimeout(async () => {
             try {
+              // ✅ Setar loading da subscription imediatamente para evitar renderização prematura
+              setIsSubscriptionLoading(true);
+
               console.log('🔵 [QUERY] Buscando usuário no banco:', session.user.id);
               const { data: userData, error } = await supabase
                 .from('usuarios')
@@ -174,6 +211,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 console.error('❌ [ERROR] Erro ao buscar dados do usuário:', error);
                 console.error('❌ [ERROR] Código do erro:', error.code);
                 console.error('❌ [ERROR] Mensagem:', error.message);
+                setIsSubscriptionLoading(false); // Liberar loading em caso de erro
                 return;
               }
 
@@ -191,16 +229,18 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 
                 // ✅ VERIFICAR ASSINATURA AQUI, PASSANDO A SESSÃO ATUAL
                 console.log('🔄 [AUTH] Iniciando verificação de assinatura após carregar usuário');
-                checkSubscription(session);
+                await checkSubscription(session, usuario);
               } else {
                 console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
                 localStorage.setItem('app-theme', 'feminino');
+                setIsSubscriptionLoading(false); // Liberar loading se não achar usuário
               }
             } catch (error) {
               console.error('❌ [EXCEPTION] Erro ao buscar perfil do usuário:', error);
               document.documentElement.setAttribute('data-theme', 'feminino');
               localStorage.setItem('app-theme', 'feminino');
+              setIsSubscriptionLoading(false);
             }
           }, 0);
         } else {

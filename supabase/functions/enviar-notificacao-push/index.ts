@@ -58,8 +58,10 @@ serve(async (req) => {
 
     const { userId, tipo, notification }: PushRequest = await req.json();
 
-    // Ensure user can only send notifications to themselves
-    if (userId && userId !== user.id) {
+    // Ensure user can only send notifications to themselves, unless it's a service role (admin/trigger)
+    const isServiceRole = user.role === 'service_role';
+    
+    if (userId && userId !== user.id && !isServiceRole) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized: cannot send notifications to other users' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
