@@ -246,16 +246,16 @@ export default function Configuracoes() {
                     <div className="text-sm text-muted-foreground">Plano</div>
                     <div className="text-sm font-medium">Premium</div>
                   </div>
-                  <div className="pt-2 flex gap-2">
-                    <Button onClick={openPortal} className="gap-2" disabled={portalLoading}>
+                  <div className="pt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button onClick={openPortal} className="w-full gap-2" disabled={portalLoading}>
                       <CreditCard className="h-4 w-4" />
                       {portalLoading ? 'Abrindo...' : 'Gerenciar Assinatura'}
                     </Button>
-                    <Button variant="outline" className="gap-2" onClick={openPortal}>
+                    <Button variant="outline" className="w-full gap-2" onClick={openPortal}>
                       <ExternalLink className="h-4 w-4" />
                       Abrir Portal em nova aba
                     </Button>
-                    <Button variant="outline" onClick={testStripeConnection}>
+                    <Button variant="outline" className="w-full sm:col-span-2" onClick={testStripeConnection}>
                       Testar Conexão Stripe
                     </Button>
                   </div>
