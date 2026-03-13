@@ -107,10 +107,14 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: 'esnext',
+    chunkSizeWarningLimit: 1000, // Aumenta o limite para 1000kb (1MB) para evitar o aviso
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
+          'ui-libs': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot', 'framer-motion', 'lucide-react'],
+          'chart-libs': ['recharts'],
+          'form-libs': ['react-hook-form', 'zod'],
         },
       },
     },
