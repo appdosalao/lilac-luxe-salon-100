@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function Configuracoes() {
@@ -48,9 +48,6 @@ export default function Configuracoes() {
       }
       return statusPrefix;
     }
-    if (fromMessage === 'Edge Function returned a non-2xx status code') {
-      return 'Falha na Edge Function. Verifique os Logs da função no Supabase.';
-    }
     return fromMessage || 'Falha ao conectar ao Stripe';
   };
 
@@ -63,6 +60,28 @@ export default function Configuracoes() {
     } : undefined);
 
     if (!firstTry.error) return firstTry;
+
+    if (token) {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        });
+
+        const text = await response.text();
+        const parsed = text ? (() => { try { return JSON.parse(text); } catch { return { error: text }; } })() : null;
+
+        if (response.ok) return { data: parsed, error: null } as any;
+        return { data: parsed, error: { message: 'Edge Function returned a non-2xx status code', context: { response } } } as any;
+      } catch (e) {
+        return { data: null, error: e } as any;
+      }
+    }
 
     const secondTry = await supabase.functions.invoke('customer-portal');
     return secondTry;
