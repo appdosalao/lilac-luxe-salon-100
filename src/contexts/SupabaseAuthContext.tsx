@@ -250,7 +250,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
                 console.log('⚠️ [WARNING] Usuário não encontrado no banco, aplicando tema padrão');
                 document.documentElement.setAttribute('data-theme', 'feminino');
                 localStorage.setItem('app-theme', 'feminino');
-                setIsSubscriptionLoading(false); // Liberar loading se não achar usuário
+                console.log('🔄 [AUTH] Tentando verificar assinatura mesmo sem perfil no banco');
+                await checkSubscription(session, null);
               }
             } catch (error) {
               console.error('❌ [EXCEPTION] Erro ao buscar perfil do usuário:', error);
