@@ -112,22 +112,38 @@ export default function Configuracoes() {
       navigate('/login');
       return;
     }
+    const popup = window.open('', '_blank');
     setPortalLoading(true);
     try {
       const { data, error } = await invokeCustomerPortal();
       if (!error && data?.url) {
-        window.open(data.url, '_blank');
+        if (popup) {
+          popup.location.href = data.url;
+          popup.focus();
+        } else {
+          window.location.href = data.url;
+        }
         setPortalUrl(data.url);
         setPortalOpen(false);
       } else {
         const message = await getFunctionsErrorMessage(error, data);
         toast.error(message);
-        window.open('/assinatura', '_blank');
+        if (popup) {
+          popup.location.href = '/assinatura';
+          popup.focus();
+        } else {
+          window.location.href = '/assinatura';
+        }
       }
     } catch (err) {
       const message = await getFunctionsErrorMessage(err, null);
       toast.error(message);
-      window.open('/assinatura', '_blank');
+      if (popup) {
+        popup.location.href = '/assinatura';
+        popup.focus();
+      } else {
+        window.location.href = '/assinatura';
+      }
     } finally {
       setPortalLoading(false);
     }

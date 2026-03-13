@@ -1,27 +1,57 @@
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS public.usuarios (
+  id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  email text NOT NULL DEFAULT '',
+  nome_completo text NOT NULL DEFAULT '',
+  nome_personalizado_app text NOT NULL DEFAULT 'Meu Salão',
+  telefone text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 ALTER TABLE public.usuarios
-ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+  ADD COLUMN IF NOT EXISTS tema_preferencia text DEFAULT 'feminino',
+  ADD COLUMN IF NOT EXISTS trial_start_date timestamptz,
+  ADD COLUMN IF NOT EXISTS trial_used boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS subscription_status text DEFAULT 'inactive',
+  ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+
+ALTER TABLE public.usuarios
+  ALTER COLUMN email SET DEFAULT '',
+  ALTER COLUMN nome_completo SET DEFAULT '';
 
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can insert their own profile" ON public.usuarios;
-DROP POLICY IF EXISTS "Allow profile creation during signup" ON public.usuarios;
-DROP POLICY IF EXISTS "Allow users to insert their own profile" ON public.usuarios;
-DROP POLICY IF EXISTS "Allow profile creation on signup" ON public.usuarios;
+DO $$
+DECLARE
+  p record;
+BEGIN
+  FOR p IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'usuarios'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.usuarios', p.policyname);
+  END LOOP;
+END$$;
 
-DROP POLICY IF EXISTS "Users can view their own profile" ON public.usuarios;
 CREATE POLICY "Users can view their own profile"
 ON public.usuarios
 FOR SELECT
 TO authenticated
 USING (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Users can update their own profile" ON public.usuarios;
 CREATE POLICY "Users can update their own profile"
 ON public.usuarios
 FOR UPDATE
 TO authenticated
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user_signup() CASCADE;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user_signup()
 RETURNS trigger
@@ -81,7 +111,6 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW
@@ -89,3 +118,5 @@ EXECUTE FUNCTION public.handle_new_user_signup();
 
 GRANT ALL ON public.usuarios TO service_role;
 GRANT SELECT, UPDATE ON public.usuarios TO authenticated;
+
+COMMIT;

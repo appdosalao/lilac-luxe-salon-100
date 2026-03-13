@@ -30,21 +30,34 @@ export default function Assinatura() {
       return;
     }
 
+    const popup = window.open('', '_blank');
     setLoading(true);
     try {
       console.log('[SUBSCRIBE] Iniciando checkout...');
       
       // ✅ supabase.functions.invoke automaticamente passa o Authorization header
-      const { data, error } = await supabase.functions.invoke('create-checkout');
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
       if (error) {
+        popup?.close();
         toast.error('Erro ao criar sessão de checkout');
         console.error(error);
         return;
       }
 
+      if (data?.error) {
+        popup?.close();
+        toast.error(data.error);
+        return;
+      }
+
       // ✅ VERIFICAR SE JÁ TEM ASSINATURA ATIVA
       if (data?.message === 'Already subscribed' && data?.redirect) {
+        popup?.close();
         toast.success('Você já tem uma assinatura ativa!');
         await checkSubscription();
         setTimeout(() => navigate('/'), 1500);
@@ -52,15 +65,24 @@ export default function Assinatura() {
       }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        if (popup) {
+          popup.location.href = data.url;
+          popup.focus();
+        } else {
+          window.location.href = data.url;
+        }
         toast.info('Complete o pagamento na janela que abriu. Seu status será atualizado automaticamente.');
         
         // Verificar assinatura múltiplas vezes
         setTimeout(() => checkSubscription(), 5000);  // 5s
         setTimeout(() => checkSubscription(), 10000); // 10s
         setTimeout(() => checkSubscription(), 20000); // 20s
+      } else {
+        popup?.close();
+        toast.error('Não foi possível abrir o checkout (URL ausente).');
       }
     } catch (error) {
+      popup?.close();
       console.error('Erro ao iniciar checkout:', error);
       toast.error('Erro ao processar pagamento');
     } finally {
@@ -88,6 +110,7 @@ export default function Assinatura() {
       return;
     }
 
+    const popup = window.open('', '_blank');
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal', {
@@ -97,15 +120,31 @@ export default function Assinatura() {
       });
 
       if (error) {
+        popup?.close();
         toast.error('Erro ao abrir portal de gerenciamento');
         console.error(error);
         return;
       }
 
+      if (data?.error) {
+        popup?.close();
+        toast.error(data.error);
+        return;
+      }
+
       if (data?.url) {
-        window.open(data.url, '_blank');
+        if (popup) {
+          popup.location.href = data.url;
+          popup.focus();
+        } else {
+          window.location.href = data.url;
+        }
+      } else {
+        popup?.close();
+        toast.error('Não foi possível abrir o portal (URL ausente).');
       }
     } catch (error) {
+      popup?.close();
       console.error('Erro ao abrir portal:', error);
       toast.error('Erro ao abrir portal de gerenciamento');
     } finally {

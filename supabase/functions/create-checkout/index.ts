@@ -17,12 +17,13 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authHeader = req.headers.get("Authorization") ?? "";
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
     {
       global: {
-        headers: { Authorization: req.headers.get('Authorization')! },
+        headers: { Authorization: authHeader },
       },
     }
   );
@@ -40,7 +41,6 @@ serve(async (req) => {
       throw new Error("STRIPE_PRICE_ID is not set");
     }
 
-    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: No authorization header");
       throw new Error("No authorization header provided");
@@ -73,6 +73,11 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { 
       apiVersion: "2025-08-27.basil" 
     });
+
+    const origin =
+      req.headers.get("origin") ??
+      Deno.env.get("SITE_URL") ??
+      "http://localhost:3000";
 
     const { data: profile } = await supabaseClient
       .from("usuarios")
@@ -166,7 +171,7 @@ serve(async (req) => {
         
         return new Response(JSON.stringify({ 
           message: 'Already subscribed',
-          redirect: `${req.headers.get("origin")}/`,
+          redirect: `${origin}/`,
           subscription: {
             id: validSubscriptions[0].id,
             status: validSubscriptions[0].status
@@ -195,8 +200,8 @@ serve(async (req) => {
       },
       metadata: { supabase_user_id: user.id },
       client_reference_id: user.id,
-      success_url: `${req.headers.get("origin")}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/assinatura`,
+      success_url: `${origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/assinatura`,
     });
 
     logStep("Checkout session created", { 
