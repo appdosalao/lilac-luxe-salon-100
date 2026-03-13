@@ -42,9 +42,13 @@ export default function Configuracoes() {
         setPortalUrl(data.url);
         setPortalOpen(false);
       } else {
-        window.open(data?.url || '/assinatura', '_blank');
+        const message = data?.error || error?.message || 'Falha ao abrir portal do Stripe';
+        toast.error(message);
+        window.open('/assinatura', '_blank');
       }
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Falha ao abrir portal do Stripe';
+      toast.error(message);
       window.open('/assinatura', '_blank');
     } finally {
       setPortalLoading(false);
@@ -61,14 +65,16 @@ export default function Configuracoes() {
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
       if (error) {
-        toast.error('Falha ao conectar ao Stripe');
+        const message = data?.error || error.message || 'Falha ao conectar ao Stripe';
+        toast.error(message);
       } else if (data?.url) {
         toast.success('Conexão com Stripe OK');
       } else {
-        toast.error('Não foi possível validar a conexão');
+        toast.error(data?.error || 'Não foi possível validar a conexão');
       }
-    } catch {
-      toast.error('Erro de conectividade com Stripe');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro de conectividade com Stripe';
+      toast.error(message);
     }
   };
   useEffect(() => {
