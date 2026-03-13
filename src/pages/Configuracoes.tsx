@@ -31,6 +31,7 @@ export default function Configuracoes() {
     const fromMessage = typeof err?.message === 'string' && err.message.trim() ? err.message : null;
     const response: Response | undefined = err?.context?.response;
     if (response) {
+      const statusPrefix = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
       try {
         const text = await response.text();
         if (text) {
@@ -38,13 +39,17 @@ export default function Configuracoes() {
             const parsed = JSON.parse(text);
             if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error;
             if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message;
-            return text;
+            return `${statusPrefix} - ${text}`;
           } catch {
-            return text;
+            return `${statusPrefix} - ${text}`;
           }
         }
       } catch {
       }
+      return statusPrefix;
+    }
+    if (fromMessage === 'Edge Function returned a non-2xx status code') {
+      return 'Falha na Edge Function. Verifique os Logs da função no Supabase.';
     }
     return fromMessage || 'Falha ao conectar ao Stripe';
   };
@@ -71,7 +76,7 @@ export default function Configuracoes() {
         window.open('/assinatura', '_blank');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha ao abrir portal do Stripe';
+      const message = await getFunctionsErrorMessage(err, null);
       toast.error(message);
       window.open('/assinatura', '_blank');
     } finally {
@@ -97,7 +102,7 @@ export default function Configuracoes() {
         toast.error(data?.error || 'Não foi possível validar a conexão');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro de conectividade com Stripe';
+      const message = await getFunctionsErrorMessage(err, null);
       toast.error(message);
     }
   };
