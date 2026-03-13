@@ -47,7 +47,7 @@ export const updateManifest = (usuario: Usuario | null) => {
     start_url: "/",
     display: "standalone",
     orientation: "portrait-primary",
-    theme_color: "#D6B2E7",
+    theme_color: "#a813ecff",
     background_color: "#FFFFFF",
     scope: "/",
     lang: "pt-BR",
