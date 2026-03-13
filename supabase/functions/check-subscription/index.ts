@@ -133,12 +133,18 @@ serve(async (req) => {
     let customerId: string | null = profile?.stripe_customer_id ?? null;
 
     if (customerId) {
-      const retrieved = await stripe.customers.retrieve(customerId);
-      if (retrieved.deleted) {
-        logStep("Stripe customer in profile is deleted, ignoring", { customerId });
+      try {
+        const retrieved = await stripe.customers.retrieve(customerId);
+        if (retrieved.deleted) {
+          logStep("Stripe customer in profile is deleted, ignoring", { customerId });
+          customerId = null;
+        } else {
+          logStep("Using Stripe customer from profile", { customerId });
+        }
+      } catch (e) {
+        logStep("Stripe customer in profile not found, ignoring", { customerId });
         customerId = null;
-      } else {
-        logStep("Using Stripe customer from profile", { customerId });
+        void e;
       }
     }
 

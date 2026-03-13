@@ -59,13 +59,19 @@ serve(async (req) => {
     const existingCustomerId = profile?.stripe_customer_id ?? null;
 
     if (existingCustomerId) {
-      const retrieved = await stripe.customers.retrieve(existingCustomerId);
-      if (!retrieved.deleted) {
-        customerId = retrieved.id;
-        logStep("Using Stripe customer from profile", { customerId });
-      } else {
+      try {
+        const retrieved = await stripe.customers.retrieve(existingCustomerId);
+        if (!retrieved.deleted) {
+          customerId = retrieved.id;
+          logStep("Using Stripe customer from profile", { customerId });
+        } else {
+          customerId = "";
+          logStep("Stripe customer in profile is deleted, will re-create", { existingCustomerId });
+        }
+      } catch (e) {
         customerId = "";
-        logStep("Stripe customer in profile is deleted, will re-create", { existingCustomerId });
+        logStep("Stripe customer in profile not found, will re-create", { existingCustomerId });
+        void e;
       }
     } else {
       customerId = "";

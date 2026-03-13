@@ -88,12 +88,18 @@ serve(async (req) => {
     let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
 
     if (customerId) {
-      const retrieved = await stripe.customers.retrieve(customerId);
-      if (retrieved.deleted) {
-        logStep("Stripe customer in profile is deleted, will re-create", { customerId });
+      try {
+        const retrieved = await stripe.customers.retrieve(customerId);
+        if (retrieved.deleted) {
+          logStep("Stripe customer in profile is deleted, will re-create", { customerId });
+          customerId = undefined;
+        } else {
+          logStep("Using Stripe customer from profile", { customerId });
+        }
+      } catch (e) {
+        logStep("Stripe customer in profile not found, will re-create", { customerId });
         customerId = undefined;
-      } else {
-        logStep("Using Stripe customer from profile", { customerId });
+        void e;
       }
     }
 
