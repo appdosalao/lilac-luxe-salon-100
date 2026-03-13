@@ -235,6 +235,7 @@ export function VendaForm({ onSuccess }: { onSuccess: () => void }) {
                     type="button"
                     variant="outline"
                     size="icon"
+                    aria-label="Remover item"
                     onClick={() => removerItem(index)}
                     disabled={itens.length === 1}
                   >
