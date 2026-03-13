@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
       srcDir: 'src',
       filename: 'service-worker.js',
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Lilac Luxe Salon',
@@ -59,38 +60,10 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      workbox: {
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
     }),
   ].filter(Boolean),
   resolve: {
