@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usePWAContext } from "@/components/pwa/PWAProvider";
 import { 
@@ -11,7 +10,6 @@ import {
   Shield,
   Settings,
   LogOut,
-  Sparkles,
   ExternalLink,
   Megaphone,
   Package,
@@ -31,9 +29,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/branding/AppLogo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 const navigationItems = [
   {
@@ -89,11 +87,11 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
-  const { state, setOpen, open, setOpenMobile, isMobile } = useSidebar() as any;
+  const { state, setOpen, setOpenMobile } = useSidebar() as any;
   const isMobileDevice = useIsMobile();
   const location = useLocation();
   const { usuario, signOut } = useSupabaseAuth();
-  const { isInstallable, installApp } = usePWAContext();
+  const { isInstallable, isInstalled, installApp } = usePWAContext();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -124,6 +122,28 @@ export function AppSidebar() {
     if (href === "/assinatura") return "from-yellow-500 to-amber-400";
     if (href === "/configuracoes") return "from-stone-500 to-stone-400";
     return "from-primary to-lilac-primary";
+  };
+
+  const handleInstallClick = async () => {
+    if (isInstalled) {
+      toast.success("O aplicativo já está instalado");
+      return;
+    }
+
+    if (isInstallable) {
+      await installApp();
+      return;
+    }
+
+    const ua = (typeof navigator !== "undefined" ? navigator.userAgent : "").toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(ua);
+
+    if (isIOS) {
+      toast.message("Para instalar no iPhone/iPad: Compartilhar → Adicionar à Tela de Início");
+      return;
+    }
+
+    toast.message("Para instalar: use o menu do navegador (⋮) e escolha “Instalar aplicativo”");
   };
 
   return (
@@ -182,17 +202,15 @@ export function AppSidebar() {
           <SidebarGroupLabel>Links Externos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {isInstallable && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={installApp}
-                    className="flex items-center gap-2 text-primary hover:bg-primary/10 transition-colors"
-                  >
-                    <Download className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">Instalar App</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={handleInstallClick}
+                  className="flex items-center gap-2 text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <Download className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Instalar App</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link 
