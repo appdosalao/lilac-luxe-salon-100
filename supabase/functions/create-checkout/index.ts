@@ -30,6 +30,16 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+
+    const stripePriceId = Deno.env.get("STRIPE_PRICE_ID");
+    if (!stripePriceId) {
+      throw new Error("STRIPE_PRICE_ID is not set");
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("ERROR: No authorization header");
@@ -60,7 +70,7 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+    const stripe = new Stripe(stripeKey, { 
       apiVersion: "2025-08-27.basil" 
     });
     
@@ -125,7 +135,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1STfSQHEo75Bn3U3GaTXOsrh", // Plano Mensal - prod_TQWVfarZ7rQSgy
+          price: stripePriceId,
           quantity: 1,
         },
       ],
