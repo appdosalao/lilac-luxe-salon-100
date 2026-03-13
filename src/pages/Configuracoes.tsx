@@ -25,6 +25,30 @@ export default function Configuracoes() {
   const [portalUrl, setPortalUrl] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
 
+  const getFunctionsErrorMessage = async (error: unknown, data: any) => {
+    if (typeof data?.error === 'string' && data.error.trim()) return data.error;
+    const err: any = error;
+    const fromMessage = typeof err?.message === 'string' && err.message.trim() ? err.message : null;
+    const response: Response | undefined = err?.context?.response;
+    if (response) {
+      try {
+        const text = await response.text();
+        if (text) {
+          try {
+            const parsed = JSON.parse(text);
+            if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error;
+            if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message;
+            return text;
+          } catch {
+            return text;
+          }
+        }
+      } catch {
+      }
+    }
+    return fromMessage || 'Falha ao conectar ao Stripe';
+  };
+
   const openPortal = async () => {
     if (!session) {
       navigate('/login');
@@ -42,7 +66,7 @@ export default function Configuracoes() {
         setPortalUrl(data.url);
         setPortalOpen(false);
       } else {
-        const message = data?.error || error?.message || 'Falha ao abrir portal do Stripe';
+        const message = await getFunctionsErrorMessage(error, data);
         toast.error(message);
         window.open('/assinatura', '_blank');
       }
@@ -65,7 +89,7 @@ export default function Configuracoes() {
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
       if (error) {
-        const message = data?.error || error.message || 'Falha ao conectar ao Stripe';
+        const message = await getFunctionsErrorMessage(error, data);
         toast.error(message);
       } else if (data?.url) {
         toast.success('Conexão com Stripe OK');
