@@ -54,6 +54,20 @@ export default function Configuracoes() {
     return fromMessage || 'Falha ao conectar ao Stripe';
   };
 
+  const invokeCustomerPortal = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token || session?.access_token;
+
+    const firstTry = await supabase.functions.invoke('customer-portal', token ? {
+      headers: { Authorization: `Bearer ${token}` }
+    } : undefined);
+
+    if (!firstTry.error) return firstTry;
+
+    const secondTry = await supabase.functions.invoke('customer-portal');
+    return secondTry;
+  };
+
   const openPortal = async () => {
     if (!session) {
       navigate('/login');
@@ -61,11 +75,7 @@ export default function Configuracoes() {
     }
     setPortalLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const { data, error } = await invokeCustomerPortal();
       if (!error && data?.url) {
         window.open(data.url, '_blank');
         setPortalUrl(data.url);
@@ -90,9 +100,7 @@ export default function Configuracoes() {
       return;
     }
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      });
+      const { data, error } = await invokeCustomerPortal();
       if (error) {
         const message = await getFunctionsErrorMessage(error, data);
         toast.error(message);
