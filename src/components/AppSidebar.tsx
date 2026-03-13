@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { usePWAContext } from "@/components/pwa/PWAProvider";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -13,7 +14,8 @@ import {
   Sparkles,
   ExternalLink,
   Megaphone,
-  Package
+  Package,
+  Download
 } from "lucide-react";
 import {
   Sidebar,
@@ -91,6 +93,7 @@ export function AppSidebar() {
   const isMobileDevice = useIsMobile();
   const location = useLocation();
   const { usuario, signOut } = useSupabaseAuth();
+  const { isInstallable, installApp } = usePWAContext();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -179,6 +182,17 @@ export function AppSidebar() {
           <SidebarGroupLabel>Links Externos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {isInstallable && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={installApp}
+                    className="flex items-center gap-2 text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <Download className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Instalar App</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link 
