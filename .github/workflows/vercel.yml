@@ -35,6 +35,4 @@ jobs:
           echo "Deploying with VERCEL_ORG_ID=$VERCEL_ORG_ID and VERCEL_PROJECT_ID=$VERCEL_PROJECT_ID"
       - run: npm ci
       - run: npx vercel --version
-      - run: npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-      - run: npx vercel build --prod --token="$VERCEL_TOKEN"
-      - run: npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+      - run: npx vercel deploy --prod --yes --token="$VERCEL_TOKEN"
