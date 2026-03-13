@@ -85,7 +85,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
-          'ui-libs': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot', 'framer-motion', 'lucide-react'],
+          'ui-libs': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot', 'lucide-react'],
           'chart-libs': ['recharts'],
           'form-libs': ['react-hook-form', 'zod'],
         },

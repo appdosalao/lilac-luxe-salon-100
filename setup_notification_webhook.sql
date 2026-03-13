@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_online_appointment_notification()
 RETURNS TRIGGER AS $$
 DECLARE
   project_url TEXT := 'https://dfwepnzwktjyhvfmpuxo.supabase.co/functions/v1/enviar-notificacao-push';
-  service_role_key TEXT := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmd2Vwbnp3a3RqeWh2Zm1wdXhvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTU3MTg3NCwiZXhwIjoyMDcxMTQ3ODc0fQ.ukNPT0N9hEgRaXONd-X8mVXK4o7Z8J9XRXQhhFozaX0';
+  service_role_key TEXT := 'YOUR_SERVICE_ROLE_KEY';
   payload JSONB;
 BEGIN
   -- Montar o payload para a Edge Function
