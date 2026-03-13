@@ -107,14 +107,20 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!error && data) {
         console.log('[AUTH] ✅ Status recebido do Stripe:', data);
+        const normalizedSubscribed = Boolean(data.subscribed);
+        const normalizedStatus: SubscriptionStatus['status'] =
+          data.status === 'trial' || data.status === 'active' || data.status === 'expired' || data.status === 'inactive'
+            ? data.status
+            : (normalizedSubscribed ? 'active' : 'inactive');
+
         finalStatus = {
-          subscribed: data.subscribed,
-          status: data.status,
+          subscribed: normalizedSubscribed,
+          status: normalizedStatus,
           trial_days_remaining: data.trial_days_remaining,
           trial_end_date: data.trial_end_date,
-          is_trial_expired: data.is_trial_expired || false,
-          subscription_end: data.subscription_end,
-          product_id: data.product_id
+          is_trial_expired: Boolean(data.is_trial_expired),
+          subscription_end: data.subscription_end ?? null,
+          product_id: data.product_id ?? null
         };
       } else {
         console.error('[AUTH] ❌ Erro ao verificar assinatura (Stripe):', error);
@@ -150,6 +156,16 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
             finalStatus.is_trial_expired = true;
           }
         }
+      }
+
+      // ✅ FALLBACK: Se o banco local já marcou como active, não bloquear o app por falha no Stripe
+      if ((finalStatus.status === 'inactive' || !finalStatus.subscribed) && profileToUse?.subscription_status === 'active') {
+        console.log('[AUTH] ⚠️ Stripe inativo, mas banco local indica ACTIVE. Liberando acesso pelo banco...', profileToUse.email);
+        finalStatus = {
+          subscribed: true,
+          status: 'active',
+          is_trial_expired: false
+        };
       }
       
       setSubscription(finalStatus);
