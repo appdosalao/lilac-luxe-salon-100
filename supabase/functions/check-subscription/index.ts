@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
@@ -113,18 +113,57 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+        auth: { persistSession: false },
+      }
+    );
+
+    const { data: profile } = await supabaseClient
+      .from("usuarios")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    let customerId: string | null = profile?.stripe_customer_id ?? null;
+
+    if (customerId) {
+      const retrieved = await stripe.customers.retrieve(customerId);
+      if (retrieved.deleted) {
+        logStep("Stripe customer in profile is deleted, ignoring", { customerId });
+        customerId = null;
+      } else {
+        logStep("Using Stripe customer from profile", { customerId });
+      }
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
+    if (!customerId) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length === 0) {
+        logStep("No customer found, updating unsubscribed state");
+        return new Response(JSON.stringify({ subscribed: false, status: 'inactive' }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      customerId = customers.data[0].id;
+      logStep("Found Stripe customer by email", { customerId });
+
+      try {
+        await supabaseClient
+          .from("usuarios")
+          .update({ stripe_customer_id: customerId })
+          .eq("id", user.id);
+      } catch (e) {
+        void e;
+      }
+    }
 
     // Buscar todas as assinaturas do cliente (não filtrar por status ainda)
     const subscriptions = await stripe.subscriptions.list({

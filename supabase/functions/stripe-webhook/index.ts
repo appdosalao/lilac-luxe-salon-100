@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
@@ -89,11 +89,16 @@ serve(async (req) => {
           break;
         }
 
-        const customerEmail = (customer as Stripe.Customer).email;
+        const stripeCustomer = customer as Stripe.Customer;
+        const customerEmail = stripeCustomer.email;
         if (!customerEmail) {
           logStep("No email for customer, skipping");
           break;
         }
+
+        const stripeCustomerId = stripeCustomer.id;
+        const metadata = (stripeCustomer.metadata ?? {}) as Record<string, string>;
+        const supabaseUserId = metadata.supabase_user_id || null;
 
         logStep("Customer email found", { email: customerEmail });
 
@@ -114,13 +119,17 @@ serve(async (req) => {
           dbStatus: newStatus 
         });
 
-        const { error: updateError } = await supabaseClient
-          .from('usuarios')
-          .update({ 
-            subscription_status: newStatus,
-            trial_used: true // Marca trial como usado quando tem assinatura
-          })
-          .eq('email', customerEmail);
+        const updatePayload = {
+          subscription_status: newStatus,
+          trial_used: true,
+          stripe_customer_id: stripeCustomerId,
+        };
+
+        const updateQuery = supabaseUserId
+          ? supabaseClient.from('usuarios').update(updatePayload).eq('id', supabaseUserId)
+          : supabaseClient.from('usuarios').update(updatePayload).eq('email', customerEmail);
+
+        const { error: updateError } = await updateQuery;
 
         if (updateError) {
           logStep("ERROR updating user", { error: updateError });
@@ -146,16 +155,27 @@ serve(async (req) => {
           break;
         }
 
-        const customerEmail = (customer as Stripe.Customer).email;
+        const stripeCustomer = customer as Stripe.Customer;
+        const customerEmail = stripeCustomer.email;
         if (!customerEmail) {
           logStep("No email for customer, skipping");
           break;
         }
 
-        const { error: updateError } = await supabaseClient
-          .from('usuarios')
-          .update({ subscription_status: 'inactive' })
-          .eq('email', customerEmail);
+        const stripeCustomerId = stripeCustomer.id;
+        const metadata = (stripeCustomer.metadata ?? {}) as Record<string, string>;
+        const supabaseUserId = metadata.supabase_user_id || null;
+
+        const updatePayload = {
+          subscription_status: 'inactive',
+          stripe_customer_id: stripeCustomerId,
+        };
+
+        const updateQuery = supabaseUserId
+          ? supabaseClient.from('usuarios').update(updatePayload).eq('id', supabaseUserId)
+          : supabaseClient.from('usuarios').update(updatePayload).eq('email', customerEmail);
+
+        const { error: updateError } = await updateQuery;
 
         if (updateError) {
           logStep("ERROR updating user on deletion", { error: updateError });
@@ -184,7 +204,8 @@ serve(async (req) => {
           break;
         }
 
-        const customerEmail = (customer as Stripe.Customer).email;
+        const stripeCustomer = customer as Stripe.Customer;
+        const customerEmail = stripeCustomer.email;
         if (!customerEmail) {
           logStep("No email for customer, skipping");
           break;
@@ -207,13 +228,21 @@ serve(async (req) => {
           dbStatus: newStatus 
         });
 
-        const { error: updateError } = await supabaseClient
-          .from('usuarios')
-          .update({ 
-            subscription_status: newStatus,
-            trial_used: true
-          })
-          .eq('email', customerEmail);
+        const stripeCustomerId = stripeCustomer.id;
+        const metadata = (stripeCustomer.metadata ?? {}) as Record<string, string>;
+        const supabaseUserId = metadata.supabase_user_id || null;
+
+        const updatePayload = {
+          subscription_status: newStatus,
+          trial_used: true,
+          stripe_customer_id: stripeCustomerId,
+        };
+
+        const updateQuery = supabaseUserId
+          ? supabaseClient.from('usuarios').update(updatePayload).eq('id', supabaseUserId)
+          : supabaseClient.from('usuarios').update(updatePayload).eq('email', customerEmail);
+
+        const { error: updateError } = await updateQuery;
 
         if (updateError) {
           logStep("ERROR updating user on payment success", { error: updateError });

@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
@@ -73,14 +73,65 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { 
       apiVersion: "2025-08-27.basil" 
     });
-    
-    // Buscar cliente existente
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Found existing customer", { customerId });
+
+    const { data: profile } = await supabaseClient
+      .from("usuarios")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
+
+    if (customerId) {
+      const retrieved = await stripe.customers.retrieve(customerId);
+      if (retrieved.deleted) {
+        logStep("Stripe customer in profile is deleted, will re-create", { customerId });
+        customerId = undefined;
+      } else {
+        logStep("Using Stripe customer from profile", { customerId });
+      }
+    }
+
+    if (!customerId) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        logStep("Found existing customer by email", { customerId });
+      } else {
+        logStep("Creating new customer");
+        const created = await stripe.customers.create({
+          email: user.email,
+          metadata: { supabase_user_id: user.id },
+        });
+        customerId = created.id;
+        logStep("Stripe customer created", { customerId });
+      }
+    }
+
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      if (!customer.deleted) {
+        const current = (customer.metadata ?? {}) as Record<string, string>;
+        if (current.supabase_user_id !== user.id) {
+          await stripe.customers.update(customerId, {
+            metadata: { ...current, supabase_user_id: user.id },
+          });
+        }
+      }
+    } catch (e) {
+      void e;
+    }
+
+    try {
+      await supabaseClient
+        .from("usuarios")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+    } catch (e) {
+      void e;
+    }
+
+    if (customerId) {
       
       // ✅ VERIFICAR SE JÁ TEM ASSINATURA ATIVA
       const subscriptions = await stripe.subscriptions.list({
@@ -125,14 +176,11 @@ serve(async (req) => {
           status: 200,
         });
       }
-    } else {
-      logStep("Creating new customer");
     }
 
     // ✅ CRIAR NOVA ASSINATURA COM TRIAL DE 7 DIAS
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [
         {
           price: stripePriceId,
@@ -143,7 +191,10 @@ serve(async (req) => {
       // Trial de 7 dias para todos os novos clientes
       subscription_data: {
         trial_period_days: 7,
+        metadata: { supabase_user_id: user.id },
       },
+      metadata: { supabase_user_id: user.id },
+      client_reference_id: user.id,
       success_url: `${req.headers.get("origin")}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/assinatura`,
     });

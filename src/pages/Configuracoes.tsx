@@ -25,11 +25,20 @@ export default function Configuracoes() {
   const [portalUrl, setPortalUrl] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
 
-  const getFunctionsErrorMessage = async (error: unknown, data: any) => {
-    if (typeof data?.error === 'string' && data.error.trim()) return data.error;
-    const err: any = error;
-    const fromMessage = typeof err?.message === 'string' && err.message.trim() ? err.message : null;
-    const response: Response | undefined = err?.context?.response;
+  const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null;
+
+  const getFunctionsErrorMessage = async (error: unknown, data: unknown) => {
+    if (isRecord(data) && typeof data.error === 'string' && data.error.trim()) return data.error;
+    const fromMessage =
+      isRecord(error) && typeof error.message === 'string' && error.message.trim()
+        ? error.message
+        : null;
+
+    const response =
+      isRecord(error) && isRecord(error.context) && error.context.response instanceof Response
+        ? error.context.response
+        : undefined;
     if (response) {
       const statusPrefix = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
       try {
@@ -44,12 +53,15 @@ export default function Configuracoes() {
             return `${statusPrefix} - ${text}`;
           }
         }
-      } catch {
+      } catch (e) {
+        void e;
       }
       return statusPrefix;
     }
     return fromMessage || 'Falha ao conectar ao Stripe';
   };
+
+  type InvokeResult = { data: unknown; error: unknown | null };
 
   const invokeCustomerPortal = async () => {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -59,7 +71,7 @@ export default function Configuracoes() {
       headers: { Authorization: `Bearer ${token}` }
     } : undefined);
 
-    if (!firstTry.error) return firstTry;
+    if (!firstTry.error) return firstTry as unknown as InvokeResult;
 
     if (token) {
       try {
@@ -74,17 +86,25 @@ export default function Configuracoes() {
         });
 
         const text = await response.text();
-        const parsed = text ? (() => { try { return JSON.parse(text); } catch { return { error: text }; } })() : null;
+        const parsed: unknown = text
+          ? (() => {
+              try {
+                return JSON.parse(text);
+              } catch {
+                return { error: text };
+              }
+            })()
+          : null;
 
-        if (response.ok) return { data: parsed, error: null } as any;
-        return { data: parsed, error: { message: 'Edge Function returned a non-2xx status code', context: { response } } } as any;
+        if (response.ok) return { data: parsed, error: null } as InvokeResult;
+        return { data: parsed, error: { message: 'Edge Function returned a non-2xx status code', context: { response } } } as InvokeResult;
       } catch (e) {
-        return { data: null, error: e } as any;
+        return { data: null, error: e } as InvokeResult;
       }
     }
 
     const secondTry = await supabase.functions.invoke('customer-portal');
-    return secondTry;
+    return secondTry as unknown as InvokeResult;
   };
 
   const openPortal = async () => {
