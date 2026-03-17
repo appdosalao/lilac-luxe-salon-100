@@ -14,7 +14,6 @@ import { AppLogo } from '@/components/branding/AppLogo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthFooter } from '@/components/branding/AuthFooter';
-import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -25,7 +24,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
-  const { signIn } = useSupabaseAuth();
+  const { login } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,8 +39,8 @@ const Login = () => {
     setError('');
 
     try {
-      const { error } = await signIn(data.email, data.senha);
-      if (!error) {
+      const ok = await login(data.email, data.senha);
+      if (ok) {
         navigate(redirect);
       } else {
         setError('E-mail ou senha incorretos');

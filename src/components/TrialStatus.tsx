@@ -7,19 +7,22 @@ import { useNavigate } from 'react-router-dom';
  * automaticamente quando o trial expira
  */
 export const TrialStatus = () => {
-  const { subscription } = useSupabaseAuth();
+  const { usuario } = useSupabaseAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Se trial expirou e não tem assinatura ativa, redirecionar
-    // MAS APENAS se não estiver já na página de assinatura
-    if (subscription?.is_trial_expired && subscription?.status !== 'active') {
-      const currentPath = window.location.pathname + window.location.search;
-      if (!currentPath.startsWith('/configuracoes')) {
-        navigate('/configuracoes?tab=assinatura', { replace: true });
+    const paymentStatus = usuario?.payment_status ?? null;
+    const nowIso = new Date().toISOString();
+    const trialValid = paymentStatus === 'trial' && typeof usuario?.trial_end_date === 'string' && usuario.trial_end_date > nowIso;
+    const activeValid = paymentStatus === 'active' && usuario?.is_active === true;
+
+    if (!trialValid && !activeValid) {
+      const path = window.location.pathname;
+      if (path !== '/planos' && path !== '/checkout' && path !== '/login' && path !== '/cadastro') {
+        navigate('/planos', { replace: true });
       }
     }
-  }, [subscription, navigate]);
+  }, [usuario, navigate]);
 
   return null;
 };

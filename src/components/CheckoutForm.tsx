@@ -67,6 +67,25 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
   const email = useMemo(() => usuario?.email || user?.email || '', [usuario?.email, user?.email]);
   const name = useMemo(() => usuario?.nome_completo || user?.user_metadata?.full_name || '', [usuario?.nome_completo, user?.user_metadata]);
 
+  const isFormComplete = useMemo(() => {
+    const cardNumberDigits = onlyDigits(cardNumber);
+    const expiryDigits = onlyDigits(cardExpiry);
+    const cvvDigits = onlyDigits(cardCvv);
+    const cpfCnpjDigits = onlyDigits(cpfCnpj);
+    const cepDigits = onlyDigits(postalCode);
+
+    if (!email) return false;
+    if (!cardHolderName.trim()) return false;
+    if (cardNumberDigits.length < 13) return false;
+    if (expiryDigits.length !== 4) return false;
+    if (cvvDigits.length < 3) return false;
+    if (cpfCnpjDigits.length < 11) return false;
+    if (cepDigits.length !== 8) return false;
+    if (!addressNumber.trim()) return false;
+    if (plano === 'vitalicio' && !vitalicioConsent) return false;
+    return true;
+  }, [addressNumber, cardCvv, cardExpiry, cardHolderName, cardNumber, cpfCnpj, email, plano, postalCode, vitalicioConsent]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
@@ -112,6 +131,9 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
       const now = new Date();
       const nextDueDate = formatYmd(addDays(now, 7));
 
+      const subscriptionValue = plano === 'mensal' ? 20.0 : 350.0;
+      const subscriptionCycle = plano === 'mensal' ? 'MONTHLY' : 'NO_RECURRENCE';
+
       const subscriptionResponse = await fetch('/api/subscriptions', {
         method: 'POST',
         headers: {
@@ -120,6 +142,8 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
         },
         body: JSON.stringify({
           plano,
+          value: subscriptionValue,
+          cycle: subscriptionCycle,
           customerId,
           cardHolderName,
           cardNumber: onlyDigits(cardNumber),
@@ -275,7 +299,7 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading || (plano === 'vitalicio' && !vitalicioConsent)}>
+          <Button type="submit" className="w-full" disabled={loading || !isFormComplete}>
             {loading ? 'Processando...' : 'Ativar meu plano com 7 dias grátis'}
           </Button>
         </form>

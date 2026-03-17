@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, subscription, isSubscriptionLoading } = useSupabaseAuth();
+  const { isAuthenticated, isLoading, usuario } = useSupabaseAuth();
 
-  if (isLoading || isSubscriptionLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -21,27 +21,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const currentPath = window.location.pathname;
+  const paymentStatus = usuario?.payment_status ?? null;
+  const nowIso = new Date().toISOString();
 
-  // ✅ VERIFICAR ACESSO: 
-  // - Trial ativo (não expirado) = acesso total
-  // - Assinatura ativa = acesso total
-  // - Trial expirado ou sem assinatura = redirecionar para Assinatura em Configurações
-  const hasActiveTrial = subscription?.status === 'trial' && !subscription?.is_trial_expired;
-  const hasActiveSubscription = subscription?.status === 'active';
-  const hasAccess = hasActiveTrial || hasActiveSubscription;
+  const canAccessTrial =
+    paymentStatus === 'trial' &&
+    typeof usuario?.trial_end_date === 'string' &&
+    usuario.trial_end_date > nowIso;
 
-  console.log('[PROTECTED-ROUTE] Access check:', {
-    pathname: currentPath,
-    hasAccess,
-    subscriptionStatus: subscription?.status,
-    isTrialExpired: subscription?.is_trial_expired,
-    trialDaysRemaining: subscription?.trial_days_remaining,
-    subscribed: subscription?.subscribed
-  });
+  const canAccessActive = paymentStatus === 'active' && usuario?.is_active === true;
 
-  if (!hasAccess) {
-    console.log('[PROTECTED-ROUTE] ❌ Acesso negado, redirecionando para /planos');
+  if (!canAccessTrial && !canAccessActive) {
     return <Navigate to="/planos" replace />;
   }
 

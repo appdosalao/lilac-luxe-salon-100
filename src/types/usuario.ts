@@ -7,14 +7,14 @@ export interface Usuario {
   tema_preferencia: 'feminino' | 'masculino';
   created_at: string;
   updated_at: string;
-  planType: 'mensal' | 'vitalicio' | null;
-  isActive: boolean;
-  trialStartDate: string | null;
-  trialEndDate: string | null;
-  planExpiresAt: string | null;
-  asaasCustomerId: string | null;
-  asaasSubscriptionId: string | null;
-  paymentStatus: 'trial' | 'active' | 'overdue' | 'cancelled' | 'pending' | null;
+  plan_type: 'mensal' | 'vitalicio' | null;
+  is_active: boolean;
+  payment_status: 'trial' | 'active' | 'overdue' | 'cancelled' | 'pending' | null;
+  trial_start_date: string | null;
+  trial_end_date: string | null;
+  plan_expires_at: string | null;
+  asaas_customer_id: string | null;
+  asaas_subscription_id: string | null;
 }
 
 export interface UsuarioCadastro {
@@ -36,4 +36,5 @@ export interface AuthState {
   usuario: Usuario | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  refreshProfile: () => Promise<void>;
 }

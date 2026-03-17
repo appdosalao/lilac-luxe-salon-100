@@ -121,10 +121,10 @@ export const updateManifest = (usuario: Usuario | null) => {
   manifestLink.href = manifestURL;
   
   // Atualizar meta tags relacionadas
-  updateMetaTags(appName);
+  updateMetaTags(appName, logo);
 };
 
-const updateMetaTags = (appName: string) => {
+const updateMetaTags = (appName: string, logo: string) => {
   // Atualizar título da página
   document.title = appName;
   

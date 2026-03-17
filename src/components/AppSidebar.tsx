@@ -90,7 +90,7 @@ export function AppSidebar() {
   const { state, setOpen, setOpenMobile } = useSidebar() as any;
   const isMobileDevice = useIsMobile();
   const location = useLocation();
-  const { usuario, signOut } = useSupabaseAuth();
+  const { usuario, logout } = useSupabaseAuth();
   const { isInstallable, isInstalled, installApp } = usePWAContext();
   const currentPath = location.pathname;
 
@@ -232,7 +232,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton 
-              onClick={signOut}
+              onClick={() => void logout()}
               className="text-destructive hover:text-destructive hover:bg-destructive/5"
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />

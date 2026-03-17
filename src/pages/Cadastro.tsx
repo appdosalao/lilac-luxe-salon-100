@@ -31,7 +31,7 @@ const cadastroSchema = z.object({
 
 const Cadastro = () => {
   const navigate = useNavigate();
-  const { signUp } = useSupabaseAuth();
+  const { cadastrar } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [planType, setPlanType] = useState<'trial' | 'paid'>('trial');
@@ -77,24 +77,12 @@ const Cadastro = () => {
         setIsLoading(false);
         return;
       }
-      const { error } = await signUp(data.email, data.senha, {
-        nome_completo: data.nome_completo,
-        nome_personalizado_app: data.nome_personalizado_app,
-        telefone: data.telefone,
-        tema_preferencia: data.tema_preferencia
-      }, planType);
-      
-      if (!error) {
-        if (planType === 'trial') {
-          // Login automático já foi feito, aguardar um pouco e ir para home
-          await new Promise(resolve => setTimeout(resolve, 800));
-          navigate('/');
-        } else {
-          // Assinar agora: ir para login primeiro, depois assinatura
-          navigate('/login?redirect=/assinatura');
-        }
+      const ok = await cadastrar(data);
+
+      if (ok) {
+        navigate('/planos');
       } else {
-        setError(error.message || 'Erro ao criar conta');
+        setError('Erro ao criar conta');
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta. Tente novamente.');

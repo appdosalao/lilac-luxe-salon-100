@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import MobileBottomNav from "@/components/navigation/MobileBottomNav";
 import { TrialBanner } from "@/components/TrialBanner";
 import { TrialStatus } from "@/components/TrialStatus";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 
 import { Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ interface LayoutProps {
 
 function LayoutContent({ children }: LayoutProps) {
   const location = useLocation();
+  const { usuario } = useSupabaseAuth();
 
   return (
     <SidebarProvider>
@@ -64,7 +66,7 @@ function LayoutContent({ children }: LayoutProps) {
             {/* Main Content */}
         <main className="flex-1 overflow-auto pb-16 sm:pb-0">
           <div className="container-responsive">
-            <TrialBanner />
+            {usuario?.payment_status === 'trial' ? <TrialBanner /> : null}
             {children}
           </div>
         </main>

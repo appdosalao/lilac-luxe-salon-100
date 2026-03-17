@@ -19,7 +19,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { agendamentosFiltrados } = useAgendamentos();
   const { lancamentos } = useLancamentos();
-  const { usuario, checkSubscription } = useSupabaseAuth();
+  const { usuario, refreshProfile } = useSupabaseAuth();
 
   // Detectar retorno de pagamento bem-sucedido
   useEffect(() => {
@@ -30,11 +30,11 @@ export default function Dashboard() {
       
       // Forçar verificação de assinatura múltiplas vezes
       toast.success('🎉 Pagamento confirmado! Verificando assinatura...');
-      setTimeout(() => checkSubscription(), 1000);
-      setTimeout(() => checkSubscription(), 3000);
-      setTimeout(() => checkSubscription(), 6000);
+      setTimeout(() => void refreshProfile(), 1000);
+      setTimeout(() => void refreshProfile(), 3000);
+      setTimeout(() => void refreshProfile(), 6000);
     }
-  }, [searchParams, setSearchParams, checkSubscription]);
+  }, [searchParams, setSearchParams, refreshProfile]);
 
   // Data atual
   const hoje = new Date();

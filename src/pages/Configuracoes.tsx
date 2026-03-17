@@ -18,8 +18,29 @@ export default function Configuracoes() {
   const initialTab = searchParams.get('tab') || 'horarios';
   const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
-  const { subscription, isSubscriptionLoading, session, checkSubscription } = useSupabaseAuth();
+  const { usuario, isLoading, refreshProfile, isAuthenticated } = useSupabaseAuth();
   const [statusLoading, setStatusLoading] = useState(false);
+
+  const nowIso = new Date().toISOString();
+  const statusLabel = (() => {
+    const paymentStatus = usuario?.payment_status ?? null;
+    const isActive = usuario?.is_active === true;
+    const trialValid = paymentStatus === 'trial' && typeof usuario?.trial_end_date === 'string' && usuario.trial_end_date > nowIso;
+
+    if (paymentStatus === 'active' && isActive) return 'Ativo';
+    if (trialValid) return 'Em teste';
+    if (paymentStatus === 'trial') return 'Expirado';
+    if (paymentStatus === 'overdue') return 'Atrasado';
+    if (paymentStatus === 'cancelled') return 'Cancelado';
+    if (paymentStatus === 'pending') return 'Pendente';
+    return 'Inativo';
+  })();
+
+  const planLabel = (() => {
+    if (usuario?.plan_type === 'mensal') return 'Mensal';
+    if (usuario?.plan_type === 'vitalicio') return 'Vitalício';
+    return '—';
+  })();
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && tab !== activeTab) {
@@ -136,48 +157,46 @@ export default function Configuracoes() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {isSubscriptionLoading ? (
+              {isLoading ? (
                 <p className="text-sm text-muted-foreground">Carregando status...</p>
               ) : (
                 <>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">Status</div>
                     <div className="text-sm font-medium">
-                      {subscription?.status === 'active' ? 'Ativo' :
-                       subscription?.status === 'trial' ? 'Em teste' :
-                       subscription?.status === 'expired' ? 'Expirado' : 'Inativo'}
+                      {statusLabel}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">Plano</div>
-                    <div className="text-sm font-medium">Premium</div>
+                    <div className="text-sm font-medium">{planLabel}</div>
                   </div>
                   <div className="pt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <Button
                       onClick={() => {
-                        if (!session) {
+                        if (!isAuthenticated) {
                           navigate('/login');
                           return;
                         }
-                        navigate('/assinatura');
+                        navigate('/planos');
                       }}
                       className="w-full gap-2"
                     >
                       <CreditCard className="h-4 w-4" />
-                      {subscription?.status === 'active' ? 'Gerenciar Assinatura' : 'Assinar Plano'}
+                      Escolher Plano
                     </Button>
                     <Button
                       variant="outline"
                       className="w-full gap-2"
                       disabled={statusLoading}
                       onClick={async () => {
-                        if (!session) {
+                        if (!isAuthenticated) {
                           navigate('/login');
                           return;
                         }
                         setStatusLoading(true);
                         try {
-                          await checkSubscription(session);
+                          await refreshProfile();
                           toast.success('Status atualizado!');
                         } catch (e) {
                           toast.error('Erro ao verificar status');

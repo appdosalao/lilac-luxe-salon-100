@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
 import { CheckoutForm } from '@/components/CheckoutForm';
 import { toast } from 'sonner';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 type PlanoSelecionado = 'mensal' | 'vitalicio';
 
@@ -14,12 +15,13 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [vitalicioConsent, setVitalicioConsent] = useState(false);
+  const { refreshProfile } = useSupabaseAuth();
 
   const plano = (location.state as any)?.plano as PlanoSelecionado | undefined;
 
   const resumo = useMemo(() => {
-    if (plano === 'mensal') return 'Plano Mensal — R$ 20,00/mês • 7 dias grátis';
-    if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 único • 7 dias grátis';
+    if (plano === 'mensal') return 'Plano Mensal — R$ 20,00/mês • Primeira cobrança em 7 dias';
+    if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 único • Cobrança em 7 dias';
     return null;
   }, [plano]);
 
@@ -63,7 +65,7 @@ export default function Checkout() {
                   onCheckedChange={(v) => setVitalicioConsent(Boolean(v))}
                 />
                 <label htmlFor="vitalicio-consent" className="text-sm leading-snug cursor-pointer">
-                  Li e concordo com os termos, incluindo a política de não-estorno do plano vitalício
+                  Li e concordo que o plano vitalício não permite cancelamento pelo app
                 </label>
               </div>
             )}
@@ -71,7 +73,8 @@ export default function Checkout() {
             <CheckoutForm
               plano={plano}
               vitalicioConsent={plano === 'vitalicio' ? vitalicioConsent : true}
-              onSuccess={() => {
+              onSuccess={async () => {
+                await refreshProfile();
                 toast.success('Bem-vindo! Seu acesso está liberado durante o trial.');
                 navigate('/', { replace: true });
               }}
