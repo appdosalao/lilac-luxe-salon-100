@@ -64,6 +64,8 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
   const [addressNumber, setAddressNumber] = useState('');
   const [phone, setPhone] = useState('');
 
+  const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
   const email = useMemo(() => usuario?.email || user?.email || '', [usuario?.email, user?.email]);
   const name = useMemo(() => usuario?.nome_completo || user?.user_metadata?.full_name || '', [usuario?.nome_completo, user?.user_metadata]);
 
@@ -100,7 +102,7 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
 
     setLoading(true);
     try {
-      const customerResponse = await fetch('/api/customers', {
+      const customerResponse = await fetch(`${API_URL}/api/customers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +136,7 @@ export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
       const subscriptionValue = plano === 'mensal' ? 20.0 : 350.0;
       const subscriptionCycle = plano === 'mensal' ? 'MONTHLY' : 'NO_RECURRENCE';
 
-      const subscriptionResponse = await fetch('/api/subscriptions', {
+      const subscriptionResponse = await fetch(`${API_URL}/api/subscriptions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
