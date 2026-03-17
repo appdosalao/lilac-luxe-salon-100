@@ -7,10 +7,14 @@ export interface Usuario {
   tema_preferencia: 'feminino' | 'masculino';
   created_at: string;
   updated_at: string;
-  stripe_customer_id?: string | null;
-  subscription_status?: 'trial' | 'active' | 'expired' | 'inactive';
-  trial_start_date?: string;
-  trial_used?: boolean;
+  planType: 'mensal' | 'vitalicio' | null;
+  isActive: boolean;
+  trialStartDate: string | null;
+  trialEndDate: string | null;
+  planExpiresAt: string | null;
+  asaasCustomerId: string | null;
+  asaasSubscriptionId: string | null;
+  paymentStatus: 'trial' | 'active' | 'overdue' | 'cancelled' | 'pending' | null;
 }
 
 export interface UsuarioCadastro {

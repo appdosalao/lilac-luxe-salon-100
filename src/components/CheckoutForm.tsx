@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { type LocalPlanState, type PlanoTipo, readLocalPlanState, writeLocalPlanState } from '@/lib/planAccess';
 
 type Props = {
+  plano: PlanoTipo;
+  vitalicioConsent?: boolean;
   onSuccess?: (result: { customerId: string; subscriptionId: string; status: unknown }) => void;
 };
 
@@ -46,7 +48,11 @@ const formatCep = (value: string) => {
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 };
 
-export function CheckoutForm({ onSuccess }: Props) {
+const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+const formatYmd = (date: Date) => date.toISOString().slice(0, 10);
+
+export function CheckoutForm({ plano, vitalicioConsent, onSuccess }: Props) {
   const { user, usuario, session } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
   const [cardHolderName, setCardHolderName] = useState('');
@@ -65,6 +71,11 @@ export function CheckoutForm({ onSuccess }: Props) {
     e.preventDefault();
     if (!email) {
       toast.error('Você precisa estar logado para assinar');
+      return;
+    }
+
+    if (plano === 'vitalicio' && !vitalicioConsent) {
+      toast.error('Você precisa concordar com os termos do plano vitalício');
       return;
     }
 
@@ -98,6 +109,9 @@ export function CheckoutForm({ onSuccess }: Props) {
 
       localStorage.setItem('asaasCustomerId', customerId);
 
+      const now = new Date();
+      const nextDueDate = formatYmd(addDays(now, 7));
+
       const subscriptionResponse = await fetch('/api/subscriptions', {
         method: 'POST',
         headers: {
@@ -105,6 +119,7 @@ export function CheckoutForm({ onSuccess }: Props) {
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
         },
         body: JSON.stringify({
+          plano,
           customerId,
           cardHolderName,
           cardNumber: onlyDigits(cardNumber),
@@ -113,7 +128,8 @@ export function CheckoutForm({ onSuccess }: Props) {
           cpfCnpj: onlyDigits(cpfCnpj),
           email,
           postalCode: onlyDigits(postalCode),
-          addressNumber
+          addressNumber,
+          nextDueDate
         })
       });
 
@@ -132,7 +148,23 @@ export function CheckoutForm({ onSuccess }: Props) {
       }
 
       localStorage.setItem('asaasSubscriptionId', subscriptionId);
-      toast.success('Assinatura criada com sucesso!');
+
+      if (user?.id) {
+        const previous = readLocalPlanState(user.id);
+        const next: LocalPlanState = {
+          planType: plano,
+          isActive: true,
+          trialStartDate: previous?.trialStartDate ?? now.toISOString(),
+          trialEndDate: previous?.trialEndDate ?? addDays(now, 7).toISOString(),
+          planExpiresAt: plano === 'mensal' ? addDays(now, 7).toISOString() : null,
+          asaasCustomerId: customerId,
+          asaasSubscriptionId: subscriptionId,
+          paymentStatus: 'trial'
+        };
+        writeLocalPlanState(user.id, next);
+      }
+
+      toast.success('Plano ativado com sucesso!');
       onSuccess?.({ customerId, subscriptionId, status });
     } catch (err) {
       toast.error('Erro ao processar pagamento');
@@ -143,12 +175,6 @@ export function CheckoutForm({ onSuccess }: Props) {
   };
 
   return (
-    <Card className="shadow-xl">
-      <CardHeader>
-        <CardTitle>Pagamento</CardTitle>
-        <CardDescription>Preencha os dados do cartão para assinar o plano mensal (R$ 49,90).</CardDescription>
-      </CardHeader>
-      <CardContent>
         <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-2">
             <Label htmlFor="cardHolderName">Nome no cartão</Label>
@@ -249,12 +275,10 @@ export function CheckoutForm({ onSuccess }: Props) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Processando...' : 'Assinar Plano Mensal'}
+          <Button type="submit" className="w-full" disabled={loading || (plano === 'vitalicio' && !vitalicioConsent)}>
+            {loading ? 'Processando...' : 'Ativar meu plano com 7 dias grátis'}
           </Button>
         </form>
-      </CardContent>
-    </Card>
   );
 }
 

@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario } from '@/types/usuario';
 import { toast } from 'sonner';
+import { getTrialDaysRemaining, isTrialValid, readLocalPlanState, writeLocalPlanState } from '@/lib/planAccess';
 
 interface SubscriptionStatus {
   subscribed: boolean;
@@ -55,13 +56,32 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setIsSubscriptionLoading(true);
-    console.log('[AUTH] 🔍 Iniciando verificação de assinatura (Asaas) para:', userToUse.email);
+    console.log('[AUTH] 🔍 Verificando acesso (trial + Asaas) para:', userToUse.email);
 
     try {
-      const customerId = localStorage.getItem('asaasCustomerId');
+      const planState = readLocalPlanState(userToUse.id);
+
+      if (isTrialValid(planState)) {
+        setSubscription({
+          subscribed: true,
+          status: 'trial',
+          trial_days_remaining: getTrialDaysRemaining(planState?.trialEndDate ?? null),
+          trial_end_date: planState?.trialEndDate ?? undefined,
+          is_trial_expired: false
+        });
+        return;
+      }
+
+      if (planState?.paymentStatus === 'active' && planState.planType === 'vitalicio' && planState.isActive) {
+        setSubscription({ subscribed: true, status: 'active', subscription_end: null, is_trial_expired: false });
+        return;
+      }
+
+      const customerId = planState?.asaasCustomerId || localStorage.getItem('asaasCustomerId');
 
       if (!customerId) {
-        setSubscription({ subscribed: false, status: 'inactive', is_trial_expired: false });
+        const expired = planState?.trialEndDate ? new Date(planState.trialEndDate).getTime() <= Date.now() : false;
+        setSubscription({ subscribed: false, status: expired ? 'expired' : 'inactive', is_trial_expired: expired });
         return;
       }
 
@@ -81,16 +101,31 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       const list = Array.isArray(data?.data) ? data.data : [];
       const active = list.find((s: any) => s?.status === 'ACTIVE');
       const nextDueDate = active?.nextDueDate;
-      const subscriptionEnd = typeof nextDueDate === 'string' ? new Date(nextDueDate).toISOString() : null;
+      const subscriptionEnd = typeof nextDueDate === 'string' ? new Date(nextDueDate).toISOString() : planState?.planExpiresAt ?? null;
 
-      const finalStatus: SubscriptionStatus = active
-        ? { subscribed: true, status: 'active', subscription_end: subscriptionEnd, is_trial_expired: false }
-        : { subscribed: false, status: 'inactive', is_trial_expired: false };
+      if (active) {
+        if (planState && planState.paymentStatus !== 'active') {
+          writeLocalPlanState(userToUse.id, {
+            ...planState,
+            isActive: true,
+            paymentStatus: 'active',
+            planExpiresAt: subscriptionEnd
+          });
+        }
+        setSubscription({ subscribed: true, status: 'active', subscription_end: subscriptionEnd, is_trial_expired: false });
+        return;
+      }
 
-      setSubscription(finalStatus);
+      const expired = planState?.trialEndDate ? new Date(planState.trialEndDate).getTime() <= Date.now() : false;
+
+      if (expired && planState) {
+        writeLocalPlanState(userToUse.id, { ...planState, isActive: false, paymentStatus: planState.paymentStatus || 'pending' });
+      }
+
+      setSubscription({ subscribed: false, status: expired ? 'expired' : 'inactive', is_trial_expired: expired });
       void profileToUse;
     } catch (error) {
-      console.error('[AUTH] ❌ Exceção ao verificar assinatura (Asaas):', error);
+      console.error('[AUTH] ❌ Exceção ao verificar assinatura:', error);
       setSubscription({ subscribed: false, status: 'inactive', is_trial_expired: false });
     } finally {
       setIsSubscriptionLoading(false);
@@ -147,7 +182,17 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
               }
 
               if (userData) {
-                const usuario = userData as Usuario;
+                const usuario = {
+                  planType: null,
+                  isActive: false,
+                  trialStartDate: null,
+                  trialEndDate: null,
+                  planExpiresAt: null,
+                  asaasCustomerId: null,
+                  asaasSubscriptionId: null,
+                  paymentStatus: null,
+                  ...(userData as Partial<Usuario>)
+                } as Usuario;
                 setUsuario(usuario);
                 
                 // Aplicar tema
@@ -229,6 +274,21 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('✅ [SIGNUP] Conta criada com sucesso! User ID:', data.user?.id);
+
+      if (data.user?.id) {
+        const now = new Date();
+        const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        writeLocalPlanState(data.user.id, {
+          planType: null,
+          isActive: true,
+          trialStartDate: now.toISOString(),
+          trialEndDate: trialEnd.toISOString(),
+          planExpiresAt: null,
+          asaasCustomerId: null,
+          asaasSubscriptionId: null,
+          paymentStatus: 'trial'
+        });
+      }
       
       // O perfil é criado automaticamente via trigger no banco de dados
       // Aplicar tema localmente

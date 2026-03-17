@@ -2,7 +2,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CreditCard } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export const TrialBanner = () => {
   const { subscription } = useSupabaseAuth();
@@ -20,19 +20,13 @@ export const TrialBanner = () => {
   };
 
   const getMessage = () => {
-    if (daysRemaining === 1) {
-      return '⚠️ Último dia do teste grátis!';
-    }
-    if (daysRemaining === 0) {
-      return '⏰ Seu teste grátis termina hoje!';
-    }
-    return `🎉 Você tem ${daysRemaining} dias restantes de teste grátis`;
+    return `🎉 Você está no período de teste grátis! Restam ${daysRemaining} dias. Escolha seu plano para continuar.`;
   };
 
   return (
     <Alert 
       variant={getAlertVariant()}
-      className="mb-4 border-2"
+      className="mb-4 border-2 border-yellow-500/30 bg-yellow-500/10"
     >
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2 flex-1">
@@ -42,13 +36,12 @@ export const TrialBanner = () => {
           </AlertDescription>
         </div>
         <Button 
-          onClick={() => navigate('/configuracoes?tab=assinatura')}
+          onClick={() => navigate('/planos')}
           size="sm"
           variant={daysRemaining <= 2 ? 'default' : 'outline'}
           className="gap-2"
         >
-          <CreditCard className="h-4 w-4" />
-          Assinar Agora - R$ 20/mês
+          Escolher plano
         </Button>
       </div>
     </Alert>

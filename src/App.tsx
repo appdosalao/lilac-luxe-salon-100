@@ -25,6 +25,8 @@ import Cadastro from "./pages/Cadastro";
 import Privacidade from "./pages/Privacidade";
 import Termos from "./pages/Termos";
 import Sobre from "./pages/Sobre";
+import Planos from "./pages/Planos";
+import Checkout from "./pages/Checkout";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
@@ -57,6 +59,8 @@ const App = () => {
                     <Route path="/agendar" element={<AgendamentoOnline />} />
                     <Route path="/privacidade" element={<Privacidade />} />
                     <Route path="/termos" element={<Termos />} />
+                    <Route path="/planos" element={<Planos />} />
+                    <Route path="/checkout" element={<Checkout />} />
                     <Route path="/teste-som" element={<TesteSomPage />} />
                     <Route path="/teste-agendamentos" element={<TesteAgendamentosPage />} />
                     <Route path="/sobre" element={<Sobre />} />

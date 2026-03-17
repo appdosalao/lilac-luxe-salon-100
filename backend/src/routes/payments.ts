@@ -125,6 +125,7 @@ router.post('/customers', async (req, res) => {
 
 router.post('/subscriptions', async (req, res) => {
   const schema = z.object({
+    plano: z.enum(['mensal', 'vitalicio']),
     customerId: z.string().min(3),
     cardHolderName: z.string().min(2),
     cardNumber: z.string().min(12),
@@ -133,7 +134,8 @@ router.post('/subscriptions', async (req, res) => {
     cpfCnpj: z.string().min(11).max(18),
     email: z.string().email(),
     postalCode: z.string().min(8).max(9),
-    addressNumber: z.string().min(1)
+    addressNumber: z.string().min(1),
+    nextDueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
   });
 
   const parsed = schema.safeParse(req.body);
@@ -157,17 +159,22 @@ router.post('/subscriptions', async (req, res) => {
     return res.status(400).json({ error: 'Validade do cartão inválida.' });
   }
 
-  const today = new Date();
-  const nextDueDate = today.toISOString().slice(0, 10);
+  const nextDueDate = parsed.data.nextDueDate;
+  const value = parsed.data.plano === 'mensal' ? 20.0 : 350.0;
+  const cycle = parsed.data.plano === 'mensal' ? 'MONTHLY' : 'NO_RECURRENCE';
+  const description =
+    parsed.data.plano === 'mensal'
+      ? 'Salão de Bolso — Plano Mensal'
+      : 'Salão de Bolso — Plano Vitalício';
 
   try {
     const response = await asaas.post('/subscriptions', {
       customer: parsed.data.customerId,
       billingType: 'CREDIT_CARD',
-      value: 49.9,
+      value,
       nextDueDate,
-      cycle: 'MONTHLY',
-      description: 'Salão de Bolso — Plano Mensal',
+      cycle,
+      description,
       creditCard: {
         holderName: parsed.data.cardHolderName,
         number: parsed.data.cardNumber.replace(/\s/g, ''),

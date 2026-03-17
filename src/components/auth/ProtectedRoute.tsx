@@ -21,13 +21,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Permitir acesso sempre à página de assinatura (nova rota), checkout-success e onboarding
-  const publicPaths = ['/configuracoes', '/onboarding', '/checkout-success', '/assinatura'];
   const currentPath = window.location.pathname;
-  
-  if (publicPaths.includes(currentPath)) {
-    return <>{children}</>;
-  }
 
   // ✅ VERIFICAR ACESSO: 
   // - Trial ativo (não expirado) = acesso total
@@ -47,8 +41,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   });
 
   if (!hasAccess) {
-    console.log('[PROTECTED-ROUTE] ❌ Acesso negado, redirecionando para Configurações/Assinatura');
-    return <Navigate to="/configuracoes?tab=assinatura" replace />;
+    console.log('[PROTECTED-ROUTE] ❌ Acesso negado, redirecionando para /planos');
+    return <Navigate to="/planos" replace />;
   }
 
   return <>{children}</>;
