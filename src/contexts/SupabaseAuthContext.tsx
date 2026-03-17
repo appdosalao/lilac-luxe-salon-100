@@ -55,128 +55,43 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setIsSubscriptionLoading(true);
-    console.log('[AUTH] 🔍 Iniciando verificação de assinatura para:', userToUse.email);
+    console.log('[AUTH] 🔍 Iniciando verificação de assinatura (Asaas) para:', userToUse.email);
 
     try {
-      // Validar sessão atual antes de chamar a função
-      const { data: { session: currentValidSession }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !currentValidSession || !currentValidSession.access_token) {
-        console.error('[AUTH] ❌ Sessão inválida, definindo como inactive:', sessionError);
-        setSubscription({
-          subscribed: false,
-          status: 'inactive',
-          is_trial_expired: false
-        });
-        setIsSubscriptionLoading(false);
+      const customerId = localStorage.getItem('asaasCustomerId');
+
+      if (!customerId) {
+        setSubscription({ subscribed: false, status: 'inactive', is_trial_expired: false });
         return;
       }
-      
-      // Verificar se o token não está expirado
-      const tokenExpiry = currentValidSession.expires_at;
-      const now = Math.floor(Date.now() / 1000);
-      
-      if (tokenExpiry && tokenExpiry < now) {
-        console.error('[AUTH] ❌ Token expirado, tentando refresh');
-        // Tentar refresh do token
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError || !refreshData.session) {
-          console.error('[AUTH] ❌ Falha no refresh, definindo como inactive');
-          setSubscription({
-            subscribed: false,
-            status: 'inactive',
-            is_trial_expired: false
-          });
-          setIsSubscriptionLoading(false);
-          return;
+
+      const response = await fetch(`/api/subscriptions/${encodeURIComponent(customerId)}`, {
+        headers: {
+          ...(sessionToUse?.access_token ? { Authorization: `Bearer ${sessionToUse.access_token}` } : {})
         }
-        console.log('[AUTH] ✅ Token refreshed com sucesso');
-      }
-      
-      console.log('[AUTH] ✅ Chamando check-subscription com token válido...');
-      
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        body: {} // Enviar body vazio para garantir que é um POST válido
       });
+      const data: any = await response.json().catch(() => null);
 
-      let finalStatus: SubscriptionStatus = {
-        subscribed: false,
-        status: 'inactive',
-        is_trial_expired: false
-      };
-
-      if (!error && data) {
-        console.log('[AUTH] ✅ Status recebido do Stripe:', data);
-        const normalizedSubscribed = Boolean(data.subscribed);
-        const normalizedStatus: SubscriptionStatus['status'] =
-          data.status === 'trial' || data.status === 'active' || data.status === 'expired' || data.status === 'inactive'
-            ? data.status
-            : (normalizedSubscribed ? 'active' : 'inactive');
-
-        finalStatus = {
-          subscribed: normalizedSubscribed,
-          status: normalizedStatus,
-          trial_days_remaining: data.trial_days_remaining,
-          trial_end_date: data.trial_end_date,
-          is_trial_expired: Boolean(data.is_trial_expired),
-          subscription_end: data.subscription_end ?? null,
-          product_id: data.product_id ?? null
-        };
-      } else {
-        console.error('[AUTH] ❌ Erro ao verificar assinatura (Stripe):', error);
+      if (!response.ok) {
+        console.error('[AUTH] ❌ Erro ao verificar assinatura (Asaas):', data);
+        setSubscription({ subscribed: false, status: 'inactive', is_trial_expired: false });
+        return;
       }
 
-      // ✅ FALLBACK: Verificar Trial Local se o Stripe retornar inativo/não inscrito
-      // Isso garante que os 7 dias grátis funcionem mesmo sem registro no Stripe
-      if ((finalStatus.status === 'inactive' || !finalStatus.subscribed) && profileToUse?.subscription_status === 'trial') {
-        console.log('[AUTH] ⚠️ Stripe inativo, verificando trial local...', profileToUse);
-        
-        const trialStart = profileToUse.trial_start_date ? new Date(profileToUse.trial_start_date) : null;
-        
-        if (trialStart) {
-          const now = new Date();
-          const diffTime = now.getTime() - trialStart.getTime();
-          const diffDays = diffTime / (1000 * 60 * 60 * 24); // Dias corridos (float)
-          
-          const isExpired = diffDays > 7;
-          const daysRemaining = Math.max(0, Math.ceil(7 - diffDays));
-          
-          if (!isExpired) {
-            console.log(`[AUTH] ✅ Trial local VÁLIDO. Dias restantes: ${daysRemaining}`);
-            finalStatus = {
-              subscribed: true, // Consideramos subscrito durante o trial
-              status: 'trial',
-              trial_days_remaining: daysRemaining,
-              trial_end_date: new Date(trialStart.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              is_trial_expired: false
-            };
-          } else {
-            console.log('[AUTH] ❌ Trial local EXPIRADO.');
-            finalStatus.status = 'expired';
-            finalStatus.is_trial_expired = true;
-          }
-        }
-      }
+      const list = Array.isArray(data?.data) ? data.data : [];
+      const active = list.find((s: any) => s?.status === 'ACTIVE');
+      const nextDueDate = active?.nextDueDate;
+      const subscriptionEnd = typeof nextDueDate === 'string' ? new Date(nextDueDate).toISOString() : null;
 
-      // ✅ FALLBACK: Se o banco local já marcou como active, não bloquear o app por falha no Stripe
-      if ((finalStatus.status === 'inactive' || !finalStatus.subscribed) && profileToUse?.subscription_status === 'active') {
-        console.log('[AUTH] ⚠️ Stripe inativo, mas banco local indica ACTIVE. Liberando acesso pelo banco...', profileToUse.email);
-        finalStatus = {
-          subscribed: true,
-          status: 'active',
-          is_trial_expired: false
-        };
-      }
-      
+      const finalStatus: SubscriptionStatus = active
+        ? { subscribed: true, status: 'active', subscription_end: subscriptionEnd, is_trial_expired: false }
+        : { subscribed: false, status: 'inactive', is_trial_expired: false };
+
       setSubscription(finalStatus);
-
+      void profileToUse;
     } catch (error) {
-      console.error('[AUTH] ❌ Exceção ao verificar assinatura:', error);
-      setSubscription({ 
-        subscribed: false, 
-        status: 'inactive',
-        is_trial_expired: false
-      });
+      console.error('[AUTH] ❌ Exceção ao verificar assinatura (Asaas):', error);
+      setSubscription({ subscribed: false, status: 'inactive', is_trial_expired: false });
     } finally {
       setIsSubscriptionLoading(false);
     }

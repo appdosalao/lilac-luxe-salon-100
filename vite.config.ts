@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   },
   plugins: [
     react(),
@@ -20,6 +26,9 @@ export default defineConfig(({ mode }) => ({
       filename: 'service-worker.js',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Lilac Luxe Salon',
@@ -80,6 +89,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: 'esnext',
+    minify: false,
     chunkSizeWarningLimit: 1000, // Aumenta o limite para 1000kb (1MB) para evitar o aviso
     rollupOptions: {
       output: {

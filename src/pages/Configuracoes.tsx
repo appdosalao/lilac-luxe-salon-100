@@ -7,12 +7,10 @@ import { ConfiguracaoNotificacoesAvancadas } from '@/components/configuracoes/Co
 import { ConfiguracaoNotificacoesPush } from '@/components/configuracoes/ConfiguracaoNotificacoesPush';
 import { ConfiguracaoBackup } from '@/components/configuracoes/ConfiguracaoBackup';
 import { ConfiguracaoAgendamentoOnline } from '@/components/configuracoes/ConfiguracaoAgendamentoOnline';
-import { Clock, Bell, Download, Settings, Calendar, Crown, CreditCard, ExternalLink } from 'lucide-react';
+import { Clock, Bell, Download, Settings, Calendar, Crown, CreditCard, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function Configuracoes() {
@@ -20,155 +18,8 @@ export default function Configuracoes() {
   const initialTab = searchParams.get('tab') || 'horarios';
   const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
-  const { subscription, isSubscriptionLoading, session } = useSupabaseAuth();
-  const [portalOpen, setPortalOpen] = useState(false);
-  const [portalUrl, setPortalUrl] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
-
-  const isRecord = (value: unknown): value is Record<string, unknown> =>
-    typeof value === 'object' && value !== null;
-
-  const getFunctionsErrorMessage = async (error: unknown, data: unknown) => {
-    if (isRecord(data) && typeof data.error === 'string' && data.error.trim()) return data.error;
-    const fromMessage =
-      isRecord(error) && typeof error.message === 'string' && error.message.trim()
-        ? error.message
-        : null;
-
-    const response =
-      isRecord(error) && isRecord(error.context) && error.context.response instanceof Response
-        ? error.context.response
-        : undefined;
-    if (response) {
-      const statusPrefix = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`;
-      try {
-        const text = await response.text();
-        if (text) {
-          try {
-            const parsed = JSON.parse(text);
-            if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error;
-            if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message;
-            return `${statusPrefix} - ${text}`;
-          } catch {
-            return `${statusPrefix} - ${text}`;
-          }
-        }
-      } catch (e) {
-        void e;
-      }
-      return statusPrefix;
-    }
-    return fromMessage || 'Falha ao conectar ao Stripe';
-  };
-
-  type InvokeResult = { data: unknown; error: unknown | null };
-
-  const invokeCustomerPortal = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token || session?.access_token;
-
-    const firstTry = await supabase.functions.invoke('customer-portal', token ? {
-      headers: { Authorization: `Bearer ${token}` }
-    } : undefined);
-
-    if (!firstTry.error) return firstTry as unknown as InvokeResult;
-
-    if (token) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
-        });
-
-        const text = await response.text();
-        const parsed: unknown = text
-          ? (() => {
-              try {
-                return JSON.parse(text);
-              } catch {
-                return { error: text };
-              }
-            })()
-          : null;
-
-        if (response.ok) return { data: parsed, error: null } as InvokeResult;
-        return { data: parsed, error: { message: 'Edge Function returned a non-2xx status code', context: { response } } } as InvokeResult;
-      } catch (e) {
-        return { data: null, error: e } as InvokeResult;
-      }
-    }
-
-    const secondTry = await supabase.functions.invoke('customer-portal');
-    return secondTry as unknown as InvokeResult;
-  };
-
-  const openPortal = async () => {
-    if (!session) {
-      navigate('/login');
-      return;
-    }
-    const popup = window.open('', '_blank');
-    setPortalLoading(true);
-    try {
-      const { data, error } = await invokeCustomerPortal();
-      if (!error && data?.url) {
-        if (popup) {
-          popup.location.href = data.url;
-          popup.focus();
-        } else {
-          window.location.href = data.url;
-        }
-        setPortalUrl(data.url);
-        setPortalOpen(false);
-      } else {
-        const message = await getFunctionsErrorMessage(error, data);
-        toast.error(message);
-        if (popup) {
-          popup.location.href = '/assinatura';
-          popup.focus();
-        } else {
-          window.location.href = '/assinatura';
-        }
-      }
-    } catch (err) {
-      const message = await getFunctionsErrorMessage(err, null);
-      toast.error(message);
-      if (popup) {
-        popup.location.href = '/assinatura';
-        popup.focus();
-      } else {
-        window.location.href = '/assinatura';
-      }
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
-  const testStripeConnection = async () => {
-    if (!session) {
-      navigate('/login');
-      return;
-    }
-    try {
-      const { data, error } = await invokeCustomerPortal();
-      if (error) {
-        const message = await getFunctionsErrorMessage(error, data);
-        toast.error(message);
-      } else if (data?.url) {
-        toast.success('Conexão com Stripe OK');
-      } else {
-        toast.error(data?.error || 'Não foi possível validar a conexão');
-      }
-    } catch (err) {
-      const message = await getFunctionsErrorMessage(err, null);
-      toast.error(message);
-    }
-  };
+  const { subscription, isSubscriptionLoading, session, checkSubscription } = useSupabaseAuth();
+  const [statusLoading, setStatusLoading] = useState(false);
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && tab !== activeTab) {
@@ -302,50 +153,48 @@ export default function Configuracoes() {
                     <div className="text-sm font-medium">Premium</div>
                   </div>
                   <div className="pt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <Button onClick={openPortal} className="w-full gap-2" disabled={portalLoading}>
+                    <Button
+                      onClick={() => {
+                        if (!session) {
+                          navigate('/login');
+                          return;
+                        }
+                        navigate('/assinatura');
+                      }}
+                      className="w-full gap-2"
+                    >
                       <CreditCard className="h-4 w-4" />
-                      {portalLoading ? 'Abrindo...' : 'Gerenciar Assinatura'}
+                      {subscription?.status === 'active' ? 'Gerenciar Assinatura' : 'Assinar Plano'}
                     </Button>
-                    <Button variant="outline" className="w-full gap-2" onClick={openPortal}>
-                      <ExternalLink className="h-4 w-4" />
-                      Abrir Portal em nova aba
-                    </Button>
-                    <Button variant="outline" className="w-full sm:col-span-2" onClick={testStripeConnection}>
-                      Testar Conexão Stripe
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      disabled={statusLoading}
+                      onClick={async () => {
+                        if (!session) {
+                          navigate('/login');
+                          return;
+                        }
+                        setStatusLoading(true);
+                        try {
+                          await checkSubscription(session);
+                          toast.success('Status atualizado!');
+                        } catch (e) {
+                          toast.error('Erro ao verificar status');
+                          void e;
+                        } finally {
+                          setStatusLoading(false);
+                        }
+                      }}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      {statusLoading ? 'Verificando...' : 'Verificar Status'}
                     </Button>
                   </div>
                 </>
               )}
             </CardContent>
           </Card>
-
-          <Dialog open={portalOpen} onOpenChange={setPortalOpen}>
-            <DialogContent className="sm:max-w-[900px] h-[85vh]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  Portal de Assinatura
-                </DialogTitle>
-                <DialogDescription>
-                  Gerencie pagamento, faturas e informações da sua assinatura. 
-                  Por segurança do Stripe, o portal abre em uma nova aba.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex-1 min-h-0">
-                <div className="text-sm text-muted-foreground">
-                  Ao clicar em “Gerenciar Assinatura”, o portal do Stripe será aberto em nova aba.
-                  Caso não abra, verifique se o bloqueador de pop‑ups está desativado para este site.
-                </div>
-                <div className="mt-2">
-                  {portalUrl && (
-                    <a href={portalUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline inline-flex items-center gap-1">
-                      Abrir em nova aba <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </TabsContent>
       </Tabs>
     </div>
