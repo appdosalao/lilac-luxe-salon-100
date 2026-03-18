@@ -32,7 +32,8 @@ O app adiciona automaticamente:
 
 No painel da Cakto, crie um webhook apontando para:
 
-- `POST https://SEU_BACKEND/api/webhooks/cakto`
+- Opção A (servidor próprio): `POST https://SEU_BACKEND/api/webhooks/cakto`
+- Opção B (Supabase Edge Function): `POST https://SEU_PROJETO.functions.supabase.co/cakto-webhook`
 
 Selecione, no mínimo:
 
@@ -41,6 +42,17 @@ Selecione, no mínimo:
 Defina uma chave secreta no webhook e configure a mesma no backend:
 
 - `CAKTO_WEBHOOK_SECRET`
+
+### Supabase Edge Function (sem Railway)
+
+Se você quiser eliminar o Railway, use a Edge Function `cakto-webhook`.
+
+Secrets necessárias no Supabase:
+
+- `CAKTO_WEBHOOK_SECRET`
+- `CAKTO_VERIFY_BY_API` (opcional, `true`/`false`)
+- `CAKTO_CLIENT_ID` e `CAKTO_CLIENT_SECRET` (opcional, para validar pedidos via API)
+- `CAKTO_MENSAL_PRODUCT_ID`, `CAKTO_VITALICIO_PRODUCT_ID` e/ou `CAKTO_MENSAL_OFFER_ID`, `CAKTO_VITALICIO_OFFER_ID` (opcional)
 
 ## Validação do pedido via API (recomendado)
 
