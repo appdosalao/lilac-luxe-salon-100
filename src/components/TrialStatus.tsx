@@ -11,10 +11,16 @@ export const TrialStatus = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const paymentStatus = usuario?.payment_status ?? null;
-    const nowIso = new Date().toISOString();
-    const trialValid = paymentStatus === 'trial' && typeof usuario?.trial_end_date === 'string' && usuario.trial_end_date > nowIso;
-    const activeValid = paymentStatus === 'active' && usuario?.is_active === true;
+    const subscriptionStatus = usuario?.subscription_status ?? null;
+    const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
+
+    const trialValid =
+      subscriptionStatus === 'trial' &&
+      typeof trialStart === 'number' &&
+      Number.isFinite(trialStart) &&
+      Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
+
+    const activeValid = subscriptionStatus === 'active';
 
     if (!trialValid && !activeValid) {
       const path = window.location.pathname;

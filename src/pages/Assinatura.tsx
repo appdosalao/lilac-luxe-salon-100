@@ -12,21 +12,22 @@ export default function Assinatura() {
   const { usuario, refreshProfile } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
-  const nowIso = new Date().toISOString();
-
   const statusLabel = useMemo(() => {
-    const paymentStatus = usuario?.payment_status ?? null;
-    const isActive = usuario?.is_active === true;
-    const trialValid = paymentStatus === 'trial' && typeof usuario?.trial_end_date === 'string' && usuario.trial_end_date > nowIso;
+    const subscriptionStatus = usuario?.subscription_status ?? null;
+    const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
+    const trialValid =
+      subscriptionStatus === 'trial' &&
+      typeof trialStart === 'number' &&
+      Number.isFinite(trialStart) &&
+      Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
 
-    if (paymentStatus === 'active' && isActive) return 'Ativo';
+    if (subscriptionStatus === 'active') return 'Ativo';
     if (trialValid) return 'Em teste';
-    if (paymentStatus === 'trial') return 'Expirado';
-    if (paymentStatus === 'overdue') return 'Atrasado';
-    if (paymentStatus === 'cancelled') return 'Cancelado';
-    if (paymentStatus === 'pending') return 'Pendente';
+    if (subscriptionStatus === 'trial') return 'Expirado';
+    if (subscriptionStatus === 'expired') return 'Expirado';
+    if (subscriptionStatus === 'inactive') return 'Inativo';
     return 'Inativo';
-  }, [usuario, nowIso]);
+  }, [usuario]);
 
   const planLabel = useMemo(() => {
     if (usuario?.plan_type === 'mensal') return 'Mensal';

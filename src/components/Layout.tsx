@@ -66,7 +66,7 @@ function LayoutContent({ children }: LayoutProps) {
             {/* Main Content */}
         <main className="flex-1 overflow-auto pb-16 sm:pb-0">
           <div className="container-responsive">
-            {usuario?.payment_status === 'trial' ? <TrialBanner /> : null}
+            {usuario?.subscription_status === 'trial' ? <TrialBanner /> : null}
             {children}
           </div>
         </main>

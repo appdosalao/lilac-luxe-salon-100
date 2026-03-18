@@ -30,13 +30,19 @@ const normalizeUsuario = (profile: any): Usuario => {
     created_at: String(profile?.created_at ?? new Date().toISOString()),
     updated_at: String(profile?.updated_at ?? new Date().toISOString()),
     plan_type: (profile?.plan_type ?? null) as Usuario['plan_type'],
-    is_active: Boolean(profile?.is_active ?? false),
-    payment_status: (profile?.payment_status ?? null) as Usuario['payment_status'],
+    subscription_status: (profile?.subscription_status ?? null) as Usuario['subscription_status'],
     trial_start_date: (profile?.trial_start_date ?? null) as Usuario['trial_start_date'],
-    trial_end_date: (profile?.trial_end_date ?? null) as Usuario['trial_end_date'],
-    plan_expires_at: (profile?.plan_expires_at ?? null) as Usuario['plan_expires_at'],
-    asaas_customer_id: (profile?.asaas_customer_id ?? null) as Usuario['asaas_customer_id'],
-    asaas_subscription_id: (profile?.asaas_subscription_id ?? null) as Usuario['asaas_subscription_id'],
+    trial_used: (profile?.trial_used ?? null) as Usuario['trial_used'],
+    payment_provider: (profile?.payment_provider ?? null) as Usuario['payment_provider'],
+    cakto_order_id: (profile?.cakto_order_id ?? null) as Usuario['cakto_order_id'],
+    cakto_order_ref_id: (profile?.cakto_order_ref_id ?? null) as Usuario['cakto_order_ref_id'],
+    cakto_product_id: (profile?.cakto_product_id ?? null) as Usuario['cakto_product_id'],
+    cakto_offer_id: (profile?.cakto_offer_id ?? null) as Usuario['cakto_offer_id'],
+    cakto_subscription_id: (profile?.cakto_subscription_id ?? null) as Usuario['cakto_subscription_id'],
+    cakto_last_event: (profile?.cakto_last_event ?? null) as Usuario['cakto_last_event'],
+    cakto_last_status: (profile?.cakto_last_status ?? null) as Usuario['cakto_last_status'],
+    cakto_customer_email: (profile?.cakto_customer_email ?? null) as Usuario['cakto_customer_email'],
+    subscription_updated_at: (profile?.subscription_updated_at ?? null) as Usuario['subscription_updated_at'],
   };
 };
 
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('usuarios')
       .select('*')
       .eq('id', nextSession.user.id)
       .single();
@@ -86,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('usuarios')
       .select('*')
       .eq('id', data.user.id)
       .single();
@@ -142,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data: profile, error } = await supabase
-      .from('profiles')
+      .from('usuarios')
       .select('*')
       .eq('id', usuario.id)
       .single();

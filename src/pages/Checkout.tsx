@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
-import { CheckoutForm } from '@/components/CheckoutForm';
 import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
@@ -15,13 +14,13 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [vitalicioConsent, setVitalicioConsent] = useState(false);
-  const { refreshProfile } = useSupabaseAuth();
+  const { isAuthenticated, user, usuario } = useSupabaseAuth();
 
   const plano = (location.state as any)?.plano as PlanoSelecionado | undefined;
 
   const resumo = useMemo(() => {
-    if (plano === 'mensal') return 'Plano Mensal — R$ 20,00/mês • Primeira cobrança em 7 dias';
-    if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 único • Cobrança em 7 dias';
+    if (plano === 'mensal') return 'Plano Mensal — R$ 20,00/mês';
+    if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 (pagamento único)';
     return null;
   }, [plano]);
 
@@ -29,6 +28,49 @@ export default function Checkout() {
     navigate('/planos', { replace: true });
     return null;
   }
+
+  const redirectToCakto = () => {
+    if (!isAuthenticated || !user?.id || !usuario) {
+      toast.error('Faça login para continuar');
+      navigate('/login');
+      return;
+    }
+
+    if (plano === 'vitalicio' && !vitalicioConsent) {
+      toast.error('Confirme o termo do plano vitalício para continuar');
+      return;
+    }
+
+    const baseUrl =
+      plano === 'mensal'
+        ? (import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL as string | undefined)
+        : (import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL as string | undefined);
+
+    if (!baseUrl) {
+      toast.error('Checkout não configurado');
+      return;
+    }
+
+    const checkoutUrl = new URL(baseUrl);
+    checkoutUrl.searchParams.set('sck', user.id);
+
+    if (usuario.nome_completo) {
+      checkoutUrl.searchParams.set('name', usuario.nome_completo);
+    }
+
+    if (usuario.email) {
+      checkoutUrl.searchParams.set('email', usuario.email);
+      checkoutUrl.searchParams.set('confirmEmail', usuario.email);
+    }
+
+    if (usuario.telefone) {
+      const digits = usuario.telefone.replace(/\D/g, '');
+      const normalized = digits.startsWith('55') ? digits : `55${digits}`;
+      checkoutUrl.searchParams.set('phone', normalized);
+    }
+
+    window.location.assign(checkoutUrl.toString());
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -47,6 +89,14 @@ export default function Checkout() {
             <CardDescription>{resumo}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!isAuthenticated ? (
+              <Alert>
+                <AlertDescription className="text-sm">
+                  Para continuar para o pagamento, faça login (ou crie sua conta).
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
             {plano === 'vitalicio' && (
               <Alert className="border-yellow-500/30 bg-yellow-500/10">
                 <AlertDescription className="text-sm">
@@ -70,15 +120,9 @@ export default function Checkout() {
               </div>
             )}
 
-            <CheckoutForm
-              plano={plano}
-              vitalicioConsent={plano === 'vitalicio' ? vitalicioConsent : true}
-              onSuccess={async () => {
-                await refreshProfile();
-                toast.success('Bem-vindo! Seu acesso está liberado durante o trial.');
-                navigate('/', { replace: true });
-              }}
-            />
+            <Button onClick={redirectToCakto} className="w-full h-12 text-base font-semibold">
+              Ir para o pagamento
+            </Button>
           </CardContent>
         </Card>
       </div>

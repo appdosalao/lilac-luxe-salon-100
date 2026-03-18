@@ -1822,13 +1822,24 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          cakto_customer_email: string | null
+          cakto_last_event: string | null
+          cakto_last_status: string | null
+          cakto_offer_id: string | null
+          cakto_order_id: string | null
+          cakto_order_ref_id: string | null
+          cakto_product_id: string | null
+          cakto_subscription_id: string | null
           created_at: string
           email: string
           id: string
           nome_completo: string
           nome_personalizado_app: string
+          payment_provider: string | null
+          plan_type: string | null
           stripe_customer_id: string | null
           subscription_status: string | null
+          subscription_updated_at: string | null
           telefone: string
           tema_preferencia: string | null
           trial_start_date: string | null
@@ -1836,13 +1847,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cakto_customer_email?: string | null
+          cakto_last_event?: string | null
+          cakto_last_status?: string | null
+          cakto_offer_id?: string | null
+          cakto_order_id?: string | null
+          cakto_order_ref_id?: string | null
+          cakto_product_id?: string | null
+          cakto_subscription_id?: string | null
           created_at?: string
           email: string
           id: string
           nome_completo: string
           nome_personalizado_app?: string
+          payment_provider?: string | null
+          plan_type?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
+          subscription_updated_at?: string | null
           telefone?: string
           tema_preferencia?: string | null
           trial_start_date?: string | null
@@ -1850,13 +1872,24 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cakto_customer_email?: string | null
+          cakto_last_event?: string | null
+          cakto_last_status?: string | null
+          cakto_offer_id?: string | null
+          cakto_order_id?: string | null
+          cakto_order_ref_id?: string | null
+          cakto_product_id?: string | null
+          cakto_subscription_id?: string | null
           created_at?: string
           email?: string
           id?: string
           nome_completo?: string
           nome_personalizado_app?: string
+          payment_provider?: string | null
+          plan_type?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
+          subscription_updated_at?: string | null
           telefone?: string
           tema_preferencia?: string | null
           trial_start_date?: string | null

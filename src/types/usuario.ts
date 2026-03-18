@@ -8,13 +8,19 @@ export interface Usuario {
   created_at: string;
   updated_at: string;
   plan_type: 'mensal' | 'vitalicio' | null;
-  is_active: boolean;
-  payment_status: 'trial' | 'active' | 'overdue' | 'cancelled' | 'pending' | null;
+  subscription_status: 'trial' | 'active' | 'expired' | 'inactive' | null;
   trial_start_date: string | null;
-  trial_end_date: string | null;
-  plan_expires_at: string | null;
-  asaas_customer_id: string | null;
-  asaas_subscription_id: string | null;
+  trial_used: boolean | null;
+  payment_provider: string | null;
+  cakto_order_id: string | null;
+  cakto_order_ref_id: string | null;
+  cakto_product_id: string | null;
+  cakto_offer_id: string | null;
+  cakto_subscription_id: string | null;
+  cakto_last_event: string | null;
+  cakto_last_status: string | null;
+  cakto_customer_email: string | null;
+  subscription_updated_at: string | null;
 }
 
 export interface UsuarioCadastro {

@@ -21,15 +21,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const paymentStatus = usuario?.payment_status ?? null;
-  const nowIso = new Date().toISOString();
+  const subscriptionStatus = usuario?.subscription_status ?? null;
 
-  const canAccessTrial =
-    paymentStatus === 'trial' &&
-    typeof usuario?.trial_end_date === 'string' &&
-    usuario.trial_end_date > nowIso;
+  const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
+  const trialValid =
+    subscriptionStatus === 'trial' &&
+    typeof trialStart === 'number' &&
+    Number.isFinite(trialStart) &&
+    Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
 
-  const canAccessActive = paymentStatus === 'active' && usuario?.is_active === true;
+  const canAccessTrial = trialValid;
+  const canAccessActive = subscriptionStatus === 'active';
 
   if (!canAccessTrial && !canAccessActive) {
     return <Navigate to="/planos" replace />;

@@ -7,14 +7,16 @@ export const TrialBanner = () => {
   const { usuario } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  if (usuario?.payment_status !== 'trial') {
+  if (usuario?.subscription_status !== 'trial') {
     return null;
   }
 
-  if (!usuario.trial_end_date) return null;
+  if (!usuario.trial_start_date) return null;
+
+  const trialEnd = new Date(new Date(usuario.trial_start_date).getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const daysRemaining = Math.ceil(
-    (new Date(usuario.trial_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    (trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
   const urgent = daysRemaining <= 2;
