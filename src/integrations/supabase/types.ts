@@ -1837,7 +1837,6 @@ export type Database = {
           nome_personalizado_app: string
           payment_provider: string | null
           plan_type: string | null
-          stripe_customer_id: string | null
           subscription_status: string | null
           subscription_updated_at: string | null
           telefone: string
@@ -1862,7 +1861,6 @@ export type Database = {
           nome_personalizado_app?: string
           payment_provider?: string | null
           plan_type?: string | null
-          stripe_customer_id?: string | null
           subscription_status?: string | null
           subscription_updated_at?: string | null
           telefone?: string
@@ -1887,7 +1885,6 @@ export type Database = {
           nome_personalizado_app?: string
           payment_provider?: string | null
           plan_type?: string | null
-          stripe_customer_id?: string | null
           subscription_status?: string | null
           subscription_updated_at?: string | null
           telefone?: string

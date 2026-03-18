@@ -1,6 +1,3 @@
-ALTER TABLE public.usuarios
-ADD COLUMN IF NOT EXISTS stripe_customer_id text;
-
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.usuarios;

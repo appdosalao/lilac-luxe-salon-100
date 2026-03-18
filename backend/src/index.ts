@@ -2,9 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import paymentsRouter from './routes/payments.js';
-import { migrate } from './db.js';
-
-migrate();
 
 const app = express();
 app.set('trust proxy', true);

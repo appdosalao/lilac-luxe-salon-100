@@ -73,11 +73,3 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
--- Adicionar coluna stripe_customer_id se não existir
-ALTER TABLE public.usuarios
-ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
-
--- Criar índice para stripe_customer_id
-CREATE INDEX IF NOT EXISTS idx_usuarios_stripe_customer 
-ON public.usuarios(stripe_customer_id);
