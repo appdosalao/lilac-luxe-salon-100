@@ -211,6 +211,19 @@ export default function Configuracoes() {
                       <RefreshCw className="h-4 w-4" />
                       {statusLoading ? 'Verificando...' : 'Verificar Status'}
                     </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          navigate('/login');
+                          return;
+                        }
+                        navigate('/integracao-cakto');
+                      }}
+                    >
+                      Guia Cakto
+                    </Button>
                   </div>
                 </>
               )}

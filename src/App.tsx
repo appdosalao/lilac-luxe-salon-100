@@ -27,6 +27,7 @@ import Termos from "./pages/Termos";
 import Sobre from "./pages/Sobre";
 import Planos from "./pages/Planos";
 import Checkout from "./pages/Checkout";
+import IntegracaoCakto from "./pages/IntegracaoCakto";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
@@ -142,6 +143,13 @@ const App = () => {
                       <ProtectedRoute>
                         <Layout>
                           <Assinatura />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/integracao-cakto" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <IntegracaoCakto />
                         </Layout>
                       </ProtectedRoute>
                     } />

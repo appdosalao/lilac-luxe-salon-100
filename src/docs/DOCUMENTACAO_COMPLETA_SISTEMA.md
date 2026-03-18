@@ -1970,11 +1970,17 @@ const AgendamentoOnlineForm = React.lazy(() =>
 - [ ] Envio de lembretes por SMS
 
 ### **Médio Prazo**
-- [ ] Pagamentos online (Stripe/PayPal)
+- [x] Pagamentos online (Cakto)
 - [ ] Cupons de desconto
 - [ ] Comissões por profissional
 - [ ] Gestão de estoque de produtos
 - [ ] Venda de produtos
+
+### **Pagamento (Cakto)**
+
+O app usa checkout hospedado da Cakto e webhooks para atualizar o status em `public.usuarios`.
+
+Documento: `src/docs/CAKTO_INTEGRACAO.md`
 
 ### **Longo Prazo**
 - [ ] App mobile nativo (React Native)

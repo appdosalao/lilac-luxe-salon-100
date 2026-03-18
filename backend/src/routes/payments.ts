@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { asaas } from '../services/asaas.js';
+import { caktoFindOrderByRefId, caktoGetOrder } from '../services/cakto.js';
 import { requireAuth } from '../auth.js';
 import {
   getUserByAsaasCustomerId,
@@ -102,7 +103,23 @@ router.post('/webhooks/cakto', async (req, res) => {
 
   const eventRaw: string = String(body?.event ?? body?.type ?? body?.custom_id ?? '');
   const event = eventRaw.trim();
-  const data = (body?.data ?? {}) as any;
+  let data = (body?.data ?? {}) as any;
+
+  const shouldVerifyByApi = String(process.env.CAKTO_VERIFY_BY_API ?? '').toLowerCase() === 'true';
+  if (shouldVerifyByApi) {
+    const orderId = typeof data?.id === 'string' ? data.id : null;
+    const refId = typeof data?.refId === 'string' ? data.refId : null;
+    const fromApi = orderId ? await caktoGetOrder(orderId) : refId ? await caktoFindOrderByRefId(refId) : null;
+    if (fromApi) {
+      data = {
+        ...data,
+        ...fromApi,
+        customer: { ...(data?.customer ?? {}), ...(fromApi.customer ?? {}) },
+        product: { ...(data?.product ?? {}), ...(fromApi.product ?? {}) },
+        offer: { ...(data?.offer ?? {}), ...(fromApi.offer ?? {}) }
+      };
+    }
+  }
 
   const supabaseUrl = process.env.SUPABASE_URL ?? '';
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
@@ -152,11 +169,16 @@ router.post('/webhooks/cakto', async (req, res) => {
   };
 
   const resolveSubscriptionStatus = (): 'trial' | 'active' | 'expired' | 'inactive' | null => {
-    const normalized = event.toLowerCase();
+    const statusNormalized = String(orderStatus ?? '').toLowerCase();
+    const eventNormalized = event.toLowerCase();
 
-    if (normalized.includes('approved') || normalized.includes('paid')) return 'active';
-    if (normalized.includes('refund') || normalized.includes('chargeback')) return 'expired';
-    if (normalized.includes('cancel')) return 'inactive';
+    if (statusNormalized === 'paid' || statusNormalized === 'approved') return 'active';
+    if (statusNormalized === 'refunded' || statusNormalized === 'chargedback' || statusNormalized === 'chargeback') return 'expired';
+    if (statusNormalized === 'canceled' || statusNormalized === 'cancelled') return 'inactive';
+
+    if (eventNormalized === 'purchase_approved') return 'active';
+    if (eventNormalized.includes('refund') || eventNormalized.includes('chargeback')) return 'expired';
+    if (eventNormalized.includes('cancel')) return 'inactive';
     return null;
   };
 
