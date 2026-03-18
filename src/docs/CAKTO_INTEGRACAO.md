@@ -32,8 +32,7 @@ O app adiciona automaticamente:
 
 No painel da Cakto, crie um webhook apontando para:
 
-- Opção A (servidor próprio): `POST https://SEU_BACKEND/api/webhooks/cakto`
-- Opção B (Supabase Edge Function): `POST https://SEU_PROJETO.functions.supabase.co/cakto-webhook`
+- `POST https://SEU_PROJETO.functions.supabase.co/cakto-webhook`
 
 Selecione, no mínimo:
 

@@ -34,10 +34,6 @@ build/
 # Vercel
 .vercel/
 
-# Backend (Express + SQLite)
-backend/data/
-backend/**/*.sqlite
-
 # Dev outputs
 dev-dist/
 
