@@ -106,9 +106,15 @@ serve(async (req) => {
   }
 
   const configuredSecret = Deno.env.get("CAKTO_WEBHOOK_SECRET") ?? "";
-  const incomingSecret = body?.secret ?? body?.data?.secret ?? null;
+  const incomingSecret =
+    body?.secret ??
+    body?.data?.secret ??
+    body?.fields?.secret ??
+    body?.data?.fields?.secret ??
+    null;
   if (configuredSecret) {
     if (!incomingSecret || incomingSecret !== configuredSecret) {
+      console.log("cakto-webhook: invalid secret");
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -116,8 +122,8 @@ serve(async (req) => {
     }
   }
 
-  const event = String(body?.event ?? body?.type ?? body?.custom_id ?? "").trim();
-  let data = (body?.data ?? {}) as any;
+  const event = String(body?.event?.custom_id ?? body?.event ?? body?.type ?? body?.custom_id ?? "").trim();
+  let data = (body?.data ?? body?.order ?? body?.payload ?? {}) as any;
 
   const verifyByApi = (Deno.env.get("CAKTO_VERIFY_BY_API") ?? "").toLowerCase() === "true";
   if (verifyByApi) {
@@ -138,6 +144,14 @@ serve(async (req) => {
   const sckRaw = data?.sck ?? data?.customer?.sck ?? null;
   const customerEmail = data?.customer?.email ?? data?.email ?? null;
 
+  console.log("cakto-webhook: received", {
+    event,
+    orderId: typeof data?.id === "string" ? data.id : null,
+    refId: typeof data?.refId === "string" ? data.refId : null,
+    sck: typeof sckRaw === "string" ? sckRaw : null,
+    email: typeof customerEmail === "string" ? customerEmail : null,
+  });
+
   let userId: string | null = typeof sckRaw === "string" && sckRaw ? sckRaw : null;
   if (!userId && typeof customerEmail === "string" && customerEmail) {
     const lookup = await supabaseAdmin.from("usuarios").select("id").eq("email", customerEmail).limit(1);
@@ -145,6 +159,7 @@ serve(async (req) => {
   }
 
   if (!userId) {
+    console.log("cakto-webhook: user not found");
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -207,7 +222,12 @@ serve(async (req) => {
   if (subscriptionStatus) payload.subscription_status = subscriptionStatus;
 
   const cleaned = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined));
-  await supabaseAdmin.from("usuarios").update(cleaned).eq("id", userId);
+  const updateRes = await supabaseAdmin.from("usuarios").update(cleaned).eq("id", userId);
+  if (updateRes.error) {
+    console.log("cakto-webhook: update error", updateRes.error);
+  } else {
+    console.log("cakto-webhook: updated", { userId, subscriptionStatus, planType });
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
