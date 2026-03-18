@@ -8,6 +8,7 @@ import { Package, ShoppingCart, Search, Filter, TrendingUp, TrendingDown, Downlo
 import { useSupabaseCompras } from "@/hooks/useSupabaseCompras";
 import { useSupabaseVendas } from "@/hooks/useSupabaseVendas";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { ScissorsLoader } from "@/components/ScissorsLoader";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { exportMovimentacoesEstoqueCSV, exportMovimentacoesEstoquePDF } from "@/lib/export";
@@ -128,7 +129,7 @@ export default function MovimentacoesProdutos() {
   if (loadingCompras || loadingVendas) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <ScissorsLoader />
       </div>
     );
   }

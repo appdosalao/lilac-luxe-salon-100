@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @keyframes scissors-snips {
+    0%,
+    100% {
+      transform: translateY(-50%) translateX(0) rotate(-12deg);
+    }
+    50% {
+      transform: translateY(-50%) translateX(10px) rotate(18deg);
+    }
+  }
+
+  @keyframes hair-fall {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+
+  .scissors-snips {
+    position: absolute;
+    transform-origin: 50% 50%;
+    animation: scissors-snips 0.9s ease-in-out infinite;
+  }
+
+  .hair-fall {
+    animation: hair-fall 0.9s ease-in-out infinite;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

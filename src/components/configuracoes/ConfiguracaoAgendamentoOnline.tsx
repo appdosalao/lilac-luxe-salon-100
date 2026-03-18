@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image, Upload, X } from 'lucide-react';
 import { useConfigAgendamentoOnline, ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
+import { ScissorsLoader } from '@/components/ScissorsLoader';
 
 export function ConfiguracaoAgendamentoOnline() {
   const { config, loading, saving, setConfig, salvarConfig } = useConfigAgendamentoOnline();
@@ -107,7 +108,7 @@ export function ConfiguracaoAgendamentoOnline() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <ScissorsLoader />
           </div>
         </CardContent>
       </Card>
