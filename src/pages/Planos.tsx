@@ -1,11 +1,24 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Scissors } from 'lucide-react';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export default function Planos() {
   const navigate = useNavigate();
+  const { isAuthenticated, usuario } = useSupabaseAuth();
+
+  const showFreeTrialCta = useMemo(() => {
+    if (!isAuthenticated) return true;
+    if (!usuario?.trial_start_date) return true;
+
+    const startMs = new Date(usuario.trial_start_date).getTime();
+    if (!Number.isFinite(startMs)) return true;
+
+    return Date.now() - startMs < 24 * 60 * 60 * 1000;
+  }, [isAuthenticated, usuario?.trial_start_date]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -64,7 +77,7 @@ export default function Planos() {
                 className="w-full h-12 text-base font-semibold"
                 size="lg"
               >
-                Começar grátis por 7 dias
+                {showFreeTrialCta ? 'COMEÇAR GRÁTIS POR 7 DIAS' : 'ASSINAR AGORA'}
               </Button>
             </CardContent>
           </Card>
