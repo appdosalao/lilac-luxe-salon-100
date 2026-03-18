@@ -24,7 +24,13 @@ export const TrialStatus = () => {
 
     if (!trialValid && !activeValid) {
       const path = window.location.pathname;
-      if (path !== '/planos' && path !== '/checkout' && path !== '/login' && path !== '/cadastro') {
+      if (
+        path !== '/planos' &&
+        path !== '/checkout' &&
+        path !== '/login' &&
+        path !== '/cadastro' &&
+        path !== '/pagamento/retorno'
+      ) {
         navigate('/planos', { replace: true });
       }
     }

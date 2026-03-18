@@ -70,3 +70,11 @@ O backend atualiza `public.usuarios` com:
 - `plan_type` (`mensal` ou `vitalicio`)
 - metadados da Cakto: `cakto_order_id`, `cakto_order_ref_id`, `cakto_last_event`, `cakto_last_status`, etc.
 
+## Retorno para o app após o checkout
+
+Após concluir o checkout, o usuário deve retornar para o app.
+
+- Rota do app: `/pagamento/retorno`
+- Exemplo de URL: `https://SEU_APP/pagamento/retorno?status=success`
+
+Essa página faz polling no Supabase e libera automaticamente quando `subscription_status` muda para `active`.
