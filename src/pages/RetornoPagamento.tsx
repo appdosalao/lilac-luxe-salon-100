@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 type Status = 'checking' | 'active' | 'pending' | 'unauthenticated';
 
 export default function RetornoPagamento() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { isAuthenticated, usuario, refreshProfile } = useSupabaseAuth();
+  const { isAuthenticated, user, usuario, refreshProfile } = useSupabaseAuth();
   const [status, setStatus] = useState<Status>('checking');
 
   const hint = useMemo(() => {
@@ -29,11 +30,26 @@ export default function RetornoPagamento() {
     }
 
     await refreshProfile();
-    const subscriptionStatus = usuario?.subscription_status ?? null;
-    if (subscriptionStatus === 'active') {
+
+    const subscriptionStatusFromState = usuario?.subscription_status ?? null;
+    if (subscriptionStatusFromState === 'active') {
       setStatus('active');
       return;
     }
+
+    if (user?.id) {
+      const { data } = await supabase
+        .from('usuarios')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data?.subscription_status === 'active') {
+        setStatus('active');
+        return;
+      }
+    }
+
     setStatus('pending');
   };
 
