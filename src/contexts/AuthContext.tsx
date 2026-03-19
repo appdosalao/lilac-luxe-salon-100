@@ -19,6 +19,18 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_resolve, reject) => {
+      const timer = window.setTimeout(() => {
+        window.clearTimeout(timer);
+        reject(new Error('timeout'));
+      }, ms);
+    }),
+  ]);
+};
+
 const normalizeUsuario = (profile: any): Usuario => {
   return {
     id: String(profile?.id ?? ''),
@@ -68,11 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', nextSession.user.id)
-      .single();
+    let profile: any = null;
+    let profileError: any = null;
+    try {
+      const res = await withTimeout(
+        supabase.from('usuarios').select('*').eq('id', nextSession.user.id).single(),
+        8000
+      );
+      profile = (res as any).data;
+      profileError = (res as any).error;
+    } catch {
+      profile = null;
+      profileError = new Error('timeout');
+    }
 
     if (profileError) {
       setUsuario(null);
@@ -174,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const init = async () => {
       setIsLoading(true);
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data } = await withTimeout(supabase.auth.getSession(), 8000);
         if (!active) return;
         await hydrateFromSession(data.session);
       } finally {
