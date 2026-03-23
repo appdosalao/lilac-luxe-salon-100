@@ -117,6 +117,8 @@ export default function ContaFixaForm({
           variant="outline" 
           size="icon"
           onClick={onCancel}
+          title="Voltar"
+          aria-label="Voltar"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -236,6 +238,8 @@ export default function ContaFixaForm({
                                 variant="outline" 
                                 size="icon"
                                 className="flex-shrink-0 h-12 w-12 btn-touch"
+                                title="Adicionar categoria"
+                                aria-label="Adicionar categoria"
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
