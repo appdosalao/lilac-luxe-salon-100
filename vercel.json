@@ -5,6 +5,7 @@
   "installCommand": "npm ci",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/sounds/(.*)", "destination": "/sounds/$1" },
     { "source": "/sunds/(.*)", "destination": "/sunds/$1" },
     {

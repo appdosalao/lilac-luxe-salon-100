@@ -29,6 +29,7 @@ import Planos from "./pages/Planos";
 import Checkout from "./pages/Checkout";
 import IntegracaoCakto from "./pages/IntegracaoCakto";
 import RetornoPagamento from "./pages/RetornoPagamento";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
@@ -64,6 +65,7 @@ const App = () => {
                     <Route path="/planos" element={<Planos />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/pagamento/retorno" element={<RetornoPagamento />} />
+                    <Route path="/payment/success" element={<PaymentSuccess />} />
                     <Route path="/teste-som" element={<TesteSomPage />} />
                     <Route path="/teste-agendamentos" element={<TesteAgendamentosPage />} />
                     <Route path="/sobre" element={<Sobre />} />

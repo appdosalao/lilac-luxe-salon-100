@@ -3,15 +3,20 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { ScissorsLoader } from '@/components/ScissorsLoader';
 import { Button } from '@/components/ui/button';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
+import { PaywallScreen } from '@/components/PaywallScreen';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, usuario } = useSupabaseAuth();
+  const { isAuthenticated, isLoading: authLoading, usuario } = useSupabaseAuth();
+  const { isPaid, isLoading: paidLoading } = usePaidAccess();
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  const isLoading = authLoading || paidLoading;
 
   useEffect(() => {
     if (!isLoading) {
@@ -47,8 +52,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const subscriptionStatus = usuario?.subscription_status ?? null;
+  if (isPaid) {
+    return <>{children}</>;
+  }
 
+  const subscriptionStatus = usuario?.subscription_status ?? null;
   const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
   const trialValid =
     subscriptionStatus === 'trial' &&
@@ -60,7 +68,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const canAccessActive = subscriptionStatus === 'active';
 
   if (!canAccessTrial && !canAccessActive) {
-    return <Navigate to="/planos" replace />;
+    return <PaywallScreen />;
   }
 
   return <>{children}</>;

@@ -21,6 +21,8 @@ export interface Usuario {
   cakto_last_status: string | null;
   cakto_customer_email: string | null;
   subscription_updated_at: string | null;
+  paid_access: boolean;
+  paid_at: string | null;
 }
 
 export interface UsuarioCadastro {
