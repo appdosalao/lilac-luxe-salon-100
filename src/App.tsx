@@ -33,7 +33,6 @@ import { NotificationProviderAvancado } from "./components/notificacoes/Notifica
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import TesteFidelidade from "./pages/TesteFidelidade";
 import TesteSomPage from "./pages/TesteSomPage";
-import TesteAgendamentosPage from "./pages/TesteAgendamentosPage";
 
 const queryClient = new QueryClient();
 
