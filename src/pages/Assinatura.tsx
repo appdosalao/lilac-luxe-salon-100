@@ -10,42 +10,25 @@ import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 export default function Assinatura() {
   const navigate = useNavigate();
-  const { usuario, refreshProfile } = useSupabaseAuth();
-  const { isPaid, isLoading: isPaidLoading } = usePaidAccess();
+  const { refreshProfile } = useSupabaseAuth();
+  const { isPaid, isLoading: isPaidLoading, refetch } = usePaidAccess();
   const [loading, setLoading] = useState(false);
 
   const statusLabel = useMemo(() => {
     if (isPaidLoading) return 'Verificando...';
     if (isPaid) return 'Acesso Vitalício Ativo';
-    
-    // Fallback para assinaturas legadas (mantido por segurança)
-    const subscriptionStatus = usuario?.subscription_status ?? null;
-    const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
-    const trialValid =
-      subscriptionStatus === 'trial' &&
-      typeof trialStart === 'number' &&
-      Number.isFinite(trialStart) &&
-      Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
-
-    if (subscriptionStatus === 'active') return 'Ativo';
-    if (trialValid) return 'Em teste';
     return 'Inativo / Pendente';
-  }, [usuario, isPaid, isPaidLoading]);
+  }, [isPaid, isPaidLoading]);
 
   const planLabel = useMemo(() => {
-    if (isPaid) return 'Vitalício (Acesso Permanente)';
-    
-    // Fallback legado
-    if (usuario?.plan_type === 'mensal') return 'Mensal';
-    if (usuario?.plan_type === 'vitalicio') return 'Vitalício (Legado)';
-    return 'Nenhum plano ativo';
-  }, [usuario?.plan_type, isPaid]);
+    return isPaid ? 'Vitalício (Acesso Permanente)' : 'Vitalício';
+  }, [isPaid]);
 
   const refresh = async () => {
     setLoading(true);
     try {
       await refreshProfile();
-      // O usePaidAccess atualizará automaticamente através do token
+      await refetch?.();
       toast.success('Status atualizado!');
     } catch {
       toast.error('Erro ao verificar status');

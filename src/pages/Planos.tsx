@@ -1,26 +1,13 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Scissors } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 export default function Planos() {
   const navigate = useNavigate();
-  const { isAuthenticated, usuario } = useSupabaseAuth();
   const { isPaid } = usePaidAccess();
-
-  const showFreeTrialCta = useMemo(() => {
-    if (!isAuthenticated) return true;
-    if (!usuario?.trial_start_date) return true;
-
-    const startMs = new Date(usuario.trial_start_date).getTime();
-    if (!Number.isFinite(startMs)) return true;
-
-    return Date.now() - startMs < 24 * 60 * 60 * 1000;
-  }, [isAuthenticated, usuario?.trial_start_date]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -53,8 +40,8 @@ export default function Planos() {
             </CardHeader>
             <CardContent className="space-y-6 pt-4">
               <div className="text-center">
-                <div className="text-5xl font-extrabold text-primary leading-none">R$ 350</div>
-                <p className="text-sm font-medium mt-2 uppercase tracking-wider text-muted-foreground">pagamento único</p>
+                <div className="text-5xl font-extrabold text-primary leading-none">R$ [PREÇO]</div>
+                <p className="text-sm font-medium mt-2 uppercase tracking-wider text-muted-foreground">pagamento único via Cakto</p>
               </div>
 
               <div className="space-y-3 bg-white/50 dark:bg-black/20 p-5 rounded-xl border border-border/50">
@@ -77,7 +64,7 @@ export default function Planos() {
               </div>
 
               <Button
-                onClick={() => navigate('/checkout', { state: { plano: 'vitalicio' } })}
+                onClick={() => navigate('/checkout')}
                 className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
                 disabled={isPaid}
               >

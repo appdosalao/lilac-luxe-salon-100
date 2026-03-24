@@ -1,5 +1,6 @@
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type PaidAccessCache = {
   userId: string;
@@ -34,30 +35,28 @@ const writeCache = (value: PaidAccessCache) => {
 export const usePaidAccess = () => {
   const { session } = useSupabaseAuth();
 
-  const token = session?.access_token ?? null;
   const userId = session?.user?.id ?? null;
 
   const query = useQuery({
     queryKey: ['paidAccess', userId],
-    enabled: !!token && !!userId,
+    enabled: !!userId,
     initialData: userId ? readCache(userId) : undefined,
     staleTime: CACHE_TTL_MS,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
     queryFn: async () => {
-      if (!token) return false;
-      const response = await fetch('/api/payment/status', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (!userId) return false;
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('paid_access')
+        .eq('id', userId)
+        .maybeSingle();
 
-      if (!response.ok) {
+      if (error) {
         return false;
       }
 
-      const data = (await response.json()) as { paid_access?: boolean };
       const isPaid = !!data?.paid_access;
       if (userId) {
         writeCache({ userId, isPaid, cachedAt: Date.now() });
@@ -66,9 +65,13 @@ export const usePaidAccess = () => {
     },
   });
 
-  if (!token || !userId) {
-    return { isPaid: false, isLoading: false };
+  if (!userId) {
+    return { isPaid: false, isLoading: false, refetch: undefined };
   }
 
-  return { isPaid: !!query.data, isLoading: query.isFetching && query.data === undefined };
+  return {
+    isPaid: !!query.data,
+    isLoading: query.isFetching && query.data === undefined,
+    refetch: query.refetch,
+  };
 };

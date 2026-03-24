@@ -20,7 +20,6 @@ A API da Cakto é REST e usa OAuth2 com `client_id` e `client_secret`.
 
 No `.env` do frontend:
 
-- `VITE_CAKTO_CHECKOUT_MENSAL_URL`
 - `VITE_CAKTO_CHECKOUT_VITALICIO_URL`
 
 O app adiciona automaticamente:
@@ -67,18 +66,16 @@ O backend tenta obter o pedido em `public_api/orders/{id}/` e usa os dados retor
 
 ## Mapeamento de planos
 
-Para o backend identificar o plano (`mensal` vs `vitalicio`), configure pelo menos um dos pares abaixo:
+Para o backend identificar o plano vitalício, configure pelo menos um dos pares abaixo:
 
-- `CAKTO_MENSAL_PRODUCT_ID` e `CAKTO_VITALICIO_PRODUCT_ID`
-- `CAKTO_MENSAL_OFFER_ID` e `CAKTO_VITALICIO_OFFER_ID`
+- `CAKTO_VITALICIO_PRODUCT_ID` ou `CAKTO_VITALICIO_OFFER_ID`
 
 ## Campos atualizados no Supabase
 
 O backend atualiza `public.usuarios` com:
 
 - `payment_provider='cakto'`
-- `subscription_status` (`active`, `trial`, `inactive`, `expired`)
-- `plan_type` (`mensal` ou `vitalicio`)
+- `paid_access` (`true` quando o vitalício é aprovado)
 - metadados da Cakto: `cakto_order_id`, `cakto_order_ref_id`, `cakto_last_event`, `cakto_last_status`, etc.
 
 ## Retorno para o app após o checkout
@@ -88,4 +85,4 @@ Após concluir o checkout, o usuário deve retornar para o app.
 - Rota do app: `/pagamento/retorno`
 - Exemplo de URL: `https://SEU_APP/pagamento/retorno?status=success`
 
-Essa página faz polling no Supabase e libera automaticamente quando `subscription_status` muda para `active`.
+Essa página faz polling no Supabase e libera automaticamente quando `paid_access` muda para `true`.

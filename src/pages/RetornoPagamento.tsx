@@ -4,14 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 type Status = 'checking' | 'active' | 'pending' | 'unauthenticated';
 
 export default function RetornoPagamento() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { isAuthenticated, user, usuario, refreshProfile } = useSupabaseAuth();
+  const { isAuthenticated, refreshProfile } = useSupabaseAuth();
+  const { isPaid, refetch } = usePaidAccess();
   const [status, setStatus] = useState<Status>('checking');
 
   const hint = useMemo(() => {
@@ -30,27 +31,9 @@ export default function RetornoPagamento() {
     }
 
     await refreshProfile();
-
-    const subscriptionStatusFromState = usuario?.subscription_status ?? null;
-    if (subscriptionStatusFromState === 'active') {
-      setStatus('active');
-      return;
-    }
-
-    if (user?.id) {
-      const { data } = await supabase
-        .from('usuarios')
-        .select('subscription_status')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (data?.subscription_status === 'active') {
-        setStatus('active');
-        return;
-      }
-    }
-
-    setStatus('pending');
+    const result = await refetch?.();
+    const paid = typeof result?.data === 'boolean' ? result.data : isPaid;
+    setStatus(paid ? 'active' : 'pending');
   };
 
   useEffect(() => {
@@ -128,8 +111,8 @@ export default function RetornoPagamento() {
               </Button>
             </div>
 
-            <Button variant="ghost" onClick={() => navigate('/planos')} className="w-full">
-              Escolher plano
+            <Button variant="ghost" onClick={() => navigate('/checkout')} className="w-full">
+              Ir para o checkout vitalício
             </Button>
           </CardContent>
         </Card>

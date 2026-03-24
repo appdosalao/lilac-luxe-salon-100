@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -7,37 +7,30 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-
-type PlanoSelecionado = 'vitalicio';
+import { buildCaktoCheckoutUrl } from '@/lib/caktoCheckout';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [vitalicioConsent, setVitalicioConsent] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { isAuthenticated, session, usuario } = useSupabaseAuth();
 
-  const plano = (location.state as any)?.plano as PlanoSelecionado | undefined;
-
   const resumo = useMemo(() => {
-    if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 (pagamento único)';
-    return null;
-  }, [plano]);
-
-  useEffect(() => {
-    if (!plano || !resumo || plano !== 'vitalicio') {
-      navigate('/planos', { replace: true });
-    }
-  }, [plano, resumo, navigate]);
-
-  if (!plano || !resumo) {
-    return null;
-  }
+    return 'Plano Vitalício — pagamento único via Cakto';
+  }, []);
 
   const redirectToCakto = async () => {
-    if (!isAuthenticated || !session?.access_token || !usuario) {
+    const userId = session?.user?.id ?? null;
+    const baseUrl = String(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || '').trim();
+
+    if (!isAuthenticated || !userId || !usuario) {
       toast.error('Faça login para continuar');
       navigate('/login');
+      return;
+    }
+
+    if (!baseUrl) {
+      toast.error('Checkout vitalício não configurado');
       return;
     }
 
@@ -49,25 +42,16 @@ export default function Checkout() {
     setIsRedirecting(true);
     
     try {
-      const response = await fetch('/api/payment/checkout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+      const redirectUrl = `${window.location.origin}/payment/success`;
+      const checkoutUrl = buildCaktoCheckoutUrl({
+        baseUrl,
+        sck: userId,
+        name: usuario?.nome_completo ?? null,
+        email: usuario?.email ?? null,
+        phone: usuario?.telefone ?? null,
+        redirectUrl,
       });
-
-      const data = await response.json();
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else if (data.alreadyPaid) {
-        toast.success('Seu acesso já está liberado!');
-        navigate('/');
-      } else {
-        toast.error('Erro ao gerar checkout. Tente novamente.');
-        setIsRedirecting(false);
-      }
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Erro ao processar checkout:', error);
       toast.error('Erro na conexão com o servidor.');

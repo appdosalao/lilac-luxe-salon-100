@@ -19,35 +19,20 @@ export default function Configuracoes() {
   const initialTab = searchParams.get('tab') || 'horarios';
   const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
-  const { usuario, isLoading: authLoading, refreshProfile, isAuthenticated } = useSupabaseAuth();
-  const { isPaid, isLoading: paidLoading } = usePaidAccess();
+  const { isLoading: authLoading, refreshProfile, isAuthenticated } = useSupabaseAuth();
+  const { isPaid, isLoading: paidLoading, refetch } = usePaidAccess();
   const [statusLoading, setStatusLoading] = useState(false);
 
   const isLoading = authLoading || paidLoading;
 
   const statusLabel = (() => {
     if (isPaid) return 'Acesso Vitalício Ativo';
-    const subscriptionStatus = usuario?.subscription_status ?? null;
-    const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
-    const trialValid =
-      subscriptionStatus === 'trial' &&
-      typeof trialStart === 'number' &&
-      Number.isFinite(trialStart) &&
-      Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
-
-    if (subscriptionStatus === 'active') return 'Ativo (Legado)';
-    if (trialValid) return 'Em teste';
-    if (subscriptionStatus === 'trial') return 'Expirado';
-    if (subscriptionStatus === 'expired') return 'Expirado';
-    if (subscriptionStatus === 'inactive') return 'Inativo';
-    return 'Inativo';
+    return 'Acesso não liberado';
   })();
 
   const planLabel = (() => {
     if (isPaid) return 'Vitalício (Acesso Permanente)';
-    if (usuario?.plan_type === 'mensal') return 'Mensal';
-    if (usuario?.plan_type === 'vitalicio') return 'Vitalício (Legado)';
-    return '—';
+    return 'Vitalício';
   })();
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -207,6 +192,7 @@ export default function Configuracoes() {
                         setStatusLoading(true);
                         try {
                           await refreshProfile();
+                          await refetch?.();
                           toast.success('Status atualizado!');
                         } catch (e) {
                           toast.error('Erro ao verificar status');

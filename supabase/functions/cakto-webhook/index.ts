@@ -221,6 +221,16 @@ serve(async (req) => {
   if (planType) payload.plan_type = planType;
   if (subscriptionStatus) payload.subscription_status = subscriptionStatus;
 
+  if (planType === "vitalicio" && subscriptionStatus === "active") {
+    payload.paid_access = true;
+    payload.paid_at = new Date().toISOString();
+  }
+
+  if (planType === "vitalicio" && (subscriptionStatus === "expired" || subscriptionStatus === "inactive")) {
+    payload.paid_access = false;
+    payload.paid_at = null;
+  }
+
   const cleaned = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined));
   const updateRes = await supabaseAdmin.from("usuarios").update(cleaned).eq("id", userId);
   if (updateRes.error) {

@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading: authLoading, usuario } = useSupabaseAuth();
+  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const { isPaid, isLoading: paidLoading } = usePaidAccess();
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -52,24 +52,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (isPaid) {
-    return <>{children}</>;
-  }
-
-  const subscriptionStatus = usuario?.subscription_status ?? null;
-  const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
-  const trialValid =
-    subscriptionStatus === 'trial' &&
-    typeof trialStart === 'number' &&
-    Number.isFinite(trialStart) &&
-    Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
-
-  const canAccessTrial = trialValid;
-  const canAccessActive = subscriptionStatus === 'active';
-
-  if (!canAccessTrial && !canAccessActive) {
-    return <PaywallScreen />;
-  }
-
-  return <>{children}</>;
+  return isPaid ? <>{children}</> : <PaywallScreen />;
 };

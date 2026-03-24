@@ -42,19 +42,18 @@ const Termos = () => {
           </section>
 
           <section className="space-responsive-sm">
-            <h2 className="text-responsive-lg font-semibold">Assinatura e Pagamentos</h2>
+            <h2 className="text-responsive-lg font-semibold">Acesso Vitalício e Pagamentos</h2>
             <ul className="list-disc pl-6 text-muted-foreground">
-              <li>Plano com período de teste gratuito de 7 dias.</li>
-              <li>Após o teste, a assinatura mensal é de R$ 20,00.</li>
+              <li>O acesso ao sistema é concedido por meio de pagamento único (licença vitalícia).</li>
+              <li>O pagamento é processado por provedor externo (Cakto) e está sujeito às regras do provedor.</li>
               <li>Encargos e tributos aplicáveis podem ser adicionados conforme a legislação.</li>
-              <li>A cobrança é recorrente e pode ser cancelada a qualquer momento.</li>
             </ul>
           </section>
 
           <section className="space-responsive-sm">
             <h2 className="text-responsive-lg font-semibold">Cancelamento e Reembolsos</h2>
             <p className="text-muted-foreground">
-              Você pode cancelar a assinatura a qualquer momento. Reembolsos, quando aplicáveis, seguirão a política do meio de pagamento utilizado e a legislação vigente.
+              Reembolsos, quando aplicáveis, seguirão a política do meio de pagamento utilizado (Cakto) e a legislação vigente.
             </p>
           </section>
 

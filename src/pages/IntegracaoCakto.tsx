@@ -1,22 +1,13 @@
-import { useMemo } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 export default function IntegracaoCakto() {
   const { usuario, user } = useSupabaseAuth();
+  const { isPaid } = usePaidAccess();
 
-  const mensalUrlConfigured = Boolean(import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL);
   const vitalicioUrlConfigured = Boolean(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL);
-
-  const statusLabel = useMemo(() => {
-    const subscriptionStatus = usuario?.subscription_status ?? null;
-    if (subscriptionStatus === 'active') return 'Ativo';
-    if (subscriptionStatus === 'trial') return 'Trial';
-    if (subscriptionStatus === 'expired') return 'Expirado';
-    if (subscriptionStatus === 'inactive') return 'Inativo';
-    return '—';
-  }, [usuario?.subscription_status]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -30,17 +21,11 @@ export default function IntegracaoCakto() {
                   Checklist e parâmetros usados pelo app (checkout hospedado + webhook)
                 </CardDescription>
               </div>
-              <Badge variant="outline">{statusLabel}</Badge>
+              <Badge variant={isPaid ? 'default' : 'outline'}>{isPaid ? 'Acesso liberado' : 'Acesso pendente'}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-3">
-              <div className="flex items-center justify-between gap-4">
-                <div className="text-sm text-muted-foreground">Checkout Mensal configurado</div>
-                <Badge variant={mensalUrlConfigured ? 'default' : 'outline'}>
-                  {mensalUrlConfigured ? 'OK' : 'Faltando'}
-                </Badge>
-              </div>
               <div className="flex items-center justify-between gap-4">
                 <div className="text-sm text-muted-foreground">Checkout Vitalício configurado</div>
                 <Badge variant={vitalicioUrlConfigured ? 'default' : 'outline'}>
@@ -75,11 +60,11 @@ export default function IntegracaoCakto() {
                 <CardDescription>Itens mínimos para o fluxo funcionar</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div>1) Produtos/Ofertas: crie um produto mensal (assinatura) e um vitalício (único).</div>
-                <div>2) Links de checkout: configure em `VITE_CAKTO_CHECKOUT_MENSAL_URL` e `VITE_CAKTO_CHECKOUT_VITALICIO_URL`.</div>
-                <div>3) Webhook: cadastre o endpoint do backend em Apps → Webhooks e selecione pelo menos `purchase_approved`.</div>
-                <div>4) Chave secreta: defina a mesma `CAKTO_WEBHOOK_SECRET` no backend para validar chamadas.</div>
-                <div>5) Testes: use “Enviar evento de teste” no webhook para validar o recebimento.</div>
+                <div>1) Produto/Oferta: crie um produto vitalício (pagamento único).</div>
+                <div>2) Link de checkout: configure em `VITE_CAKTO_CHECKOUT_VITALICIO_URL`.</div>
+                <div>3) Webhook: cadastre o endpoint e selecione pelo menos `purchase_approved`.</div>
+                <div>4) Chave secreta: defina a mesma `CAKTO_WEBHOOK_SECRET` no webhook e no backend.</div>
+                <div>5) Testes: use “Enviar evento de teste” para validar o recebimento.</div>
               </CardContent>
             </Card>
 

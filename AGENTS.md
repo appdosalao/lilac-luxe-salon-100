@@ -17,7 +17,7 @@ There is no test framework configured in this project.
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in:
-- `VITE_CAKTO_CHECKOUT_MENSAL_URL` / `VITE_CAKTO_CHECKOUT_VITALICIO_URL` – Cakto payment checkout URLs
+- `VITE_CAKTO_CHECKOUT_VITALICIO_URL` – Cakto payment checkout URL (vitalício)
 - The Supabase URL and keys are **hardcoded** in `src/integrations/supabase/client.ts` and `publicClient.ts`; the `.env.example` values are for Vercel deployment reference only.
 
 ## Architecture Overview

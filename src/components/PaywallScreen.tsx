@@ -4,37 +4,38 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Loader2, Sparkles, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { buildCaktoCheckoutUrl } from '@/lib/caktoCheckout';
 
 export const PaywallScreen: React.FC = () => {
-  const { session, signOut } = useSupabaseAuth();
+  const { session, usuario, signOut } = useSupabaseAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleBuyAccess = async () => {
-    if (!session?.access_token) {
+    const userId = session?.user?.id ?? null;
+    const baseUrl = String(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || '').trim();
+
+    if (!userId) {
       toast.error('Você precisa estar logado para comprar o acesso.');
+      return;
+    }
+
+    if (!baseUrl) {
+      toast.error('Checkout vitalício não configurado.');
       return;
     }
 
     setIsRedirecting(true);
     try {
-      const response = await fetch('/api/payment/checkout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+      const redirectUrl = `${window.location.origin}/payment/success`;
+      const checkoutUrl = buildCaktoCheckoutUrl({
+        baseUrl,
+        sck: userId,
+        name: usuario?.nome_completo ?? null,
+        email: usuario?.email ?? null,
+        phone: usuario?.telefone ?? null,
+        redirectUrl,
       });
-
-      const data = await response.json();
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else if (data.alreadyPaid) {
-        toast.success('Seu acesso já está liberado!');
-        window.location.reload();
-      } else {
-        toast.error('Erro ao gerar checkout. Tente novamente.');
-      }
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Erro ao processar checkout:', error);
       toast.error('Erro na conexão com o servidor.');
