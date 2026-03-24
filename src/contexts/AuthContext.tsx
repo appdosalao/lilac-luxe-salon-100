@@ -55,6 +55,8 @@ const normalizeUsuario = (profile: any): Usuario => {
     cakto_last_status: (profile?.cakto_last_status ?? null) as Usuario['cakto_last_status'],
     cakto_customer_email: (profile?.cakto_customer_email ?? null) as Usuario['cakto_customer_email'],
     subscription_updated_at: (profile?.subscription_updated_at ?? null) as Usuario['subscription_updated_at'],
+    paid_access: Boolean(profile?.paid_access ?? false),
+    paid_at: (profile?.paid_at ?? null) as Usuario['paid_at'],
   };
 };
 

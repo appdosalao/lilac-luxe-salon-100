@@ -33,13 +33,15 @@ const writeCache = (value: PaidAccessCache) => {
 };
 
 export const usePaidAccess = () => {
-  const { session } = useSupabaseAuth();
+  const { session, usuario } = useSupabaseAuth();
 
   const userId = session?.user?.id ?? null;
 
+  const paidFromProfile = typeof usuario?.paid_access === 'boolean' ? usuario.paid_access : undefined;
+
   const query = useQuery({
     queryKey: ['paidAccess', userId],
-    enabled: !!userId,
+    enabled: !!userId && paidFromProfile === undefined,
     initialData: userId ? readCache(userId) : undefined,
     staleTime: CACHE_TTL_MS,
     gcTime: 30 * 60 * 1000,
@@ -70,8 +72,8 @@ export const usePaidAccess = () => {
   }
 
   return {
-    isPaid: !!query.data,
-    isLoading: query.isFetching && query.data === undefined,
+    isPaid: paidFromProfile ?? !!query.data,
+    isLoading: paidFromProfile === undefined && query.isFetching && query.data === undefined,
     refetch: query.refetch,
   };
 };
