@@ -2,12 +2,14 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 export const TrialBanner = () => {
   const { usuario } = useSupabaseAuth();
+  const { isPaid } = usePaidAccess();
   const navigate = useNavigate();
 
-  if (usuario?.subscription_status !== 'trial') {
+  if (isPaid || usuario?.subscription_status !== 'trial') {
     return null;
   }
 

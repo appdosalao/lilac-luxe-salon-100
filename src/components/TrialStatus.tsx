@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 
 /**
  * Componente que monitora o status do trial e redireciona
@@ -8,9 +9,12 @@ import { useNavigate } from 'react-router-dom';
  */
 export const TrialStatus = () => {
   const { usuario } = useSupabaseAuth();
+  const { isPaid } = usePaidAccess();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isPaid) return;
+
     const subscriptionStatus = usuario?.subscription_status ?? null;
     const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
 
@@ -34,7 +38,7 @@ export const TrialStatus = () => {
         navigate('/planos', { replace: true });
       }
     }
-  }, [usuario, navigate]);
+  }, [usuario, navigate, isPaid]);
 
   return null;
 };

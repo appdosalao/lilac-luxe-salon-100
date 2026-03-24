@@ -1,75 +1,78 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-type PlanoSelecionado = 'mensal' | 'vitalicio';
+type PlanoSelecionado = 'vitalicio';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [vitalicioConsent, setVitalicioConsent] = useState(false);
-  const { isAuthenticated, user, usuario } = useSupabaseAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const { isAuthenticated, session, usuario } = useSupabaseAuth();
 
   const plano = (location.state as any)?.plano as PlanoSelecionado | undefined;
 
   const resumo = useMemo(() => {
-    if (plano === 'mensal') return 'Plano Mensal — R$ 20,00/mês';
     if (plano === 'vitalicio') return 'Plano Vitalício — R$ 350,00 (pagamento único)';
     return null;
   }, [plano]);
 
+  useEffect(() => {
+    if (!plano || !resumo || plano !== 'vitalicio') {
+      navigate('/planos', { replace: true });
+    }
+  }, [plano, resumo, navigate]);
+
   if (!plano || !resumo) {
-    navigate('/planos', { replace: true });
     return null;
   }
 
-  const redirectToCakto = () => {
-    if (!isAuthenticated || !user?.id || !usuario) {
+  const redirectToCakto = async () => {
+    if (!isAuthenticated || !session?.access_token || !usuario) {
       toast.error('Faça login para continuar');
       navigate('/login');
       return;
     }
 
-    if (plano === 'vitalicio' && !vitalicioConsent) {
+    if (!vitalicioConsent) {
       toast.error('Confirme o termo do plano vitalício para continuar');
       return;
     }
 
-    const baseUrl =
-      plano === 'mensal'
-        ? (import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL as string | undefined)
-        : (import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL as string | undefined);
+    setIsRedirecting(true);
+    
+    try {
+      const response = await fetch('/api/payment/checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    if (!baseUrl) {
-      toast.error('Checkout não configurado');
-      return;
+      const data = await response.json();
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else if (data.alreadyPaid) {
+        toast.success('Seu acesso já está liberado!');
+        navigate('/');
+      } else {
+        toast.error('Erro ao gerar checkout. Tente novamente.');
+        setIsRedirecting(false);
+      }
+    } catch (error) {
+      console.error('Erro ao processar checkout:', error);
+      toast.error('Erro na conexão com o servidor.');
+      setIsRedirecting(false);
     }
-
-    const checkoutUrl = new URL(baseUrl);
-    checkoutUrl.searchParams.set('sck', user.id);
-
-    if (usuario.nome_completo) {
-      checkoutUrl.searchParams.set('name', usuario.nome_completo);
-    }
-
-    if (usuario.email) {
-      checkoutUrl.searchParams.set('email', usuario.email);
-      checkoutUrl.searchParams.set('confirmEmail', usuario.email);
-    }
-
-    if (usuario.telefone) {
-      const digits = usuario.telefone.replace(/\D/g, '');
-      const normalized = digits.startsWith('55') ? digits : `55${digits}`;
-      checkoutUrl.searchParams.set('phone', normalized);
-    }
-
-    window.location.assign(checkoutUrl.toString());
   };
 
   return (
@@ -80,48 +83,56 @@ export default function Checkout() {
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <div className="text-sm text-muted-foreground">Checkout</div>
+          <div className="text-sm text-muted-foreground">Checkout Seguro</div>
         </div>
 
-        <Card className="shadow-xl">
+        <Card className="shadow-xl border-primary/20">
           <CardHeader>
-            <CardTitle className="text-2xl">Ativar seu plano</CardTitle>
-            <CardDescription>{resumo}</CardDescription>
+            <CardTitle className="text-2xl">Finalizar Compra</CardTitle>
+            <CardDescription className="text-lg font-medium text-foreground">{resumo}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {!isAuthenticated ? (
-              <Alert>
-                <AlertDescription className="text-sm">
-                  Para continuar para o pagamento, faça login (ou crie sua conta).
+              <Alert variant="destructive">
+                <AlertDescription className="text-sm font-medium">
+                  Para continuar para o pagamento, faça login ou crie sua conta.
                 </AlertDescription>
               </Alert>
             ) : null}
 
-            {plano === 'vitalicio' && (
-              <Alert className="border-yellow-500/30 bg-yellow-500/10">
-                <AlertDescription className="text-sm">
-                  ℹ️ O plano vitalício não permite cancelamento ou estorno pelo app. Em caso de arrependimento,
-                  entre em contato em até 7 dias: <span className="font-medium">resellr7@gmail.com</span> |{' '}
-                  <span className="font-medium">(33) 99854-2100</span>
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert className="border-yellow-500/30 bg-yellow-500/10">
+              <AlertDescription className="text-sm">
+                ℹ️ O plano vitalício não possui cobranças futuras. Em caso de arrependimento,
+                entre em contato em até 7 dias: <span className="font-medium">resellr7@gmail.com</span> |{' '}
+                <span className="font-medium">(33) 99854-2100</span>
+              </AlertDescription>
+            </Alert>
 
-            {plano === 'vitalicio' && (
-              <div className="flex items-start gap-3 rounded-lg border p-3">
-                <Checkbox
-                  id="vitalicio-consent"
-                  checked={vitalicioConsent}
-                  onCheckedChange={(v) => setVitalicioConsent(Boolean(v))}
-                />
-                <label htmlFor="vitalicio-consent" className="text-sm leading-snug cursor-pointer">
-                  Li e concordo que o plano vitalício não permite cancelamento pelo app
-                </label>
-              </div>
-            )}
+            <div className="flex items-start gap-3 rounded-lg border p-4 bg-muted/30">
+              <Checkbox
+                id="vitalicio-consent"
+                checked={vitalicioConsent}
+                onCheckedChange={(v) => setVitalicioConsent(Boolean(v))}
+                className="mt-1"
+              />
+              <label htmlFor="vitalicio-consent" className="text-sm leading-snug cursor-pointer font-medium">
+                Li e concordo que estou adquirindo uma licença vitalícia e confirmo estar ciente das políticas de reembolso em até 7 dias.
+              </label>
+            </div>
 
-            <Button onClick={redirectToCakto} className="w-full h-12 text-base font-semibold">
-              Ir para o pagamento
+            <Button 
+              onClick={redirectToCakto} 
+              className="w-full h-14 text-lg font-bold"
+              disabled={isRedirecting || !vitalicioConsent}
+            >
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Gerando checkout...
+                </>
+              ) : (
+                'Ir para o pagamento seguro'
+              )}
             </Button>
           </CardContent>
         </Card>

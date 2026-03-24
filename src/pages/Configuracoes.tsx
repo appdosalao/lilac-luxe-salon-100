@@ -11,6 +11,7 @@ import { Clock, Bell, Download, Settings, Calendar, Crown, CreditCard, RefreshCw
 import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 import { toast } from 'sonner';
 
 export default function Configuracoes() {
@@ -18,10 +19,14 @@ export default function Configuracoes() {
   const initialTab = searchParams.get('tab') || 'horarios';
   const [activeTab, setActiveTab] = useState(initialTab);
   const navigate = useNavigate();
-  const { usuario, isLoading, refreshProfile, isAuthenticated } = useSupabaseAuth();
+  const { usuario, isLoading: authLoading, refreshProfile, isAuthenticated } = useSupabaseAuth();
+  const { isPaid, isLoading: paidLoading } = usePaidAccess();
   const [statusLoading, setStatusLoading] = useState(false);
 
+  const isLoading = authLoading || paidLoading;
+
   const statusLabel = (() => {
+    if (isPaid) return 'Acesso Vitalício Ativo';
     const subscriptionStatus = usuario?.subscription_status ?? null;
     const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
     const trialValid =
@@ -30,7 +35,7 @@ export default function Configuracoes() {
       Number.isFinite(trialStart) &&
       Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;
 
-    if (subscriptionStatus === 'active') return 'Ativo';
+    if (subscriptionStatus === 'active') return 'Ativo (Legado)';
     if (trialValid) return 'Em teste';
     if (subscriptionStatus === 'trial') return 'Expirado';
     if (subscriptionStatus === 'expired') return 'Expirado';
@@ -39,8 +44,9 @@ export default function Configuracoes() {
   })();
 
   const planLabel = (() => {
+    if (isPaid) return 'Vitalício (Acesso Permanente)';
     if (usuario?.plan_type === 'mensal') return 'Mensal';
-    if (usuario?.plan_type === 'vitalicio') return 'Vitalício';
+    if (usuario?.plan_type === 'vitalicio') return 'Vitalício (Legado)';
     return '—';
   })();
   useEffect(() => {
@@ -183,9 +189,11 @@ export default function Configuracoes() {
                         navigate('/planos');
                       }}
                       className="w-full gap-2"
+                      disabled={isPaid}
+                      variant={isPaid ? "outline" : "default"}
                     >
                       <CreditCard className="h-4 w-4" />
-                      Escolher Plano
+                      {isPaid ? 'Acesso Vitalício Adquirido' : 'Escolher Plano'}
                     </Button>
                     <Button
                       variant="outline"
