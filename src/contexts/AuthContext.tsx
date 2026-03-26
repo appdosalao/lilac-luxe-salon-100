@@ -157,10 +157,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout: AuthContextType['logout'] = async () => {
-    await supabase.auth.signOut();
-    setUsuario(null);
-    setUser(null);
-    setSession(null);
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+    } finally {
+      setUsuario(null);
+      setUser(null);
+      setSession(null);
+    }
   };
 
   const refreshProfile: AuthContextType['refreshProfile'] = async () => {

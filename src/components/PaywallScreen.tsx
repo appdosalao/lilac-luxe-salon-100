@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -9,8 +10,10 @@ import { toast } from 'sonner';
 import { buildCaktoCheckoutUrl } from '@/lib/caktoCheckout';
 
 export const PaywallScreen: React.FC = () => {
-  const { session, usuario, signOut } = useSupabaseAuth();
+  const navigate = useNavigate();
+  const { session, usuario, logout } = useSupabaseAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleBuyAccess = async () => {
     const userId = session?.user?.id ?? null;
@@ -202,10 +205,21 @@ export const PaywallScreen: React.FC = () => {
                 <Button
                   variant="ghost"
                   className="w-full text-muted-foreground"
-                  onClick={() => signOut()}
+                  disabled={isSigningOut}
+                  onClick={async () => {
+                    setIsSigningOut(true);
+                    try {
+                      await logout();
+                      navigate('/login', { replace: true });
+                    } catch {
+                      toast.error('Não foi possível sair da conta. Tente novamente.');
+                    } finally {
+                      setIsSigningOut(false);
+                    }
+                  }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sair da conta
+                  {isSigningOut ? 'Saindo...' : 'Sair da conta'}
                 </Button>
               </CardFooter>
             </Card>
