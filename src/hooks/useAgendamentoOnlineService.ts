@@ -12,11 +12,53 @@ export const useAgendamentoOnlineService = () => {
   const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string }[]>([]);
   const [horariosError, setHorariosError] = useState<string | null>(null);
   const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
+  const [publicIdCache, setPublicIdCache] = useState<string | null>(null);
+
+  const getPublicIdFromUrl = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('s') || params.get('public_id') || params.get('salao') || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const resolvePublicId = useCallback(async (): Promise<string> => {
+    const fromUrl = getPublicIdFromUrl();
+    if (fromUrl) {
+      setPublicIdCache(fromUrl);
+      return fromUrl;
+    }
+    if (publicIdCache) return publicIdCache;
+
+    try {
+      const { data, error } = await db.rpc('get_default_public_id');
+      if (error) return '';
+      const next = data ? String(data) : '';
+      if (next) setPublicIdCache(next);
+      return next;
+    } catch {
+      return '';
+    }
+  }, [publicIdCache]);
 
   const resolveOwnerUserId = useCallback(async (): Promise<string | null> => {
     if (ownerUserIdCache) return ownerUserIdCache;
 
     try {
+      const publicId = await resolvePublicId();
+
+      if (publicId) {
+        const { data, error } = await db.rpc('get_booking_owner_id', { p_public_id: publicId });
+        if (error) {
+          console.error('Erro ao resolver owner user_id pelo public_id:', error);
+          return null;
+        }
+        const next = data ? String(data) : null;
+        setOwnerUserIdCache(next);
+        return next;
+      }
+
       const { data, error } = await db
         .from('configuracoes_agendamento_online')
         .select('user_id')
@@ -36,13 +78,26 @@ export const useAgendamentoOnlineService = () => {
       console.error('Erro ao resolver owner user_id:', error);
       return null;
     }
-  }, [ownerUserIdCache]);
+  }, [ownerUserIdCache, resolvePublicId]);
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
     setLoading(true);
     setServicosError(null);
     try {
+      const publicId = await resolvePublicId();
+      if (publicId) {
+        const { data, error } = await db.rpc('get_public_services', { p_public_id: publicId });
+        if (error) {
+          const msg = `${error.code || ''} ${error.message || ''}`.trim() || 'Erro ao carregar serviços';
+          setServicosError(msg);
+          setServicos([]);
+          return;
+        }
+        setServicos(Array.isArray(data) ? data : []);
+        return;
+      }
+
       const ownerId = await resolveOwnerUserId();
 
       const primary = await db.from('servicos_public').select('*');
@@ -83,11 +138,23 @@ export const useAgendamentoOnlineService = () => {
     } finally {
       setLoading(false);
     }
-  }, [resolveOwnerUserId]);
+  }, [resolveOwnerUserId, resolvePublicId]);
 
   // Carregar produtos disponíveis (públicos ou fallback)
   const carregarProdutosPublicos = useCallback(async () => {
     try {
+      const publicId = await resolvePublicId();
+      if (publicId) {
+        const { data, error } = await db.rpc('get_public_products', { p_public_id: publicId });
+        if (error) {
+          console.error('Erro ao carregar produtos públicos (rpc):', error);
+          setProdutos([]);
+          return;
+        }
+        setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor, categoria: p.categoria })));
+        return;
+      }
+
       // Tenta view pública se existir
       let data: any[] | null = null;
       const { data: primaryData, error } = await db
@@ -112,7 +179,7 @@ export const useAgendamentoOnlineService = () => {
       console.error('Erro ao carregar produtos:', error);
       setProdutos([]);
     }
-  }, []);
+  }, [resolvePublicId]);
 
   // A verificação de disponibilidade agora é feita pela função RPC do Supabase
 
@@ -129,19 +196,22 @@ export const useAgendamentoOnlineService = () => {
     }
 
     try {
-      const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
-      const userId = servico.user_id || (await resolveOwnerUserId());
-      if (!userId) {
-        setHorariosError('Nenhum salão ativo encontrado (user_id não resolvido).');
-        return [];
-      }
+      const publicId = await resolvePublicId();
 
-      // Usar função melhorada do Supabase que considera duração e conflitos
-      const { data: horariosResult, error } = await db.rpc('buscar_horarios_com_multiplos_intervalos', {
-        data_selecionada: data,
-        user_id_param: userId,
-        duracao_servico: duracaoEfetiva
-      });
+      const horariosResultCall = publicId
+        ? await db.rpc('get_public_time_slots', {
+            p_public_id: publicId,
+            p_data: data,
+            p_servico_id: servicoId,
+          })
+        : await db.rpc('buscar_horarios_com_multiplos_intervalos', {
+            data_selecionada: data,
+            user_id_param: servico.user_id || (await resolveOwnerUserId()),
+            duracao_servico: typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60,
+          });
+
+      const horariosResult = horariosResultCall?.data;
+      const error = horariosResultCall?.error;
 
       if (error) {
         console.error('Erro ao buscar horários:', error);
@@ -149,7 +219,8 @@ export const useAgendamentoOnlineService = () => {
         return [];
       }
 
-      console.log(`Horários para serviço ${servico.nome} (${duracaoEfetiva}min):`, horariosResult);
+      const duracaoLabel = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
+      console.log(`Horários para serviço ${servico.nome} (${duracaoLabel}min):`, horariosResult);
 
       // Filtrar apenas horários disponíveis e formatar corretamente
       const horariosFormatados = (horariosResult || [])
@@ -165,7 +236,7 @@ export const useAgendamentoOnlineService = () => {
       setHorariosError(error instanceof Error ? error.message : 'Erro ao calcular horários disponíveis');
       return [];
     }
-  }, [servicos]);
+  }, [resolvePublicId, servicos]);
 
   // Criar cliente se não existir
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
