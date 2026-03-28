@@ -124,6 +124,17 @@ export function AppSidebar() {
     return "from-primary to-lilac-primary";
   };
 
+  const iconWrapClass = (active: boolean, gradient: string) => {
+    const base =
+      "relative h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200 before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-b before:from-white/65 before:to-transparent before:pointer-events-none";
+
+    if (active) {
+      return `${base} bg-gradient-to-br ${gradient} text-white ring-1 ring-white/25 shadow-[0_1px_0_0_hsl(0_0%_100%/0.25),0_14px_26px_-14px_hsl(var(--primary)/0.55)] dark:ring-white/10 dark:shadow-[0_1px_0_0_hsl(0_0%_100%/0.10),0_18px_32px_-18px_hsl(0_0%_0%/0.55)]`;
+    }
+
+    return `${base} bg-white/60 text-sidebar-primary shadow-[0_1px_0_0_hsl(0_0%_100%/0.80),0_12px_24px_-16px_hsl(var(--primary)/0.20)] group-hover:bg-white/75 group-hover:-translate-y-px dark:bg-white/10 dark:text-sidebar-foreground dark:shadow-[0_1px_0_0_hsl(0_0%_100%/0.06),0_18px_32px_-18px_hsl(0_0%_0%/0.55)]`;
+  };
+
   const handleInstallClick = async () => {
     if (isInstalled) {
       toast.success("O aplicativo já está instalado");
@@ -148,19 +159,24 @@ export function AppSidebar() {
 
   return (
     <Sidebar 
-      className="border-r border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300 ease-in-out"
+      className="border-r border-sidebar-border/60 bg-transparent [&_[data-sidebar=sidebar]]:bg-gradient-to-b [&_[data-sidebar=sidebar]]:from-lilac-lighter/90 [&_[data-sidebar=sidebar]]:to-sidebar [&_[data-sidebar=sidebar]]:shadow-[0_1px_0_0_hsl(0_0%_100%/0.65),0_22px_60px_-40px_hsl(var(--primary)/0.22)] dark:[&_[data-sidebar=sidebar]]:from-sidebar dark:[&_[data-sidebar=sidebar]]:to-sidebar dark:[&_[data-sidebar=sidebar]]:shadow-[0_1px_0_0_hsl(0_0%_100%/0.06),0_30px_70px_-45px_hsl(0_0%_0%/0.60)] transition-all duration-300 ease-in-out"
       collapsible="icon"
       variant="sidebar"
     >
-      <SidebarHeader className="border-b border-border/50">
+      <SidebarHeader className="border-b border-sidebar-border/60 bg-white/35 backdrop-blur-xl dark:bg-white/5">
         <div className="flex items-center gap-2 p-2">
-          <AppLogo size={32} rounded="xl" />
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent blur" />
+            <div className="relative rounded-2xl bg-white/55 p-1 shadow-[0_1px_0_0_hsl(0_0%_100%/0.70),0_14px_30px_-18px_hsl(var(--primary)/0.25)] dark:bg-white/10 dark:shadow-[0_1px_0_0_hsl(0_0%_100%/0.06),0_18px_36px_-20px_hsl(0_0%_0%/0.55)]">
+              <AppLogo size={28} rounded="xl" />
+            </div>
+          </div>
           {state === "expanded" && (
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-bold bg-gradient-to-r from-primary to-lilac-primary bg-clip-text text-transparent truncate">
                 {usuario?.nome_personalizado_app || 'Sistema'}
               </h2>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-sidebar-foreground/70 truncate">
                 {usuario?.nome_completo}
               </p>
             </div>
@@ -182,10 +198,10 @@ export function AppSidebar() {
                     <SidebarMenuButton 
                       asChild 
                       isActive={active}
-                      className="data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary data-[active=true]:to-lilac-primary data-[active=true]:text-primary-foreground group"
+                      className="group relative h-11 rounded-xl px-3 py-2 overflow-hidden transition-all duration-200 hover:bg-white/40 hover:-translate-y-px active:translate-y-0 data-[active=true]:bg-gradient-to-b data-[active=true]:from-white/75 data-[active=true]:to-white/45 data-[active=true]:text-sidebar-foreground data-[active=true]:ring-1 data-[active=true]:ring-primary/15 data-[active=true]:shadow-[0_1px_0_0_hsl(0_0%_100%/0.80),0_22px_44px_-30px_hsl(var(--primary)/0.40)] data-[active=true]:before:content-[''] data-[active=true]:before:absolute data-[active=true]:before:inset-0 data-[active=true]:before:bg-gradient-to-b data-[active=true]:before:from-white/55 data-[active=true]:before:to-transparent data-[active=true]:before:pointer-events-none data-[active=true]:after:content-[''] data-[active=true]:after:absolute data-[active=true]:after:left-3 data-[active=true]:after:right-3 data-[active=true]:after:top-0 data-[active=true]:after:h-px data-[active=true]:after:bg-gradient-to-r data-[active=true]:after:from-transparent data-[active=true]:after:via-white/80 data-[active=true]:after:to-transparent data-[active=true]:after:pointer-events-none dark:hover:bg-white/10 dark:data-[active=true]:bg-white/10 dark:data-[active=true]:ring-white/10 dark:data-[active=true]:shadow-[0_1px_0_0_hsl(0_0%_100%/0.06),0_22px_44px_-30px_hsl(0_0%_0%/0.65)]"
                     >
                       <Link to={item.href} className="flex items-center gap-3" onClick={handleNavClick}>
-                        <div className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all ${active ? `bg-gradient-to-br ${badgeFor(item.href)} text-white shadow-md` : "bg-muted text-muted-foreground group-hover:bg-accent/50"}`}>
+                        <div className={iconWrapClass(active, badgeFor(item.href))}>
                           <Icon className="h-4 w-4 flex-shrink-0" />
                         </div>
                         <span className="truncate">{item.title}</span>
@@ -205,20 +221,27 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   onClick={handleInstallClick}
-                  className="flex items-center gap-2 text-primary hover:bg-primary/10 transition-colors"
+                  className="group h-11 rounded-xl px-3 py-2 transition-all duration-200 hover:bg-white/40 hover:-translate-y-px active:translate-y-0 dark:hover:bg-white/10"
                 >
-                  <Download className="h-4 w-4 flex-shrink-0" />
+                  <div className={iconWrapClass(false, "from-primary to-lilac-primary")}>
+                    <Download className="h-4 w-4 flex-shrink-0" />
+                  </div>
                   <span className="truncate">Instalar App</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  className="group h-11 rounded-xl px-3 py-2 transition-all duration-200 hover:bg-white/40 hover:-translate-y-px active:translate-y-0 dark:hover:bg-white/10"
+                >
                   <Link 
                     to="/agendamento-online" 
                     target="_blank"
                     className="flex items-center gap-2 text-primary"
                   >
-                    <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                    <div className={iconWrapClass(false, "from-primary to-lilac-primary")}>
+                      <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                    </div>
                     <span className="truncate">Agendamento Online</span>
                   </Link>
                 </SidebarMenuButton>
@@ -233,9 +256,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={() => void logout()}
-              className="text-destructive hover:text-destructive hover:bg-destructive/5"
+              className="group h-11 rounded-xl px-3 py-2 transition-all duration-200 hover:bg-destructive/10 hover:-translate-y-px active:translate-y-0"
             >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
+              <div className="relative h-8 w-8 rounded-xl flex items-center justify-center bg-white/60 text-destructive shadow-[0_1px_0_0_hsl(0_0%_100%/0.80),0_12px_24px_-16px_hsl(0_84%_55%/0.18)] before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-b before:from-white/65 before:to-transparent before:pointer-events-none group-hover:bg-white/75 group-hover:-translate-y-px dark:bg-white/10 dark:shadow-[0_1px_0_0_hsl(0_0%_100%/0.06),0_18px_32px_-18px_hsl(0_0%_0%/0.55)]">
+                <LogOut className="h-4 w-4 flex-shrink-0" />
+              </div>
               <span className="truncate">Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
