@@ -14,28 +14,29 @@ export const TesteSom = () => {
     setIsPlaying(true);
     
     try {
-      const encoded = encodeURIComponent(`${soundType}.mp3`);
-      const sunds = new Audio(`/sunds/${encoded}`);
-      sunds.volume = 0.7;
-      await sunds.play();
-    } catch {
-      try {
-        const encoded = encodeURIComponent(`${soundType}.mp3`);
-        const sond = new Audio(`/sond/${encoded}`);
-        sond.volume = 0.7;
-        await sond.play();
-      } catch {
+      const defaultFiles: Record<typeof soundType, string> = {
+        notification: 'Mensagem de Texto 1.mp3',
+        notification2: 'Mensagem de Texto 2.mp3',
+        notification3: 'Mensagem de Texto 3.mp3',
+      };
+      const filename = defaultFiles[soundType];
+      const encoded = encodeURIComponent(filename);
+      const candidates = [`/sounds/${encoded}`, `/sunds/${encoded}`];
+
+      for (const src of candidates) {
         try {
-          const encoded = encodeURIComponent(`${soundType}.mp3`);
-          const audio = new Audio(`/sounds/${encoded}`);
+          const audio = new Audio(src);
           audio.volume = 0.7;
           await audio.play();
-        } catch (error) {
-          console.error('Erro ao reproduzir som:', error);
-          setIsPlaying(false);
-          return;
+          break;
+        } catch {
+          continue;
         }
       }
+    } catch (error) {
+      console.error('Erro ao reproduzir som:', error);
+      setIsPlaying(false);
+      return;
     }
       
       setTimeout(() => setIsPlaying(false), 2000);

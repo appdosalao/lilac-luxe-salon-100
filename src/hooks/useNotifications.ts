@@ -30,6 +30,12 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   soundType: 'notification',
 };
 
+const DEFAULT_SOUND_FILES: Record<NotificationSettings['soundType'], string> = {
+  notification: 'Mensagem de Texto 1.mp3',
+  notification2: 'Mensagem de Texto 2.mp3',
+  notification3: 'Mensagem de Texto 3.mp3',
+};
+
 export const useNotifications = () => {
   const { usuario } = useSupabaseAuth();
   const [settings, setSettings] = useState<NotificationSettings>(() => {
@@ -56,26 +62,18 @@ export const useNotifications = () => {
     if (settings.soundEnabled) {
       const custom = configuracaoNotificacoes?.som_personalizado;
       const soundType = settings.soundType || 'notification';
-      const base = soundType === 'notification' ? 'notification' : soundType;
-      const filename = custom || `${base}.mp3`;
+      const filename = custom || DEFAULT_SOUND_FILES[soundType];
       const encoded = encodeURIComponent(filename);
-      const sundsSrc = `/sunds/${encoded}`;
-      const sondSrc = `/sond/${encoded}`;
       const soundsSrc = `/sounds/${encoded}`;
-      const audio = new Audio(sundsSrc);
+      const sundsSrc = `/sunds/${encoded}`;
+      const audio = new Audio(soundsSrc);
       audio.volume = 0.5;
       audio.preload = 'auto';
       audio.onerror = () => {
-        const toSond = new Audio(sondSrc);
-        toSond.volume = 0.5;
-        toSond.preload = 'auto';
-        toSond.onerror = () => {
-          const fallback = new Audio(soundsSrc);
-          fallback.volume = 0.5;
-          fallback.preload = 'auto';
-          audioRef.current = fallback;
-        };
-        audioRef.current = toSond;
+        const fallback = new Audio(sundsSrc);
+        fallback.volume = 0.5;
+        fallback.preload = 'auto';
+        audioRef.current = fallback;
       };
       audioRef.current = audio;
     }
@@ -114,17 +112,15 @@ export const useNotifications = () => {
 
     const custom = configuracaoNotificacoes?.som_personalizado;
     const soundType = settings.soundType || 'notification';
-    const base = soundType === 'notification' ? 'notification' : soundType;
-    const filename = custom || `${base}.mp3`;
+    const filename = custom || DEFAULT_SOUND_FILES[soundType];
     const encoded = encodeURIComponent(filename);
     const candidates = [
-      `/sunds/${encoded}`,
-      `/sond/${encoded}`,
       `/sounds/${encoded}`,
+      `/sunds/${encoded}`,
     ];
 
     await tryPlay(candidates);
-  }, [settings.soundEnabled]);
+  }, [configuracaoNotificacoes?.som_personalizado, settings.soundEnabled, settings.soundType]);
 
   // Função para adicionar nova notificação
   const addNotification = useCallback((agendamento: Omit<AgendamentoNotification, 'shown'>) => {

@@ -14,6 +14,7 @@ export interface ServicoDisponivel {
   valor: number;
   duracao: number;
   descricao?: string;
+  user_id?: string;
 }
 
 export interface HorarioDisponivel {

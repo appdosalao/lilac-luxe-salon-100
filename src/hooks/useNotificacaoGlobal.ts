@@ -30,8 +30,13 @@ export function useNotificacaoGlobal() {
 
       // Tocar som se configurado
       if (configuracaoNotificacoes?.notificacoes_som) {
-        const audio = new Audio('/sounds/notification.mp3');
-        audio.play().catch(console.error);
+        const filename = 'Mensagem de Texto 1.mp3';
+        const encoded = encodeURIComponent(filename);
+        const audio = new Audio(`/sounds/${encoded}`);
+        audio.play().catch(() => {
+          const fallback = new Audio(`/sunds/${encoded}`);
+          fallback.play().catch(() => {});
+        });
       }
 
     } catch (error) {

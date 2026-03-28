@@ -20,15 +20,21 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
-  return await Promise.race([
-    promise,
-    new Promise<T>((_resolve, reject) => {
-      const timer = window.setTimeout(() => {
+  return await new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error('timeout'));
+    }, ms);
+
+    promise
+      .then((value) => {
         window.clearTimeout(timer);
-        reject(new Error('timeout'));
-      }, ms);
-    }),
-  ]);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      });
+  });
 };
 
 const normalizeUsuario = (profile: any): Usuario => {
@@ -206,6 +212,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await withTimeout(supabase.auth.getSession(), 8000);
         if (!active) return;
         await hydrateFromSession(data.session);
+      } catch (error) {
+        console.error('Erro ao inicializar autenticação:', error);
+        if (!active) return;
+        await hydrateFromSession(null);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -218,6 +228,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       try {
         await hydrateFromSession(nextSession);
+      } catch (error) {
+        console.error('Erro ao sincronizar autenticação:', error);
+        if (!active) return;
+        await hydrateFromSession(null);
       } finally {
         if (active) setIsLoading(false);
       }

@@ -70,10 +70,14 @@ export default function AvisosVencimento({ contasFixas, onPagarConta }: AvisosVe
       
       // Som de alerta (se disponível)
       try {
-        const audio = new Audio('/sounds/notification.mp3');
+        const filename = 'Mensagem de Texto 1.mp3';
+        const encoded = encodeURIComponent(filename);
+        const audio = new Audio(`/sounds/${encoded}`);
         audio.volume = 0.3;
         audio.play().catch(() => {
-          // Ignorar erro se não conseguir tocar o som
+          const fallback = new Audio(`/sunds/${encoded}`);
+          fallback.volume = 0.3;
+          fallback.play().catch(() => {});
         });
       } catch (error) {
         // Ignorar erro de áudio

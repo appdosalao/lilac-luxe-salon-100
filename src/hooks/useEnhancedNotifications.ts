@@ -15,36 +15,34 @@ export const useEnhancedNotifications = () => {
   } = useNotificationScheduler();
   const { configuracoes } = useConfiguracoes();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const defaultFiles: Record<'notification' | 'notification2' | 'notification3', string> = {
+    notification: 'Mensagem de Texto 1.mp3',
+    notification2: 'Mensagem de Texto 2.mp3',
+    notification3: 'Mensagem de Texto 3.mp3',
+  };
 
   // Função personalizada para tocar som baseado na configuração
   const playCustomSound = useCallback(async (soundType?: 'notification' | 'notification2' | 'notification3') => {
     if (!soundType) return;
 
     try {
-      const soundFile = soundType === 'notification' ? 'notification' : soundType;
-      const encoded = encodeURIComponent(`${soundFile}.mp3`);
-      const sundsSrc = `/sunds/${encoded}`;
-      const sondSrc = `/sond/${encoded}`;
+      const filename = defaultFiles[soundType] || defaultFiles.notification;
+      const encoded = encodeURIComponent(filename);
       const soundsSrc = `/sounds/${encoded}`;
-      const targetSrc = audioRef.current?.src?.includes(sundsSrc) || audioRef.current?.src?.includes(sondSrc) || audioRef.current?.src?.includes(soundsSrc)
-        ? audioRef.current!.src
-        : sundsSrc;
+      const sundsSrc = `/sunds/${encoded}`;
+      const targetSrc =
+        audioRef.current?.src?.includes(soundsSrc) || audioRef.current?.src?.includes(sundsSrc)
+          ? audioRef.current!.src
+          : soundsSrc;
+
       if (!audioRef.current || audioRef.current.src !== targetSrc) {
         audioRef.current = new Audio(targetSrc);
         audioRef.current.volume = 0.7;
         audioRef.current.preload = 'auto';
-        const toSond = () => {
-          audioRef.current = new Audio(sondSrc);
+        audioRef.current.onerror = () => {
+          audioRef.current = new Audio(sundsSrc);
           audioRef.current.volume = 0.7;
           audioRef.current.preload = 'auto';
-          audioRef.current.onerror = () => {
-            audioRef.current = new Audio(soundsSrc);
-            audioRef.current.volume = 0.7;
-            audioRef.current.preload = 'auto';
-          };
-        };
-        audioRef.current.onerror = () => {
-          toSond();
         };
       }
       

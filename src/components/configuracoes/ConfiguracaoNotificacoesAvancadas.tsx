@@ -41,7 +41,7 @@ export function ConfiguracaoNotificacoesAvancadas() {
     notificacoes_push: true,
     notificacoes_email: true,
     notificacoes_som: true,
-    som_personalizado: 'notification.mp3',
+    som_personalizado: 'Mensagem de Texto 1.mp3',
     lembrete_agendamento_minutos: 60,
     lembrete_vencimento_dias: 3,
     lembrete_contas_fixas_dias: 7,
@@ -59,7 +59,7 @@ export function ConfiguracaoNotificacoesAvancadas() {
         notificacoes_push: configuracaoNotificacoes.notificacoes_push,
         notificacoes_email: configuracaoNotificacoes.notificacoes_email,
         notificacoes_som: configuracaoNotificacoes.notificacoes_som,
-        som_personalizado: configuracaoNotificacoes.som_personalizado || 'notification.mp3',
+        som_personalizado: configuracaoNotificacoes.som_personalizado || 'Mensagem de Texto 1.mp3',
         lembrete_agendamento_minutos: configuracaoNotificacoes.lembrete_agendamento_minutos,
         lembrete_vencimento_dias: configuracaoNotificacoes.lembrete_vencimento_dias,
         lembrete_contas_fixas_dias: configuracaoNotificacoes.lembrete_contas_fixas_dias,
@@ -106,21 +106,17 @@ export function ConfiguracaoNotificacoesAvancadas() {
   const playTestSound = () => {
     try {
       const encoded = encodeURIComponent(localConfig.som_personalizado);
-      const sunds = new Audio(`/sunds/${encoded}`);
-      sunds.oncanplaythrough = () => sunds.play();
-      sunds.onerror = () => {
-        const sond = new Audio(`/sond/${encoded}`);
-        sond.oncanplaythrough = () => sond.play();
-        sond.onerror = () => {
-          const fallback = new Audio(`/sounds/${encoded}`);
-          fallback.play().catch(error => {
-            console.log('Erro ao reproduzir som:', error);
-            toast.error('Não foi possível reproduzir o som selecionado');
-          });
-        };
-        sond.load();
+      const primary = new Audio(`/sounds/${encoded}`);
+      primary.oncanplaythrough = () => primary.play();
+      primary.onerror = () => {
+        const fallback = new Audio(`/sunds/${encoded}`);
+        fallback.play().catch(error => {
+          console.log('Erro ao reproduzir som:', error);
+          toast.error('Não foi possível reproduzir o som selecionado');
+        });
+        fallback.load();
       };
-      sunds.load();
+      primary.load();
     } catch (error) {
       console.log('Erro ao criar áudio:', error);
     }
@@ -274,7 +270,7 @@ export function ConfiguracaoNotificacoesAvancadas() {
                           toast.success('Som adicionado à biblioteca');
                           await reload();
                         } else {
-                          toast.error('Arquivo não encontrado em /sond ou /sounds');
+                          toast.error('Arquivo não encontrado em /sounds ou /sunds');
                         }
                       }}
                     >
