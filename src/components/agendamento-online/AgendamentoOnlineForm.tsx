@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft, ShoppingBag, Check, Scissors, Star, Timer, Tag, ChevronRight, LayoutGrid } from 'lucide-react';
 import { z } from 'zod';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
@@ -447,72 +447,101 @@ Você receberá uma confirmação em breve.
 
   if (success) {
     return (
-      <>
+      <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl } as React.CSSProperties}>
         <SalonHeader />
-        <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
-                <Calendar className="w-8 h-8 text-success" />
+        <div className="flex-1 bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md border-none shadow-[0_30px_60px_rgba(0,0,0,0.12)] bg-white/90 backdrop-blur-xl rounded-[3rem] overflow-hidden animate-in zoom-in duration-500">
+            <div className="bg-primary h-2 w-full" />
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto mb-6 w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center rotate-12 animate-bounce">
+                <CheckCircle2 className="w-12 h-12 text-primary" />
               </div>
-              <CardTitle className="text-2xl text-success">Agendamento Confirmado!</CardTitle>
-              <CardDescription>
-                Seu agendamento foi realizado com sucesso. Você receberá uma confirmação em breve.
+              <CardTitle className="text-3xl font-black text-primary tracking-tighter">Agendamento Confirmado!</CardTitle>
+              <CardDescription className="text-base font-medium px-4">
+                Tudo pronto! Seu horário foi reservado com sucesso em nosso sistema.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p><strong>Serviço:</strong> {servicoSelecionado?.nome}</p>
-                <p><strong>Data:</strong> {new Date(formData.data).toLocaleDateString('pt-BR')}</p>
-                <p><strong>Horário:</strong> {formData.horario}</p>
-                <p><strong>Valor:</strong> R$ {servicoSelecionado?.valor.toFixed(2)}</p>
+            <CardContent className="space-y-6 p-8">
+              <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-primary/10 space-y-4 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform duration-500">
+                  <Calendar className="w-20 h-20 text-primary" />
+                </div>
+
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                    <Scissors className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Serviço</p>
+                    <p className="font-bold text-lg leading-tight">{servicoSelecionado?.nome}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 relative z-10">
+                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-primary/5">
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Data</p>
+                    <p className="font-bold">{new Date(formData.data).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-primary/5">
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Horário</p>
+                    <p className="font-bold">{formData.horario}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-primary/10 flex justify-between items-center relative z-10">
+                  <span className="text-sm font-bold text-muted-foreground">Valor Total</span>
+                  <span className="text-2xl font-black text-primary">R$ {servicoSelecionado?.valor.toFixed(2)}</span>
+                </div>
+
                 {produtoEnabled && produtoId && (
-                  <div className="mt-2 border-t pt-2">
-                    <p className="flex items-center gap-2"><ShoppingBag className="w-4 h-4" /><strong>Produto selecionado</strong></p>
-                    <p>
+                  <div className="mt-2 pt-4 border-t border-primary/10 animate-in fade-in slide-in-from-top-2 relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShoppingBag className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] uppercase font-black text-primary tracking-widest">Produto Extra</span>
+                    </div>
+                    <p className="text-xs font-bold text-muted-foreground bg-white/50 p-2 rounded-xl">
                       {(() => {
                         const p = produtos.find(pr => pr.id === produtoId);
-                        const unit = typeof p?.valor === 'number' ? p!.valor : 0;
-                        const total = unit * produtoQtd;
-                        return `${p?.nome || 'Produto'} • Qtd: ${produtoQtd} • Forma: ${produtoForma.toUpperCase()}${unit ? ` • Total estimado: R$ ${total.toFixed(2)}` : ''}`;
+                        return `${p?.nome || 'Produto'} • Qtd: ${produtoQtd}`;
                       })()}
                     </p>
                   </div>
                 )}
               </div>
               
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <Button 
                   onClick={compartilharComprovante}
                   disabled={isSharing}
-                  className="w-full flex items-center gap-2 bg-success hover:bg-success/90"
+                  className="w-full h-14 rounded-2xl flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 active:translate-y-0 border-b-4 border-primary/50"
                 >
-                  <Share2 className="w-4 h-4" />
-                  {isSharing ? 'Compartilhando...' : 'Compartilhar Comprovante'}
+                  <Share2 className="w-5 h-5" />
+                  {isSharing ? 'Compartilhando...' : 'Enviar Comprovante'}
                 </Button>
                 
-                <Button 
-                  onClick={copiarComprovante}
-                  variant="outline"
-                  className="w-full flex items-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copiar Comprovante
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={copiarComprovante}
+                    variant="outline"
+                    className="h-12 rounded-2xl flex items-center gap-2 border-primary/10 font-bold hover:bg-primary/5"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.reload()} 
+                    variant="ghost"
+                    className="h-12 rounded-2xl font-bold text-muted-foreground hover:text-primary"
+                  >
+                    Novo Agendamento
+                  </Button>
+                </div>
               </div>
-              
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                className="w-full"
-              >
-                Fazer Novo Agendamento
-              </Button>
             </CardContent>
           </Card>
         </div>
         <SalonFooter />
-      </>
+      </div>
     );
   }
 
@@ -593,129 +622,231 @@ Você receberá uma confirmação em breve.
 
                 {/* Step 2: Serviço e Agendamento */}
                 {currentStep === 2 && (
-                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                    <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
-                      <div className="p-2 bg-primary/10 rounded-xl">
-                        <Calendar className="w-5 h-5 text-primary" />
+                  <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex flex-col gap-2 border-b border-primary/10 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <Scissors className="w-5 h-5 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground">
+                          Escolha o Serviço
+                        </h3>
                       </div>
-                      <h3 className="text-xl font-bold text-foreground">
-                        Agendamento
-                      </h3>
                     </div>
 
-                    <div className="grid gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="servico_id" className="text-sm font-semibold">Serviço *</Label>
-                        <Select onValueChange={(value) => handleInputChange('servico_id', value)}>
-                          <SelectTrigger className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.servico_id ? 'border-destructive ring-destructive/20' : 'focus:shadow-md'}`}>
-                            <SelectValue placeholder="Selecione um serviço" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl shadow-xl border-primary/5">
-                            {servicos.map((servico) => (
-                              <SelectItem key={servico.id} value={servico.id} className="h-12 cursor-pointer focus:bg-primary/5 transition-colors">
-                                <div className="flex items-center justify-between gap-4 w-full">
-                                  <span className="font-medium">{servico.nome}</span>
-                                  {configOnline.mostrar_precos && (
-                                    <span className="text-primary font-bold">R$ {servico.valor.toFixed(2)}</span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.servico_id && (
-                          <span className="text-xs text-destructive font-medium">{errors.servico_id}</span>
-                        )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {servicos.map((servico) => (
+                        <button
+                          key={servico.id}
+                          type="button"
+                          onClick={() => handleInputChange('servico_id', servico.id)}
+                          className={cn(
+                            "group relative flex flex-col p-5 rounded-[2rem] border-2 transition-all duration-300 text-left",
+                            formData.servico_id === servico.id
+                              ? "border-primary bg-primary/5 shadow-[0_10px_30px_rgba(var(--primary),0.2)] scale-[1.02] -translate-y-1 border-b-8 active:translate-y-0 active:border-b-2"
+                              : "border-primary/10 bg-white/50 hover:border-primary/30 hover:bg-white hover:-translate-y-1 hover:shadow-xl border-b-4 active:translate-y-0 active:border-b-2"
+                          )}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className={cn(
+                              "p-3 rounded-2xl transition-all duration-500",
+                              formData.servico_id === servico.id 
+                                ? "bg-primary text-white shadow-lg rotate-12" 
+                                : "bg-primary/10 text-primary group-hover:rotate-12"
+                            )}>
+                              <Scissors className="w-5 h-5" />
+                            </div>
+                            {formData.servico_id === servico.id && (
+                              <div className="bg-primary text-white p-1.5 rounded-full shadow-lg animate-in zoom-in">
+                                <Check className="w-4 h-4 stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <h4 className="font-black text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
+                            {servico.nome}
+                          </h4>
+                          
+                          <div className="flex items-center gap-3 mt-4">
+                            {configOnline.mostrar_precos && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase font-black text-muted-foreground/50 tracking-tighter">Preço</span>
+                                <span className="text-primary font-black text-xl tracking-tighter">
+                                  R$ {servico.valor.toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="w-px h-8 bg-primary/10 mx-1" />
+                            {configOnline.mostrar_duracao && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase font-black text-muted-foreground/50 tracking-tighter">Duração</span>
+                                <span className="text-muted-foreground font-bold text-sm flex items-center gap-1">
+                                  <Timer className="w-3.5 h-3.5 text-primary/50" />
+                                  {servico.duracao} min
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Efeito de brilho ao selecionar */}
+                          {formData.servico_id === servico.id && (
+                            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent rounded-[2rem] pointer-events-none" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.servico_id && (
+                      <span className="text-xs text-destructive font-medium -mt-4 block">{errors.servico_id}</span>
+                    )}
+
+                    <div className="space-y-6 pt-4 border-t border-primary/10">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground">
+                          Data e Horário
+                        </h3>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="data" className="text-sm font-semibold">Data *</Label>
-                          <Input
-                            id="data"
-                            type="date"
-                            min={dataMinima}
-                            max={dataMaxima}
-                            value={formData.data}
-                            onChange={(e) => handleInputChange('data', e.target.value)}
-                            className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.data ? 'border-destructive' : 'focus:shadow-md'}`}
-                          />
-                          {errors.data && (
-                            <span className="text-xs text-destructive font-medium">{errors.data}</span>
-                          )}
+                      <div className="space-y-8">
+                        {/* Novo Seletor de Data Visual */}
+                        <div className="space-y-4">
+                          <Label className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-primary/70">
+                            <Calendar className="w-4 h-4" />
+                            Selecione o Dia
+                          </Label>
+                          
+                          <div className="flex gap-3 overflow-x-auto pb-4 pt-2 px-1 no-scrollbar -mx-4 sm:mx-0 sm:px-0">
+                            {Array.from({ length: 14 }).map((_, i) => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + i);
+                              const iso = d.toISOString().split('T')[0];
+                              const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                              const diaMes = d.getDate();
+                              const isAtivo = isDiaAtivo(d.getDay());
+                              const isSelected = formData.data === iso;
+
+                              return (
+                                <button
+                                  key={iso}
+                                  type="button"
+                                  disabled={!isAtivo}
+                                  onClick={() => handleInputChange('data', iso)}
+                                  className={cn(
+                                    "flex flex-col items-center justify-center min-w-[70px] h-[90px] rounded-3xl transition-all duration-300 border-2",
+                                    !isAtivo 
+                                      ? "opacity-30 grayscale cursor-not-allowed border-transparent"
+                                      : isSelected
+                                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/30 -translate-y-2 scale-110 border-b-8 active:translate-y-0 active:border-b-2"
+                                      : "bg-white border-primary/10 text-foreground hover:border-primary/30 hover:-translate-y-1 border-b-4 active:translate-y-0 active:border-b-2"
+                                  )}
+                                >
+                                  <span className={cn(
+                                    "text-[10px] font-black uppercase tracking-tighter mb-1",
+                                    isSelected ? "text-white/80" : "text-muted-foreground"
+                                  )}>
+                                    {diaSemana}
+                                  </span>
+                                  <span className="text-xl font-black">
+                                    {diaMes}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                            
+                            {/* Botão para abrir calendário manual */}
+                            <div className="relative min-w-[70px] h-[90px]">
+                              <Input
+                                type="date"
+                                min={dataMinima}
+                                max={dataMaxima}
+                                value={formData.data}
+                                onChange={(e) => handleInputChange('data', e.target.value)}
+                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                              />
+                              <div className="flex flex-col items-center justify-center h-full rounded-3xl border-2 border-dashed border-primary/30 text-primary/50 bg-primary/5">
+                                <LayoutGrid className="w-5 h-5 mb-1" />
+                                <span className="text-[10px] font-black uppercase">Mais</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="horario" className="text-sm font-semibold">Horário *</Label>
-                          <Select 
-                            onValueChange={(value) => handleInputChange('horario', value)}
-                            disabled={!formData.servico_id || !formData.data || !isDataDisponivel(formData.data)}
-                          >
-                            <SelectTrigger className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.horario ? 'border-destructive' : 'focus:shadow-md'}`}>
-                              <SelectValue placeholder={
-                                !formData.servico_id || !formData.data 
-                                  ? "Selecione serviço e data" 
-                                  : !isDataDisponivel(formData.data)
-                                  ? "Data indisponível"
-                                  : horariosDisponiveis.length === 0
-                                  ? "Sem horários"
-                                  : "Horário"
-                              } />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl shadow-xl border-primary/5 max-h-[300px]">
-                              {horariosDisponiveis.length > 0 ? (
-                                <div className="grid grid-cols-3 gap-1 p-2">
-                                  {horariosDisponiveis.map((horario) => (
-                                    <SelectItem 
-                                      key={horario.horario} 
-                                      value={horario.horario}
-                                      disabled={!horario.disponivel}
-                                      className="h-10 cursor-pointer justify-center rounded-lg focus:bg-primary/10 transition-colors"
-                                    >
-                                      {horario.horario}
-                                    </SelectItem>
-                                  ))}
+                        {/* Grade de Horários Modernizada */}
+                        <div className="space-y-4">
+                          <Label className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-primary/70">
+                            <Clock className="w-4 h-4" />
+                            Horários Disponíveis
+                          </Label>
+                          
+                          {!formData.servico_id || !formData.data ? (
+                            <div className="h-24 rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+                              <Scissors className="w-6 h-6 mb-2 opacity-20" />
+                              <span className="text-xs font-bold uppercase tracking-tight">Escolha o serviço e a data primeiro</span>
+                            </div>
+                          ) : !isDataDisponivel(formData.data) ? (
+                            <div className="h-24 rounded-[2rem] bg-destructive/5 border-2 border-destructive/10 flex flex-col items-center justify-center text-destructive p-4 text-center font-black uppercase tracking-tighter">
+                              <AlertCircle className="w-6 h-6 mb-2" />
+                              Salão fechado nesta data
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-[280px] overflow-y-auto p-2 pr-3 custom-scrollbar">
+                              {horariosDisponiveis.map((h) => (
+                                <button
+                                  key={h.horario}
+                                  type="button"
+                                  disabled={!h.disponivel}
+                                  onClick={() => handleInputChange('horario', h.horario)}
+                                  className={cn(
+                                    "h-12 rounded-2xl text-sm font-black transition-all duration-300 border-2 flex items-center justify-center",
+                                    !h.disponivel 
+                                      ? "bg-muted/30 border-transparent text-muted-foreground/30 cursor-not-allowed grayscale"
+                                      : formData.horario === h.horario
+                                      ? "bg-primary border-primary text-white shadow-xl shadow-primary/30 scale-105 -translate-y-1 border-b-4 active:translate-y-0 active:border-b-0"
+                                      : "bg-white border-primary/10 text-foreground hover:border-primary/50 hover:bg-primary/5 hover:-translate-y-0.5 border-b-2 active:translate-y-0 active:border-b-0"
+                                  )}
+                                >
+                                  {h.horario}
+                                </button>
+                              ))}
+                              {horariosDisponiveis.length === 0 && (
+                                <div className="col-span-full py-8 text-center text-muted-foreground bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
+                                  <Timer className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                  <span className="text-xs font-black uppercase">Sem horários para este dia</span>
                                 </div>
-                              ) : (
-                                <SelectItem value="none" disabled>
-                                  Nenhum horário disponível
-                                </SelectItem>
                               )}
-                            </SelectContent>
-                          </Select>
+                            </div>
+                          )}
                           {errors.horario && (
-                            <span className="text-xs text-destructive font-medium">{errors.horario}</span>
+                            <span className="text-xs text-destructive font-black uppercase tracking-tighter block mt-2 ml-1">{errors.horario}</span>
                           )}
                         </div>
                       </div>
 
                       {formData.data && !isDataDisponivel(formData.data) && (
-                        <Alert className="rounded-xl border-amber-200 bg-amber-50 animate-in zoom-in-95 duration-200">
+                        <Alert className="rounded-2xl border-amber-200 bg-amber-50 animate-in zoom-in-95 duration-200">
                           <AlertCircle className="h-4 w-4 text-amber-600" />
-                          <AlertDescription className="text-amber-800 text-xs font-medium">
-                            Esta data não está disponível para agendamentos. Escolha outro dia.
+                          <AlertDescription className="text-amber-800 text-xs font-bold uppercase tracking-tight">
+                            Este dia não atendemos. Por favor, escolha outra data.
                           </AlertDescription>
                         </Alert>
                       )}
 
-                      <div className="space-y-2">
-                        <Label htmlFor="observacoes" className="text-sm font-semibold">Observações (opcional)</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor="observacoes" className="text-sm font-bold flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-primary" />
+                          Observações (opcional)
+                        </Label>
                         <Textarea
                           id="observacoes"
                           value={formData.observacoes}
                           onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                          placeholder="Alguma observação ou preferência?"
+                          placeholder="Ex: Tenho alergia a algum produto, ou gostaria de um profissional específico."
                           rows={3}
-                          className="rounded-xl border-primary/10 bg-white/50 shadow-sm focus:shadow-md transition-all resize-none"
+                          className="rounded-2xl border-primary/10 bg-white/50 shadow-sm focus:shadow-lg transition-all duration-300 resize-none"
                         />
                       </div>
-                      
-                      {configOnline.mostrar_duracao && servicoSelecionado && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Duração estimada: {servicoSelecionado.duracao} minutos
-                        </p>
-                      )}
                     </div>
                   </div>
                 )}
@@ -752,49 +883,95 @@ Você receberá uma confirmação em breve.
                     </div>
 
                     {/* Produtos opcionais */}
-                    <div className="bg-white/50 border border-primary/5 rounded-2xl p-6 space-y-4 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
-                          <ShoppingBag className="w-5 h-5 text-primary" />
-                          Produtos Extras
-                        </h3>
+                    <div className="bg-white/50 border border-primary/10 rounded-3xl p-6 space-y-6 shadow-xl relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <ShoppingBag className="w-12 h-12 text-primary" />
+                      </div>
+
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-black flex items-center gap-2 text-foreground">
+                            <ShoppingBag className="w-6 h-6 text-primary" />
+                            Produtos Extras
+                          </h3>
+                          <p className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">Adicione itens ao seu agendamento</p>
+                        </div>
                         <Checkbox 
                           id="produtoEnabled"
                           checked={produtoEnabled}
                           onCheckedChange={(checked) => setProdutoEnabled(!!checked)}
-                          className="w-6 h-6 rounded-lg"
+                          className="w-8 h-8 rounded-xl border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all duration-300 shadow-lg"
                         />
                       </div>
                       
                       {produtoEnabled && (
-                        <div className="space-y-4 pt-2 animate-in fade-in zoom-in duration-300">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Produto</Label>
-                              <Select value={produtoId} onValueChange={setProdutoId}>
-                                <SelectTrigger className="h-11 rounded-xl border-primary/10 shadow-sm">
-                                  <SelectValue placeholder="Escolha um item" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl shadow-xl">
-                                  {produtos.map((p) => (
-                                    <SelectItem key={p.id} value={p.id} className="cursor-pointer">
-                                      {p.nome} — R$ {Number(p.valor).toFixed(2)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Quantidade</Label>
-                              <Input 
-                                type="number" 
-                                min={1} 
-                                value={produtoQtd} 
-                                onChange={(e) => setProdutoQtd(Math.max(1, Number(e.target.value)))}
-                                className="h-11 rounded-xl border-primary/10 shadow-sm"
-                              />
-                            </div>
+                        <div className="space-y-6 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto p-1 pr-3 custom-scrollbar">
+                            {produtos.map((p) => {
+                              const isSelected = produtoId === p.id;
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => setProdutoId(isSelected ? '' : p.id)}
+                                  className={cn(
+                                    "flex flex-col p-4 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden",
+                                    isSelected
+                                      ? "border-primary bg-primary/5 shadow-lg -translate-y-1 border-b-4 active:translate-y-0 active:border-b-0"
+                                      : "border-primary/10 bg-white hover:border-primary/30 hover:-translate-y-1 border-b-2 active:translate-y-0 active:border-b-0"
+                                  )}
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className={cn(
+                                      "p-2 rounded-xl",
+                                      isSelected ? "bg-primary text-white" : "bg-primary/5 text-primary"
+                                    )}>
+                                      <Tag className="w-4 h-4" />
+                                    </div>
+                                    {isSelected && (
+                                      <div className="bg-primary text-white p-1 rounded-full animate-in zoom-in">
+                                        <Check className="w-3 h-3 stroke-[3]" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="font-bold text-sm text-foreground line-clamp-1">{p.nome}</span>
+                                  <span className="text-primary font-black text-lg mt-1">R$ {Number(p.valor).toFixed(2)}</span>
+                                  
+                                  {isSelected && (
+                                    <div className="absolute top-0 right-0 w-12 h-12 bg-primary/10 rounded-bl-[2rem] -mr-4 -mt-4 rotate-45" />
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
+
+                          {produtoId && (
+                            <div className="grid grid-cols-2 gap-4 animate-in zoom-in-95 duration-300 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black text-primary uppercase ml-1">Quantidade</Label>
+                                <Input 
+                                  type="number" 
+                                  min={1} 
+                                  value={produtoQtd} 
+                                  onChange={(e) => setProdutoQtd(Math.max(1, Number(e.target.value)))}
+                                  className="h-12 rounded-xl border-primary/10 bg-white font-black text-center shadow-inner"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-black text-primary uppercase ml-1">Pagamento</Label>
+                                <Select value={produtoForma} onValueChange={setProdutoForma}>
+                                  <SelectTrigger className="h-12 rounded-xl border-primary/10 bg-white font-black shadow-inner">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl shadow-2xl font-bold">
+                                    <SelectItem value="pix">PIX</SelectItem>
+                                    <SelectItem value="cartao">CARTÃO</SelectItem>
+                                    <SelectItem value="dinheiro">DINHEIRO</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
