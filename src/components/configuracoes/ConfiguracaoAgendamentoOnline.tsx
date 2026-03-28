@@ -7,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image, Upload, X } from 'lucide-react';
+import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image, Upload, X, Palette, Eye, Layout } from 'lucide-react';
 import { useConfigAgendamentoOnline, ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 import { ScissorsLoader } from '@/components/ScissorsLoader';
 
 export function ConfiguracaoAgendamentoOnline() {
   const { config, loading, saving, setConfig, salvarConfig } = useConfigAgendamentoOnline();
-  const [uploading, setUploading] = useStateReact(false);
-  const [previewUrl, setPreviewUrl] = useStateReact<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useStateReact(false);
+  const [uploadingBanner, setUploadingBanner] = useStateReact(false);
+  const [previewLogoUrl, setPreviewLogoUrl] = useStateReact<string | null>(null);
+  const [previewBannerUrl, setPreviewBannerUrl] = useStateReact<string | null>(null);
 
   const handleChange = (field: keyof ConfigAgendamentoOnline, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -24,43 +26,39 @@ export function ConfiguracaoAgendamentoOnline() {
     await salvarConfig(config);
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Validar tipo de arquivo
       if (!file.type.startsWith('image/')) {
         toast.error('Por favor, selecione apenas arquivos de imagem');
         return;
       }
 
-      // Validar tamanho (máximo 2MB)
       if (file.size > 2 * 1024 * 1024) {
         toast.error('A imagem deve ter no máximo 2MB');
         return;
       }
 
-      setUploading(true);
+      if (type === 'logo') setUploadingLogo(true);
+      else setUploadingBanner(true);
 
-      // Obter user ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Deletar logo anterior se existir
-      if (config.logo_url && config.logo_url.includes('salon-logos')) {
-        const oldPath = config.logo_url.split('/salon-logos/')[1];
+      const currentUrl = type === 'logo' ? config.logo_url : config.banner_url;
+      if (currentUrl && currentUrl.includes('salon-logos')) {
+        const oldPath = currentUrl.split('/salon-logos/')[1];
         if (oldPath) {
           await supabase.storage.from('salon-logos').remove([oldPath]);
         }
       }
 
-      // Criar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/logo-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${type}-${Date.now()}.${fileExt}`;
 
-      // Upload do arquivo
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('salon-logos')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -69,37 +67,48 @@ export function ConfiguracaoAgendamentoOnline() {
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('salon-logos')
         .getPublicUrl(fileName);
 
-      // Atualizar config com nova URL
-      handleChange('logo_url', publicUrl);
-      setPreviewUrl(publicUrl);
-      toast.success('Logo atualizada com sucesso!');
+      if (type === 'logo') {
+        handleChange('logo_url', publicUrl);
+        setPreviewLogoUrl(publicUrl);
+        toast.success('Logo atualizada!');
+      } else {
+        handleChange('banner_url', publicUrl);
+        setPreviewBannerUrl(publicUrl);
+        toast.success('Banner atualizado!');
+      }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast.error('Erro ao fazer upload da imagem');
     } finally {
-      setUploading(false);
+      if (type === 'logo') setUploadingLogo(false);
+      else setUploadingBanner(false);
     }
   };
 
-  const handleRemoveLogo = async () => {
+  const handleRemoveImage = async (type: 'logo' | 'banner') => {
     try {
-      if (config.logo_url && config.logo_url.includes('salon-logos')) {
-        const oldPath = config.logo_url.split('/salon-logos/')[1];
+      const currentUrl = type === 'logo' ? config.logo_url : config.banner_url;
+      if (currentUrl && currentUrl.includes('salon-logos')) {
+        const oldPath = currentUrl.split('/salon-logos/')[1];
         if (oldPath) {
           await supabase.storage.from('salon-logos').remove([oldPath]);
         }
       }
-      handleChange('logo_url', '');
-      setPreviewUrl(null);
-      toast.success('Logo removida');
+      if (type === 'logo') {
+        handleChange('logo_url', '');
+        setPreviewLogoUrl(null);
+      } else {
+        handleChange('banner_url', '');
+        setPreviewBannerUrl(null);
+      }
+      toast.success('Imagem removida');
     } catch (error) {
-      console.error('Erro ao remover logo:', error);
-      toast.error('Erro ao remover logo');
+      console.error('Erro ao remover imagem:', error);
+      toast.error('Erro ao remover imagem');
     }
   };
 
@@ -118,10 +127,10 @@ export function ConfiguracaoAgendamentoOnline() {
   return (
     <div className="space-y-6">
       {/* Ativação */}
-      <Card>
+      <Card className="border-primary/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
+            <Store className="h-5 w-5 text-primary" />
             Status do Agendamento Online
           </CardTitle>
           <CardDescription>
@@ -129,9 +138,9 @@ export function ConfiguracaoAgendamentoOnline() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
             <div className="space-y-0.5">
-              <Label htmlFor="ativo">Agendamento Online Ativo</Label>
+              <Label htmlFor="ativo" className="text-base font-bold">Agendamento Online Ativo</Label>
               <p className="text-sm text-muted-foreground">
                 Quando ativo, clientes podem agendar através do link público
               </p>
@@ -140,16 +149,158 @@ export function ConfiguracaoAgendamentoOnline() {
               id="ativo"
               checked={config.ativo}
               onCheckedChange={(checked) => handleChange('ativo', checked)}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Informações do Salão */}
-      <Card>
+      {/* Visual e Personalização */}
+      <Card className="border-primary/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
+            <Palette className="h-5 w-5 text-primary" />
+            Visual e Personalização
+          </CardTitle>
+          <CardDescription>
+            Personalize as imagens e cores do seu formulário
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {/* Logo e Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Logo */}
+            <div className="space-y-4">
+              <Label className="flex items-center gap-2 font-bold">
+                <Image className="h-4 w-4" />
+                Logo/Foto Circular
+              </Label>
+              <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-primary/10 rounded-2xl bg-muted/30">
+                {(config.logo_url || previewLogoUrl) ? (
+                  <div className="relative group">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                      <img
+                        src={previewLogoUrl || config.logo_url}
+                        alt="Logo"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('logo')}
+                      className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-primary/5 flex items-center justify-center border-4 border-white shadow-inner">
+                    <Store className="h-10 w-10 text-primary/20" />
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingLogo}
+                  onClick={() => document.getElementById('logo-upload')?.click()}
+                  className="rounded-full px-6"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadingLogo ? 'Enviando...' : 'Trocar Logo'}
+                </Button>
+                <input id="logo-upload" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} className="hidden" />
+              </div>
+            </div>
+
+            {/* Banner */}
+            <div className="space-y-4">
+              <Label className="flex items-center gap-2 font-bold">
+                <Layout className="h-4 w-4" />
+                Imagem de Capa (Banner)
+              </Label>
+              <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-primary/10 rounded-2xl bg-muted/30">
+                {(config.banner_url || previewBannerUrl) ? (
+                  <div className="relative group w-full">
+                    <div className="w-full h-24 rounded-xl overflow-hidden border-4 border-white shadow-xl">
+                      <img
+                        src={previewBannerUrl || config.banner_url}
+                        alt="Banner"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage('banner')}
+                      className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-24 rounded-xl bg-primary/5 flex items-center justify-center border-4 border-white shadow-inner">
+                    <Image className="h-10 w-10 text-primary/20" />
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingBanner}
+                  onClick={() => document.getElementById('banner-upload')?.click()}
+                  className="rounded-full px-6"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadingBanner ? 'Enviando...' : 'Trocar Capa'}
+                </Button>
+                <input id="banner-upload" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} className="hidden" />
+              </div>
+            </div>
+          </div>
+
+          {/* Cores e Opções */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div className="space-y-3">
+              <Label htmlFor="cor_primaria" className="font-bold">Cor de Destaque</Label>
+              <div className="flex gap-3 items-center">
+                <Input
+                  id="cor_primaria"
+                  type="color"
+                  value={config.cor_primaria || '#8B5CF6'}
+                  onChange={(e) => handleChange('cor_primaria', e.target.value)}
+                  className="w-16 h-12 p-1 rounded-lg cursor-pointer"
+                />
+                <Input
+                  value={config.cor_primaria || '#8B5CF6'}
+                  onChange={(e) => handleChange('cor_primaria', e.target.value)}
+                  placeholder="#000000"
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="font-bold">Opções de Exibição</Label>
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                  <span className="text-sm font-medium">Mostrar Preços</span>
+                  <Switch checked={config.mostrar_precos} onCheckedChange={(v) => handleChange('mostrar_precos', v)} />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                  <span className="text-sm font-medium">Mostrar Duração</span>
+                  <Switch checked={config.mostrar_duracao} onCheckedChange={(v) => handleChange('mostrar_duracao', v)} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Informações do Salão */}
+      <Card className="border-primary/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-primary" />
             Informações do Salão
           </CardTitle>
           <CardDescription>
@@ -158,336 +309,158 @@ export function ConfiguracaoAgendamentoOnline() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nome_salao">Nome do Salão *</Label>
+            <Label htmlFor="nome_salao" className="font-bold">Nome do Salão *</Label>
             <Input
               id="nome_salao"
               value={config.nome_salao}
               onChange={(e) => handleChange('nome_salao', e.target.value)}
               placeholder="Ex: Salão Beleza Pura"
+              className="h-12 rounded-xl"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
+            <Label htmlFor="descricao" className="font-bold">Descrição Curta</Label>
             <Textarea
               id="descricao"
               value={config.descricao}
               onChange={(e) => handleChange('descricao', e.target.value)}
               placeholder="Breve descrição sobre seu salão"
-              rows={3}
+              rows={2}
+              className="rounded-xl resize-none"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Contato e Redes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Phone className="h-4 w-4 text-primary" />
+              Contato
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp" className="text-xs font-bold uppercase text-muted-foreground">WhatsApp</Label>
+              <Input id="whatsapp" value={config.whatsapp} onChange={(e) => handleChange('whatsapp', e.target.value)} placeholder="5511999999999" className="h-11 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endereco" className="text-xs font-bold uppercase text-muted-foreground">Endereço</Label>
+              <Input id="endereco" value={config.endereco} onChange={(e) => handleChange('endereco', e.target.value)} placeholder="Rua..." className="h-11 rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Instagram className="h-4 w-4 text-primary" />
+              Redes Sociais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="instagram" className="text-xs font-bold uppercase text-muted-foreground">Instagram</Label>
+              <Input id="instagram" value={config.instagram} onChange={(e) => handleChange('instagram', e.target.value)} placeholder="@seuuser" className="h-11 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="facebook" className="text-xs font-bold uppercase text-muted-foreground">Facebook</Label>
+              <Input id="facebook" value={config.facebook} onChange={(e) => handleChange('facebook', e.target.value)} placeholder="fb.com/user" className="h-11 rounded-xl" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Regras e Mensagens */}
+      <Card className="border-primary/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            Regras e Mensagens
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase">Sinal (%)</Label>
+              <Input type="number" value={config.taxa_sinal_percentual} onChange={(e) => handleChange('taxa_sinal_percentual', Number(e.target.value))} className="h-11 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase">Ant. Mín (min)</Label>
+              <Input type="number" value={config.tempo_minimo_antecedencia} onChange={(e) => handleChange('tempo_minimo_antecedencia', Number(e.target.value))} className="h-11 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase">Ant. Máx (dias)</Label>
+              <Input type="number" value={Math.floor(config.tempo_maximo_antecedencia / 1440)} onChange={(e) => handleChange('tempo_maximo_antecedencia', Number(e.target.value) * 1440)} className="h-11 rounded-xl" />
+            </div>
           </div>
 
           <div className="space-y-4">
-            <Label className="flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              Logo/Foto do Salão
-            </Label>
-            
-            {/* Preview da imagem */}
-            {(config.logo_url || previewUrl) && (
-              <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-border">
-                <img
-                  src={previewUrl || config.logo_url}
-                  alt="Logo do salão"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveLogo}
-                  className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            )}
-
-            {/* Upload de arquivo */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={uploading}
-                onClick={() => document.getElementById('logo-upload')?.click()}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                {uploading ? 'Enviando...' : 'Fazer Upload'}
-              </Button>
-              <input
-                id="logo-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
+            <div className="space-y-2">
+              <Label className="font-bold">Boas-vindas</Label>
+              <Textarea value={config.mensagem_boas_vindas} onChange={(e) => handleChange('mensagem_boas_vindas', e.target.value)} className="rounded-xl resize-none" rows={2} />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Formatos aceitos: JPG, PNG, WEBP (máx. 2MB)
-            </p>
-
-            {/* Opção alternativa: URL externa */}
-            <div className="space-y-2 pt-2 border-t">
-              <Label htmlFor="logo_url" className="text-xs text-muted-foreground">
-                Ou cole uma URL externa:
-              </Label>
-              <Input
-                id="logo_url"
-                value={config.logo_url}
-                onChange={(e) => handleChange('logo_url', e.target.value)}
-                placeholder="https://exemplo.com/logo.png"
-                className="text-sm"
-              />
+            <div className="space-y-2">
+              <Label className="font-bold">Termos de Uso</Label>
+              <Textarea value={config.termos_condicoes} onChange={(e) => handleChange('termos_condicoes', e.target.value)} className="rounded-xl resize-none" rows={2} />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Contato */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Phone className="h-5 w-5" />
-            Informações de Contato
-          </CardTitle>
-          <CardDescription>
-            Dados de contato exibidos no rodapé do formulário
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="telefone" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Telefone
-            </Label>
-            <Input
-              id="telefone"
-              value={config.telefone}
-              onChange={(e) => handleChange('telefone', e.target.value)}
-              placeholder="(00) 00000-0000"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              E-mail
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={config.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="contato@seusalao.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="endereco" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Endereço
-            </Label>
-            <Input
-              id="endereco"
-              value={config.endereco}
-              onChange={(e) => handleChange('endereco', e.target.value)}
-              placeholder="Rua Exemplo, 123 - Centro"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Redes Sociais */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Redes Sociais</CardTitle>
-          <CardDescription>
-            Links para suas redes sociais (aparecerão no rodapé)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="instagram" className="flex items-center gap-2">
-              <Instagram className="h-4 w-4" />
-              Instagram
-            </Label>
-            <Input
-              id="instagram"
-              value={config.instagram}
-              onChange={(e) => handleChange('instagram', e.target.value)}
-              placeholder="@seusalao"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="facebook" className="flex items-center gap-2">
-              <Facebook className="h-4 w-4" />
-              Facebook
-            </Label>
-            <Input
-              id="facebook"
-              value={config.facebook}
-              onChange={(e) => handleChange('facebook', e.target.value)}
-              placeholder="facebook.com/seusalao"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="whatsapp" className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </Label>
-            <Input
-              id="whatsapp"
-              value={config.whatsapp}
-              onChange={(e) => handleChange('whatsapp', e.target.value)}
-              placeholder="5500000000000"
-            />
-            <p className="text-xs text-muted-foreground">
-              Apenas números (com código do país e DDD)
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Configurações de Agendamento */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Regras de Agendamento
-          </CardTitle>
-          <CardDescription>
-            Configure as regras para agendamentos online
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="taxa_sinal" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Taxa de Sinal (%)
-            </Label>
-            <Input
-              id="taxa_sinal"
-              type="number"
-              min="0"
-              max="100"
-              value={config.taxa_sinal_percentual}
-              onChange={(e) => handleChange('taxa_sinal_percentual', Number(e.target.value))}
-            />
-            <p className="text-xs text-muted-foreground">
-              Percentual cobrado como adiantamento (0 para não cobrar)
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tempo_min">Antecedência Mínima (minutos)</Label>
-            <Input
-              id="tempo_min"
-              type="number"
-              min="0"
-              value={config.tempo_minimo_antecedencia}
-              onChange={(e) => handleChange('tempo_minimo_antecedencia', Number(e.target.value))}
-            />
-            <p className="text-xs text-muted-foreground">
-              Tempo mínimo para agendar antes do horário (ex: 60 minutos)
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tempo_max">Antecedência Máxima (dias)</Label>
-            <Input
-              id="tempo_max"
-              type="number"
-              min="1"
-              value={Math.floor(config.tempo_maximo_antecedencia / 1440)}
-              onChange={(e) => handleChange('tempo_maximo_antecedencia', Number(e.target.value) * 1440)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Quantos dias no futuro o cliente pode agendar (ex: 30 dias)
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Mensagens Personalizadas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Mensagens Personalizadas
-          </CardTitle>
-          <CardDescription>
-            Personalize as mensagens exibidas no formulário
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="msg_boas_vindas">Mensagem de Boas-Vindas</Label>
-            <Textarea
-              id="msg_boas_vindas"
-              value={config.mensagem_boas_vindas}
-              onChange={(e) => handleChange('mensagem_boas_vindas', e.target.value)}
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="termos">Termos e Condições</Label>
-            <Textarea
-              id="termos"
-              value={config.termos_condicoes}
-              onChange={(e) => handleChange('termos_condicoes', e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="msg_confirmacao">Mensagem de Confirmação</Label>
-            <Textarea
-              id="msg_confirmacao"
-              value={config.mensagem_confirmacao}
-              onChange={(e) => handleChange('mensagem_confirmacao', e.target.value)}
-              rows={2}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Botão Salvar */}
-      <div className="flex justify-end gap-4">
+      {/* Botão Salvar Fixo/Flutuante no Mobile */}
+      <div className="flex justify-end pt-4">
         <Button
           onClick={handleSave}
           disabled={saving}
           size="lg"
+          className="w-full sm:w-auto h-14 sm:h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl transition-all active:scale-95"
         >
-          {saving ? 'Salvando...' : 'Salvar Configurações'}
+          {saving ? (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Salvando...
+            </div>
+          ) : (
+            'Salvar Todas as Configurações'
+          )}
         </Button>
       </div>
 
-      {/* Link de Acesso */}
+      {/* Link de Acesso com QR Code (Simulado) */}
       {config.ativo && (
-        <Card className="border-primary/50 bg-primary/5">
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">Link de Agendamento Online</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Compartilhe este link com seus clientes para que eles possam agendar online:
-            </p>
-            <div className="flex gap-2">
-              <Input
-                readOnly
-                value={`${window.location.origin}/agendamento-online`}
-                className="bg-background"
-              />
-              <Button
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/agendamento-online`);
-                  toast.success('Link copiado!');
-                }}
-              >
-                Copiar
-              </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="flex-1 space-y-2 text-center sm:text-left">
+                <h3 className="text-lg font-bold text-primary flex items-center gap-2 justify-center sm:justify-start">
+                  <Eye className="h-5 w-5" />
+                  Seu Link Público Está Pronto!
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Copie o link abaixo e coloque na sua Bio do Instagram ou envie para seus clientes no WhatsApp.
+                </p>
+                <div className="flex gap-2 pt-2">
+                  <Input
+                    readOnly
+                    value={`${window.location.origin}/agendamento-online`}
+                    className="bg-background/50 h-11 rounded-xl font-medium"
+                  />
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/agendamento-online`);
+                      toast.success('Link copiado com sucesso! 🚀');
+                    }}
+                    className="h-11 rounded-xl px-6"
+                  >
+                    Copiar
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

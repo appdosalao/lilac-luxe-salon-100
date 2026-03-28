@@ -43,6 +43,38 @@ export function AgendamentoOnlineForm() {
   const { lastUpdate } = useConfiguracoesRealTime();
   const { config: configOnline } = useConfigAgendamentoOnline();
 
+  // Cores dinâmicas do formulário
+  const primaryColor = configOnline.cor_primaria || '#8B5CF6';
+  const primaryHsl = hexToHsl(primaryColor);
+
+  // Função auxiliar para converter Hex para HSL (formato esperado pelo Tailwind no projeto)
+  function hexToHsl(hex: string) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
+    }
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  }
+
   const [formData, setFormData] = useState<AgendamentoOnlineData>({
     nome_completo: '',
     email: '',
@@ -237,6 +269,15 @@ export function AgendamentoOnlineForm() {
     // Validate and sanitize input with zod
     try {
       const validatedData = agendamentoOnlineSchema.parse(formData);
+      
+      // Se não houver taxa de sinal, forçamos a aceitação interna para não travar o envio
+      const canSubmit = termsAccepted && (configOnline.taxa_sinal_percentual <= 0 || taxaAccepted);
+      
+      if (!canSubmit) {
+        toast.error('Você deve aceitar os termos e a taxa de sinal (se houver) para continuar.');
+        return;
+      }
+
       if (produtoEnabled && produtoId) {
         const pSel = produtos.find(p => p.id === produtoId);
         const compra = {
@@ -476,336 +517,317 @@ Você receberá uma confirmação em breve.
   }
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl, '--ring': primaryHsl } as React.CSSProperties}>
       <SalonHeader />
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4 pb-0">
+      <div className="flex-1 bg-gradient-to-b from-transparent to-primary/5 p-4 sm:p-6">
         <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
+          <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden animate-in fade-in zoom-in duration-500">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent border-b border-primary/5 p-6 sm:p-8">
               <ProgressSteps currentStep={currentStep} steps={steps} />
             </CardHeader>
-            <CardContent>
-              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="p-6 sm:p-8">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
                 {/* Step 1: Dados Pessoais */}
                 {currentStep === 1 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      Seus Dados
-                    </h3>
+                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex flex-col gap-2 border-b border-primary/10 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <User className="w-5 h-5 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground">
+                          Seus Dados
+                        </h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {configOnline.mensagem_boas_vindas || 'Preencha os dados abaixo para agendar seu horário.'}
+                      </p>
+                    </div>
                   
-                    <div>
-                      <Label htmlFor="nome_completo">Nome Completo *</Label>
-                      <Input
-                        id="nome_completo"
-                        value={formData.nome_completo}
-                        onChange={(e) => handleInputChange('nome_completo', e.target.value)}
-                        placeholder="Seu nome completo"
-                        className={errors.nome_completo ? 'border-destructive' : ''}
-                      />
-                      {errors.nome_completo && (
-                        <span className="text-sm text-destructive">{errors.nome_completo}</span>
-                      )}
-                    </div>
+                    <div className="grid gap-6">
+                      <div className="space-y-2 group">
+                        <Label htmlFor="nome_completo" className="text-sm font-semibold group-focus-within:text-primary transition-colors">Nome Completo *</Label>
+                        <Input
+                          id="nome_completo"
+                          value={formData.nome_completo}
+                          onChange={(e) => handleInputChange('nome_completo', e.target.value)}
+                          placeholder="Seu nome completo"
+                          className={`h-12 rounded-xl border-primary/10 bg-white/50 focus:bg-white shadow-sm transition-all duration-300 ${errors.nome_completo ? 'border-destructive ring-destructive/20' : 'focus:shadow-md focus:ring-primary/20'}`}
+                        />
+                        {errors.nome_completo && (
+                          <span className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">{errors.nome_completo}</span>
+                        )}
+                      </div>
 
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="seu@email.com"
-                        className={errors.email ? 'border-destructive' : ''}
-                      />
-                      {errors.email && (
-                        <span className="text-sm text-destructive">{errors.email}</span>
-                      )}
-                    </div>
+                      <div className="space-y-2 group">
+                        <Label htmlFor="email" className="text-sm font-semibold group-focus-within:text-primary transition-colors">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          placeholder="seu@email.com"
+                          className={`h-12 rounded-xl border-primary/10 bg-white/50 focus:bg-white shadow-sm transition-all duration-300 ${errors.email ? 'border-destructive ring-destructive/20' : 'focus:shadow-md focus:ring-primary/20'}`}
+                        />
+                        {errors.email && (
+                          <span className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">{errors.email}</span>
+                        )}
+                      </div>
 
-                    <div>
-                      <Label htmlFor="telefone">Telefone *</Label>
-                      <Input
-                        id="telefone"
-                        value={formData.telefone}
-                        onChange={(e) => handleInputChange('telefone', e.target.value)}
-                        placeholder="(11) 99999-9999"
-                        className={errors.telefone ? 'border-destructive' : ''}
-                      />
-                      {errors.telefone && (
-                        <span className="text-sm text-destructive">{errors.telefone}</span>
-                      )}
+                      <div className="space-y-2 group">
+                        <Label htmlFor="telefone" className="text-sm font-semibold group-focus-within:text-primary transition-colors">Telefone *</Label>
+                        <Input
+                          id="telefone"
+                          value={formData.telefone}
+                          onChange={(e) => handleInputChange('telefone', e.target.value)}
+                          placeholder="(11) 99999-9999"
+                          className={`h-12 rounded-xl border-primary/10 bg-white/50 focus:bg-white shadow-sm transition-all duration-300 ${errors.telefone ? 'border-destructive ring-destructive/20' : 'focus:shadow-md focus:ring-primary/20'}`}
+                        />
+                        {errors.telefone && (
+                          <span className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">{errors.telefone}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Step 2: Serviço e Agendamento */}
                 {currentStep === 2 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Calendar className="w-5 h-5" />
-                      Agendamento
-                    </h3>
-
-                    <div>
-                      <Label htmlFor="servico_id">Serviço *</Label>
-                      <Select onValueChange={(value) => handleInputChange('servico_id', value)}>
-                        <SelectTrigger className={errors.servico_id ? 'border-destructive' : ''}>
-                          <SelectValue placeholder="Selecione um serviço" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {servicos.map((servico) => (
-                            <SelectItem key={servico.id} value={servico.id}>
-                              {servico.nome} - R$ {servico.valor.toFixed(2)} ({servico.duracao}min)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.servico_id && (
-                        <span className="text-sm text-destructive">{errors.servico_id}</span>
-                      )}
+                  <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
+                      <div className="p-2 bg-primary/10 rounded-xl">
+                        <Calendar className="w-5 h-5 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold text-foreground">
+                        Agendamento
+                      </h3>
                     </div>
 
-                    <div>
-                      <Label htmlFor="data">Data *</Label>
-                      <Input
-                        id="data"
-                        type="date"
-                        min={dataMinima}
-                        max={dataMaxima}
-                        value={formData.data}
-                        onChange={(e) => handleInputChange('data', e.target.value)}
-                        className={errors.data ? 'border-destructive' : ''}
-                      />
-                      {errors.data && (
-                        <span className="text-sm text-destructive">{errors.data}</span>
-                      )}
+                    <div className="grid gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="servico_id" className="text-sm font-semibold">Serviço *</Label>
+                        <Select onValueChange={(value) => handleInputChange('servico_id', value)}>
+                          <SelectTrigger className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.servico_id ? 'border-destructive ring-destructive/20' : 'focus:shadow-md'}`}>
+                            <SelectValue placeholder="Selecione um serviço" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl shadow-xl border-primary/5">
+                            {servicos.map((servico) => (
+                              <SelectItem key={servico.id} value={servico.id} className="h-12 cursor-pointer focus:bg-primary/5 transition-colors">
+                                <div className="flex items-center justify-between gap-4 w-full">
+                                  <span className="font-medium">{servico.nome}</span>
+                                  {configOnline.mostrar_precos && (
+                                    <span className="text-primary font-bold">R$ {servico.valor.toFixed(2)}</span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.servico_id && (
+                          <span className="text-xs text-destructive font-medium">{errors.servico_id}</span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="data" className="text-sm font-semibold">Data *</Label>
+                          <Input
+                            id="data"
+                            type="date"
+                            min={dataMinima}
+                            max={dataMaxima}
+                            value={formData.data}
+                            onChange={(e) => handleInputChange('data', e.target.value)}
+                            className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.data ? 'border-destructive' : 'focus:shadow-md'}`}
+                          />
+                          {errors.data && (
+                            <span className="text-xs text-destructive font-medium">{errors.data}</span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="horario" className="text-sm font-semibold">Horário *</Label>
+                          <Select 
+                            onValueChange={(value) => handleInputChange('horario', value)}
+                            disabled={!formData.servico_id || !formData.data || !isDataDisponivel(formData.data)}
+                          >
+                            <SelectTrigger className={`h-12 rounded-xl border-primary/10 bg-white/50 shadow-sm transition-all ${errors.horario ? 'border-destructive' : 'focus:shadow-md'}`}>
+                              <SelectValue placeholder={
+                                !formData.servico_id || !formData.data 
+                                  ? "Selecione serviço e data" 
+                                  : !isDataDisponivel(formData.data)
+                                  ? "Data indisponível"
+                                  : horariosDisponiveis.length === 0
+                                  ? "Sem horários"
+                                  : "Horário"
+                              } />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl shadow-xl border-primary/5 max-h-[300px]">
+                              {horariosDisponiveis.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-1 p-2">
+                                  {horariosDisponiveis.map((horario) => (
+                                    <SelectItem 
+                                      key={horario.horario} 
+                                      value={horario.horario}
+                                      disabled={!horario.disponivel}
+                                      className="h-10 cursor-pointer justify-center rounded-lg focus:bg-primary/10 transition-colors"
+                                    >
+                                      {horario.horario}
+                                    </SelectItem>
+                                  ))}
+                                </div>
+                              ) : (
+                                <SelectItem value="none" disabled>
+                                  Nenhum horário disponível
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {errors.horario && (
+                            <span className="text-xs text-destructive font-medium">{errors.horario}</span>
+                          )}
+                        </div>
+                      </div>
+
                       {formData.data && !isDataDisponivel(formData.data) && (
-                        <Alert className="mt-2">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
+                        <Alert className="rounded-xl border-amber-200 bg-amber-50 animate-in zoom-in-95 duration-200">
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <AlertDescription className="text-amber-800 text-xs font-medium">
                             Esta data não está disponível para agendamentos. Escolha outro dia.
                           </AlertDescription>
                         </Alert>
                       )}
-                    </div>
 
-                    <div>
-                      <Label htmlFor="horario">Horário *</Label>
-                      <Select 
-                        onValueChange={(value) => handleInputChange('horario', value)}
-                        disabled={!formData.servico_id || !formData.data || !isDataDisponivel(formData.data)}
-                      >
-                        <SelectTrigger className={errors.horario ? 'border-destructive' : ''}>
-                          <SelectValue placeholder={
-                            !formData.servico_id || !formData.data 
-                              ? "Selecione um serviço e data primeiro" 
-                              : !isDataDisponivel(formData.data)
-                              ? "Data indisponível"
-                              : horariosDisponiveis.length === 0
-                              ? "Nenhum horário disponível"
-                              : "Selecione um horário"
-                          } />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {horariosDisponiveis.length > 0 ? (
-                            horariosDisponiveis.map((horario) => (
-                              <SelectItem 
-                                key={horario.horario} 
-                                value={horario.horario}
-                                disabled={!horario.disponivel}
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{horario.horario}</span>
-                                  {!horario.disponivel && (
-                                    <span className="text-xs text-muted-foreground ml-2">(Ocupado)</span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="none" disabled>
-                              Nenhum horário disponível
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {errors.horario && (
-                        <span className="text-sm text-destructive">{errors.horario}</span>
-                      )}
-                      {servicoSelecionado && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Duração do serviço: {servicoSelecionado.duracao} minutos
+                      <div className="space-y-2">
+                        <Label htmlFor="observacoes" className="text-sm font-semibold">Observações (opcional)</Label>
+                        <Textarea
+                          id="observacoes"
+                          value={formData.observacoes}
+                          onChange={(e) => handleInputChange('observacoes', e.target.value)}
+                          placeholder="Alguma observação ou preferência?"
+                          rows={3}
+                          className="rounded-xl border-primary/10 bg-white/50 shadow-sm focus:shadow-md transition-all resize-none"
+                        />
+                      </div>
+                      
+                      {configOnline.mostrar_duracao && servicoSelecionado && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Duração estimada: {servicoSelecionado.duracao} minutos
                         </p>
                       )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="observacoes">Observações (opcional)</Label>
-                      <Textarea
-                        id="observacoes"
-                        value={formData.observacoes}
-                        onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                        placeholder="Alguma observação ou preferência?"
-                        rows={3}
-                      />
                     </div>
                   </div>
                 )}
 
                 {/* Step 3: Condições e Finalização */}
                 {currentStep === 3 && (
-                  <div className="space-y-6">
-                    {/* Produtos opcionais */}
-                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5" />
-                        Produtos (opcional)
+                  <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                    {/* Resumo do Agendamento */}
+                    <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10 shadow-inner">
+                      <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-primary">
+                        <Clock className="w-5 h-5" />
+                        Resumo do Agendamento
                       </h3>
-                      <div className="flex items-start gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Cliente</p>
+                          <p className="font-bold text-foreground truncate">{formData.nome_completo}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Serviço</p>
+                          <p className="font-bold text-foreground">{servicoSelecionado?.nome}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Data e Horário</p>
+                          <p className="font-bold text-foreground">
+                            {formData.data ? new Date(formData.data).toLocaleDateString('pt-BR') : '-'} às {formData.horario}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Investimento</p>
+                          <p className="font-bold text-primary text-lg">R$ {servicoSelecionado?.valor.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Produtos opcionais */}
+                    <div className="bg-white/50 border border-primary/5 rounded-2xl p-6 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                          <ShoppingBag className="w-5 h-5 text-primary" />
+                          Produtos Extras
+                        </h3>
                         <Checkbox 
                           id="produtoEnabled"
                           checked={produtoEnabled}
                           onCheckedChange={(checked) => setProdutoEnabled(!!checked)}
+                          className="w-6 h-6 rounded-lg"
                         />
-                        <Label htmlFor="produtoEnabled" className="text-sm leading-5">
-                          Desejo comprar um produto do salão junto com o agendamento
-                        </Label>
                       </div>
+                      
                       {produtoEnabled && (
-                        <>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div>
-                              <Label>Categoria</Label>
-                              <Select value={produtoCategoria} onValueChange={(v) => setProdutoCategoria(v)}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Todas" />
+                        <div className="space-y-4 pt-2 animate-in fade-in zoom-in duration-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Produto</Label>
+                              <Select value={produtoId} onValueChange={setProdutoId}>
+                                <SelectTrigger className="h-11 rounded-xl border-primary/10 shadow-sm">
+                                  <SelectValue placeholder="Escolha um item" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="todas">Todas</SelectItem>
-                                  {[...new Set(produtos.map(p => p.categoria).filter(Boolean))].map((c) => (
-                                    <SelectItem key={String(c)} value={String(c)}>{String(c)}</SelectItem>
+                                <SelectContent className="rounded-xl shadow-xl">
+                                  {produtos.map((p) => (
+                                    <SelectItem key={p.id} value={p.id} className="cursor-pointer">
+                                      {p.nome} — R$ {Number(p.valor).toFixed(2)}
+                                    </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div>
-                              <Label>Ordenar por</Label>
-                              <Select value={produtoOrdenacao} onValueChange={(v: any) => setProdutoOrdenacao(v)}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="nome">Nome</SelectItem>
-                                  <SelectItem value="preco">Preço</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-bold text-muted-foreground uppercase ml-1">Quantidade</Label>
+                              <Input 
+                                type="number" 
+                                min={1} 
+                                value={produtoQtd} 
+                                onChange={(e) => setProdutoQtd(Math.max(1, Number(e.target.value)))}
+                                className="h-11 rounded-xl border-primary/10 shadow-sm"
+                              />
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Select value={produtoId} onValueChange={setProdutoId}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione um produto" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {produtos
-                                  .filter(p => produtoCategoria === 'todas' || String(p.categoria) === produtoCategoria)
-                                  .sort((a, b) => {
-                                    if (produtoOrdenacao === 'nome') return a.nome.localeCompare(b.nome);
-                                    const av = typeof a.valor === 'number' ? a.valor! : 0;
-                                    const bv = typeof b.valor === 'number' ? b.valor! : 0;
-                                    return av - bv;
-                                  })
-                                  .map((p) => (
-                                  <SelectItem key={p.id} value={p.id}>
-                                    {p.nome}{typeof p.valor === 'number' ? ` — R$ ${p.valor.toFixed(2)}` : ''}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input 
-                              type="number" 
-                              min={1} 
-                              value={produtoQtd} 
-                              onChange={(e) => setProdutoQtd(Math.max(1, Number(e.target.value)))}
-                              placeholder="Quantidade"
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <Label className="sm:col-span-1">Forma de pagamento do produto</Label>
-                            <div className="sm:col-span-2">
-                              <Select value={produtoForma} onValueChange={setProdutoForma}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a forma de pagamento" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pix">PIX</SelectItem>
-                                  <SelectItem value="cartao">Cartão</SelectItem>
-                                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </>
+                        </div>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        O pagamento do produto será finalizado no atendimento. Seleção aqui registra sua intenção de compra.
-                      </p>
-                    </div>
-                    {/* Resumo do Agendamento */}
-                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Clock className="w-5 h-5" />
-                        Resumo do Agendamento
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <p><strong>Nome:</strong> {formData.nome_completo}</p>
-                        <p><strong>Email:</strong> {formData.email}</p>
-                        <p><strong>Telefone:</strong> {formData.telefone}</p>
-                        <p><strong>Serviço:</strong> {servicoSelecionado?.nome}</p>
-                        <p><strong>Data:</strong> {formData.data ? new Date(formData.data).toLocaleDateString('pt-BR') : '-'}</p>
-                        <p><strong>Horário:</strong> {formData.horario}</p>
-                        <p><strong>Valor:</strong> R$ {servicoSelecionado?.valor.toFixed(2)}</p>
-                        {formData.observacoes && (
-                          <p><strong>Observações:</strong> {formData.observacoes}</p>
-                        )}
-                      </div>
                     </div>
 
                     {/* Condições e Termos */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <CreditCard className="w-5 h-5" />
-                        Condições
-                      </h3>
-                      
-                      <Alert className="border-primary/20 bg-primary/5">
-                        <CreditCard className="h-4 w-4" />
-                        <AlertDescription className="text-sm leading-relaxed">
-                          <div className="flex items-start space-x-2 mt-2">
+                      {configOnline.taxa_sinal_percentual > 0 && (
+                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 shadow-sm">
+                          <div className="flex items-start gap-4">
                             <Checkbox
                               id="taxa"
                               checked={taxaAccepted}
                               onCheckedChange={(checked) => setTaxaAccepted(checked as boolean)}
-                              className="mt-0.5"
+                              className="mt-1 w-6 h-6 rounded-lg border-amber-300 data-[state=checked]:bg-amber-600"
                             />
-                            <Label htmlFor="taxa" className="text-sm leading-relaxed cursor-pointer">
-                              Oi, tudo bem? 💙 Para garantir seu horário pedimos uma taxa antecipada de R$40,00. 
-                              Fique tranquilo(a): esse valor é abatido do serviço no dia do atendimento 😉. 
-                              Só não conseguimos devolver em caso de cancelamento sem justificativa, tá bom? *
+                            <Label htmlFor="taxa" className="text-sm leading-relaxed cursor-pointer text-amber-900 font-medium">
+                              Oi, tudo bem? 💙 Para garantir seu horário pedimos uma taxa antecipada de {configOnline.taxa_sinal_percentual}%. 
+                              Esse valor é abatido no dia do atendimento. 
+                              Não devolvemos em caso de cancelamento sem justificativa. *
                             </Label>
                           </div>
-                        </AlertDescription>
-                      </Alert>
+                        </div>
+                      )}
 
-                      <div className="flex items-start space-x-2">
+                      <div className="flex items-start gap-4 px-2">
                         <Checkbox
                           id="terms"
                           checked={termsAccepted}
                           onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                          className="w-6 h-6 rounded-lg border-primary/20 mt-1"
                         />
-                        <Label htmlFor="terms" className="text-sm leading-5">
-                          Aceito os termos e condições e concordo em receber confirmações por email e WhatsApp *
+                        <Label htmlFor="terms" className="text-sm text-muted-foreground font-medium cursor-pointer leading-relaxed">
+                          {configOnline.termos_condicoes || 'Aceito os termos e concordo em receber confirmações por WhatsApp *'}
                         </Label>
                       </div>
                     </div>
@@ -813,15 +835,15 @@ Você receberá uma confirmação em breve.
                 )}
 
                 {/* Navigation Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-4 pt-4">
                   {currentStep > 1 && (
                     <Button 
                       type="button"
                       variant="outline"
                       onClick={handlePrevStep}
-                      className="flex-1"
+                      className="flex-1 h-14 rounded-2xl border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all shadow-sm active:scale-95"
                     >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      <ArrowLeft className="w-5 h-5 mr-2" />
                       Voltar
                     </Button>
                   )}
@@ -830,18 +852,35 @@ Você receberá uma confirmação em breve.
                     <Button 
                       type="button"
                       onClick={handleNextStep}
-                      className="flex-1"
+                      className="flex-1 h-14 rounded-2xl text-white font-bold shadow-lg transition-all hover:translate-y-[-2px] active:translate-y-[1px] active:shadow-none"
+                      style={{ background: primaryColor }}
                     >
-                      Próximo
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      Continuar
+                      <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   ) : (
                     <Button 
                       type="submit" 
-                      className="flex-1"
-                      disabled={isSubmitting || !termsAccepted || !taxaAccepted}
+                      className={`flex-1 h-14 rounded-2xl font-bold shadow-lg transition-all active:translate-y-[1px] active:shadow-none ${
+                        isSubmitting || !termsAccepted || (configOnline.taxa_sinal_percentual > 0 && !taxaAccepted)
+                        ? 'bg-muted cursor-not-allowed' 
+                        : 'text-white hover:shadow-xl hover:translate-y-[-2px]'
+                      }`}
+                      style={{ 
+                        background: !isSubmitting && termsAccepted && (configOnline.taxa_sinal_percentual <= 0 || taxaAccepted)
+                          ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` 
+                          : undefined 
+                      }}
+                      disabled={isSubmitting || !termsAccepted || (configOnline.taxa_sinal_percentual > 0 && !taxaAccepted)}
                     >
-                      {isSubmitting ? 'Enviando...' : 'Confirmar Agendamento'}
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Processando...
+                        </div>
+                      ) : (
+                        'Confirmar Agendamento'
+                      )}
                     </Button>
                   )}
                 </div>
@@ -851,6 +890,6 @@ Você receberá uma confirmação em breve.
         </div>
       </div>
       <SalonFooter />
-    </>
+    </div>
   );
 }

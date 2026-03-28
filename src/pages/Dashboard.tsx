@@ -4,7 +4,23 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, DollarSign, Plus, Users, UserPlus, TrendingUp, Sparkles, PiggyBank } from "lucide-react";
+import { 
+  Calendar, 
+  Clock, 
+  DollarSign, 
+  Plus, 
+  Users, 
+  UserPlus, 
+  TrendingUp, 
+  Sparkles, 
+  PiggyBank,
+  CalendarPlus,
+  UserCheck,
+  Wallet,
+  Scissors,
+  Package,
+  Megaphone
+} from "lucide-react";
 import { useAgendamentos } from "@/hooks/useAgendamentos";
 import { useLancamentos } from "@/hooks/useLancamentos";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
@@ -336,7 +352,7 @@ export default function Dashboard() {
       </div>
 
       {/* Atalhos Rápidos */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm rounded-2xl">
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm rounded-2xl hover:shadow-md transition-shadow duration-300">
         <CardHeader className="p-responsive">
           <CardTitle className="flex items-center gap-2 text-responsive-lg">
             <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
@@ -350,53 +366,53 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
             <Button 
               onClick={() => navigate('/agendamentos')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-primary to-lilac-primary text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(139,92,246,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 group border-b-4 border-[#5B21B6] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Novo Agendamento</span>
+              <CalendarPlus className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Agendar</span>
             </Button>
             
             <Button 
               onClick={() => navigate('/clientes')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-lilac-primary to-pink-accent text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#D946EF] to-[#EC4899] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(217,70,239,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 delay-75 group border-b-4 border-[#9D174D] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <UserPlus className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Novo Cliente</span>
+              <UserCheck className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Clientes</span>
             </Button>
             
             <Button 
               onClick={() => navigate('/financeiro')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-pink-accent to-lavender text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#F59E0B] to-[#EF4444] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(245,158,11,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 delay-100 group border-b-4 border-[#991B1B] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <PiggyBank className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Nova Entrada/Saída</span>
+              <Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Financeiro</span>
             </Button>
             <Button 
               onClick={() => navigate('/servicos')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-purple-500 to-purple-400 text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#A855F7] to-[#7C3AED] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(168,85,247,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 delay-150 group border-b-4 border-[#581C87] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Serviços</span>
+              <Scissors className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Serviços</span>
             </Button>
             <Button 
               onClick={() => navigate('/produtos')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-indigo-500 to-indigo-400 text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(59,130,246,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 delay-200 group border-b-4 border-[#1E40AF] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Produtos</span>
+              <Package className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Produtos</span>
             </Button>
             <Button 
               onClick={() => navigate('/marketing')}
-              className="btn-touch h-16 sm:h-20 flex-col gap-2 bg-gradient-to-br from-rose-500 to-rose-400 text-white text-responsive-xs sm:text-responsive-sm hover:brightness-110"
+              className="btn-touch btn-3d h-20 sm:h-24 flex-col gap-2 bg-gradient-to-br from-[#F43F5E] to-[#E11D48] text-white text-responsive-xs sm:text-responsive-sm hover:scale-105 hover:shadow-[0_10px_20px_rgba(244,63,94,0.4)] transition-all duration-300 animate-in fade-in zoom-in slide-in-from-bottom-2 delay-300 group border-b-4 border-[#9F1239] active:border-b-0 active:translate-y-1"
               size="lg"
             >
-              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span>Marketing</span>
+              <Megaphone className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+              <span className="font-bold text-white drop-shadow-sm">Marketing</span>
             </Button>
           </div>
         </CardContent>

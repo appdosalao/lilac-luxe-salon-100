@@ -16,7 +16,9 @@ import {
   Save,
   AlertTriangle,
   CheckCircle2,
-  File
+  File,
+  Mail as MailIcon,
+  Send
 } from 'lucide-react';
 import { useSupabaseConfiguracoes } from '@/hooks/useSupabaseConfiguracoes';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -35,6 +37,7 @@ export function ConfiguracaoBackup() {
   const { configuracaoBackup, loading, salvarBackup } = useSupabaseConfiguracoes();
   const { user } = useSupabaseAuth();
   const [realizandoBackup, setRealizandoBackup] = useState(false);
+  const [enviandoEmail, setEnviandoEmail] = useState(false);
   const [importando, setImportando] = useState(false);
   const [formatoExport, setFormatoExport] = useState<ExportFormat>('json');
   
@@ -269,11 +272,6 @@ export function ConfiguracaoBackup() {
       // Atualizar última data de backup
       await salvarBackup({
         ...localConfig,
-        backup_automatico: configuracaoBackup?.backup_automatico || false,
-        frequencia_backup: configuracaoBackup?.frequencia_backup || 'semanal',
-        dia_backup: configuracaoBackup?.dia_backup || 1,
-        hora_backup: configuracaoBackup?.hora_backup || '02:00',
-        email_backup: configuracaoBackup?.email_backup || '',
         ultimo_backup: new Date().toISOString(),
       });
 
@@ -289,6 +287,53 @@ export function ConfiguracaoBackup() {
       toast.error('Erro ao criar backup. Verifique o console.');
     } finally {
       setRealizandoBackup(false);
+    }
+  };
+
+  const enviarPorEmail = async () => {
+    const emailDestino = localConfig.email_backup;
+    
+    if (!emailDestino) {
+      toast.error('Por favor, cadastre um e-mail para receber o backup.');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    setEnviandoEmail(true);
+    try {
+      const dadosBackup = await coletarDados();
+      const totalItens = Object.values(dadosBackup.estatisticas)
+        .reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0);
+
+      // Chamada para a Edge Function do Supabase (Deve ser criada/configurada)
+      const { data, error } = await supabase.functions.invoke('enviar-backup-email', {
+        body: {
+          email: emailDestino,
+          usuario: user.email,
+          dados: dadosBackup,
+          formato: formatoExport,
+          totalItens
+        }
+      });
+
+      if (error) throw error;
+
+      // Atualizar última data de backup
+      await salvarBackup({
+        ...localConfig,
+        ultimo_backup: new Date().toISOString(),
+      });
+
+      toast.success(`Backup enviado com sucesso para ${emailDestino}!`);
+    } catch (error) {
+      console.error('❌ Erro ao enviar backup por e-mail:', error);
+      toast.error('Erro ao enviar e-mail. Certifique-se de que a função de e-mail está configurada no Supabase.');
+    } finally {
+      setEnviandoEmail(false);
     }
   };
 
@@ -399,11 +444,19 @@ export function ConfiguracaoBackup() {
     }
   };
 
+  const handleUpdateConfig = async (field: string, value: any) => {
+    const newConfig = { ...localConfig, [field]: value };
+    setLocalConfig(newConfig);
+    await salvarBackup(newConfig);
+  };
+
   if (loading) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center">Carregando configurações...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -412,10 +465,10 @@ export function ConfiguracaoBackup() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Exportar Dados */}
-      <Card>
+      <Card className="card-3d border-border/60">
         <CardHeader className="p-responsive">
           <CardTitle className="flex items-center gap-2 text-responsive-lg">
-            <Download className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <Download className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-primary" />
             Exportar Dados
           </CardTitle>
           <CardDescription className="text-responsive-sm">
@@ -433,15 +486,15 @@ export function ConfiguracaoBackup() {
                   <button
                     key={formato.value}
                     onClick={() => setFormatoExport(formato.value as ExportFormat)}
-                    className={`p-3 sm:p-4 border-2 rounded-lg text-left transition-all touch-manipulation ${
+                    className={`p-3 sm:p-4 border-2 rounded-xl text-left transition-all touch-manipulation shadow-sm ${
                       formatoExport === formato.value
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-primary bg-primary/5 shadow-md scale-[1.02]'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                      <span className="font-semibold text-responsive-sm">{formato.label}</span>
+                      <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${formatoExport === formato.value ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className={`font-semibold text-responsive-sm ${formatoExport === formato.value ? 'text-primary' : ''}`}>{formato.label}</span>
                     </div>
                     <p className="text-responsive-xs text-muted-foreground">{formato.description}</p>
                   </button>
@@ -461,15 +514,15 @@ export function ConfiguracaoBackup() {
                 { key: 'incluir_cronogramas', label: 'Cronogramas', icon: '🔄' },
                 { key: 'incluir_financeiro', label: 'Financeiro', icon: '💰' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center space-x-2 p-2 sm:p-3 border rounded-lg touch-manipulation">
+                <div key={item.key} className="flex items-center space-x-2 p-2 sm:p-3 border rounded-lg touch-manipulation hover:bg-muted/50 transition-colors">
                   <Switch
                     id={item.key}
                     checked={localConfig[item.key as keyof typeof localConfig] as boolean}
                     onCheckedChange={(checked) =>
-                      setLocalConfig(prev => ({ ...prev, [item.key]: checked }))
+                      handleUpdateConfig(item.key, checked)
                     }
                   />
-                  <Label htmlFor={item.key} className="text-responsive-xs cursor-pointer flex-1 select-none">
+                  <Label htmlFor={item.key} className="text-responsive-xs cursor-pointer flex-1 select-none font-medium">
                     {item.icon} {item.label}
                   </Label>
                 </div>
@@ -477,82 +530,99 @@ export function ConfiguracaoBackup() {
             </div>
           </div>
 
-          <Button 
-            onClick={() => salvarBackup(localConfig)} 
-            variant="outline"
-            className="w-full btn-touch"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            <span className="text-responsive-sm">Salvar Preferências de Backup</span>
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button 
+              onClick={exportarDados} 
+              disabled={realizandoBackup || enviandoEmail}
+              className="w-full btn-touch btn-3d bg-primary hover:bg-primary/90 text-white font-bold h-12"
+              size="lg"
+            >
+              {realizandoBackup ? (
+                <>
+                  <Download className="h-4 w-4 mr-2 animate-bounce" />
+                  <span className="text-responsive-sm">Gerando Arquivo...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  <span className="text-responsive-sm">Baixar Arquivo ({formatoExport.toUpperCase()})</span>
+                </>
+              )}
+            </Button>
 
-          <Button 
-            onClick={exportarDados} 
-            disabled={realizandoBackup}
-            className="w-full btn-touch"
-            size="lg"
-          >
-            {realizandoBackup ? (
-              <>
-                <Download className="h-4 w-4 mr-2 animate-pulse" />
-                <span className="text-responsive-sm">Preparando backup...</span>
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                <span className="text-responsive-sm">Exportar em {formatoExport.toUpperCase()}</span>
-              </>
-            )}
-          </Button>
+            <Button 
+              onClick={enviarPorEmail} 
+              disabled={realizandoBackup || enviandoEmail}
+              variant="outline"
+              className="w-full btn-touch btn-3d border-primary/20 text-primary font-bold h-12 hover:bg-primary/5"
+              size="lg"
+            >
+              {enviandoEmail ? (
+                <>
+                  <Send className="h-4 w-4 mr-2 animate-pulse" />
+                  <span className="text-responsive-sm">Enviando E-mail...</span>
+                </>
+              ) : (
+                <>
+                  <MailIcon className="h-4 w-4 mr-2" />
+                  <span className="text-responsive-sm">Enviar para E-mail</span>
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       {/* Importar Dados */}
-      <Card>
+      <Card className="card-3d border-border/60">
         <CardHeader className="p-responsive">
           <CardTitle className="flex items-center gap-2 text-responsive-lg">
-            <Upload className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-            Importar Dados
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-primary" />
+            Restaurar Backup
           </CardTitle>
           <CardDescription className="text-responsive-sm">
-            Restaure seus dados a partir de um arquivo de backup
+            Recupere seus dados a partir de um arquivo de backup (.json)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-responsive">
-          <Alert>
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <AlertDescription className="text-responsive-xs">
-              A importação irá adicionar os dados do backup ao sistema. Dados duplicados serão atualizados.
-              Atualmente suportamos apenas importação de arquivos JSON.
+          <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/30">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
+            <AlertDescription className="text-responsive-xs text-amber-800 dark:text-amber-400 font-medium">
+              A restauração irá mesclar os dados do arquivo com os dados atuais. 
+              Certifique-se de que o arquivo é um backup válido gerado por este sistema.
             </AlertDescription>
           </Alert>
 
-          <div className="border-2 border-dashed rounded-lg p-6 sm:p-8 text-center touch-manipulation">
+          <div className="border-2 border-dashed border-primary/20 rounded-xl p-6 sm:p-10 text-center touch-manipulation bg-primary/5 hover:bg-primary/10 transition-colors">
             <input
               type="file"
               id="file-upload"
-              accept=".json,.csv,.sql"
+              accept=".json"
               onChange={importarDados}
               disabled={importando}
               className="hidden"
             />
             <label
               htmlFor="file-upload"
-              className="cursor-pointer flex flex-col items-center gap-3"
+              className="cursor-pointer flex flex-col items-center gap-4"
             >
               {importando ? (
                 <>
-                  <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-primary animate-pulse" />
-                  <p className="font-medium text-responsive-base">Importando dados...</p>
-                  <p className="text-responsive-sm text-muted-foreground">Aguarde, isso pode levar alguns instantes</p>
+                  <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                  <p className="font-bold text-responsive-base text-primary">Restaurando Dados...</p>
+                  <p className="text-responsive-sm text-muted-foreground">Por favor, não feche a página</p>
                 </>
               ) : (
                 <>
-                  <File className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
-                  <p className="font-medium text-responsive-base">Clique para selecionar arquivo</p>
-                  <p className="text-responsive-sm text-muted-foreground">
-                    Suporta: JSON, CSV, SQL (máx. 10MB)
-                  </p>
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                    <File className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-responsive-base">Clique ou arraste o arquivo aqui</p>
+                    <p className="text-responsive-xs text-muted-foreground">
+                      Somente arquivos .JSON (máx. 10MB)
+                    </p>
+                  </div>
                 </>
               )}
             </label>
@@ -561,51 +631,43 @@ export function ConfiguracaoBackup() {
       </Card>
 
       {/* Backup Automático */}
-      <Card>
+      <Card className="card-3d border-primary/10">
         <CardHeader className="p-responsive">
           <CardTitle className="flex items-center gap-2 text-responsive-lg">
-            <Database className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-            Backup Automático Programado
+            <Database className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-primary" />
+            Lembrete de Backup Automático
           </CardTitle>
           <CardDescription className="text-responsive-sm">
-            Configure backups automáticos periódicos dos seus dados
+            Configure alertas periódicos para nunca esquecer de salvar seus dados
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-responsive">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border rounded-xl bg-muted/30">
             <div className="flex-1 min-w-0">
-              <Label className="text-responsive-base font-medium">Ativar Backup Automático</Label>
+              <Label className="text-responsive-base font-bold">Ativar Alertas de Backup</Label>
               <p className="text-responsive-xs text-muted-foreground mt-1">
-                Quando ativado, você será notificado para fazer backup
+                O sistema lembrará você de exportar seus dados conforme a frequência escolhida
               </p>
             </div>
             <Switch
-              checked={localConfig.backup_automatico || false}
-              onCheckedChange={(checked) => {
-                const newConfig = { ...localConfig, backup_automatico: checked };
-                setLocalConfig(newConfig);
-                salvarBackup(newConfig);
-              }}
-              className="flex-shrink-0"
+              checked={localConfig.backup_automatico}
+              onCheckedChange={(checked) => handleUpdateConfig('backup_automatico', checked)}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
           {localConfig.backup_automatico && (
-            <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="space-y-3">
-                <Label className="text-responsive-sm">Frequência do Backup:</Label>
+                <Label className="text-responsive-sm font-bold">Frequência do Lembrete:</Label>
                 <Select
-                  value={configuracaoBackup?.frequencia_backup || 'semanal'}
-                  onValueChange={(value) => {
-                    const newConfig = { ...localConfig, frequencia_backup: value as 'diario' | 'semanal' | 'mensal' };
-                    setLocalConfig(newConfig);
-                    salvarBackup(newConfig);
-                  }}
+                  value={localConfig.frequencia_backup}
+                  onValueChange={(value) => handleUpdateConfig('frequencia_backup', value)}
                 >
-                  <SelectTrigger className="select-responsive">
+                  <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="diario">Diariamente</SelectItem>
                     <SelectItem value="semanal">Semanalmente</SelectItem>
                     <SelectItem value="mensal">Mensalmente</SelectItem>
@@ -613,113 +675,71 @@ export function ConfiguracaoBackup() {
                 </Select>
               </div>
 
-              {configuracaoBackup?.frequencia_backup === 'semanal' && (
-                <div className="space-y-3">
-                  <Label className="text-responsive-sm">Dia da Semana:</Label>
-                  <Select
-                    value={configuracaoBackup?.dia_backup?.toString() || '0'}
-                    onValueChange={(value) => {
-                      const newConfig = { ...localConfig, dia_backup: parseInt(value) };
-                      setLocalConfig(newConfig);
-                      salvarBackup(newConfig);
-                    }}
-                  >
-                    <SelectTrigger className="select-responsive">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Domingo</SelectItem>
-                      <SelectItem value="1">Segunda-feira</SelectItem>
-                      <SelectItem value="2">Terça-feira</SelectItem>
-                      <SelectItem value="3">Quarta-feira</SelectItem>
-                      <SelectItem value="4">Quinta-feira</SelectItem>
-                      <SelectItem value="5">Sexta-feira</SelectItem>
-                      <SelectItem value="6">Sábado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {configuracaoBackup?.frequencia_backup === 'mensal' && (
-                <div className="space-y-3">
-                  <Label className="text-responsive-sm">Dia do Mês:</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="28"
-                    value={configuracaoBackup?.dia_backup || 1}
-                    onChange={(e) => {
-                      const newConfig = { ...localConfig, dia_backup: parseInt(e.target.value) };
-                      setLocalConfig(newConfig);
-                    }}
-                    onBlur={() => salvarBackup(localConfig)}
-                    className="input-responsive"
-                  />
-                  <p className="text-responsive-xs text-muted-foreground">
-                    Escolha entre 1 e 28 (evita problemas com meses diferentes)
-                  </p>
-                </div>
-              )}
-
               <div className="space-y-3">
-                <Label className="text-responsive-sm">Horário do Backup:</Label>
+                <Label className="text-responsive-sm font-bold">Horário Preferencial:</Label>
                 <Input
                   type="time"
-                  value={configuracaoBackup?.hora_backup || '02:00'}
-                  onChange={(e) => {
-                    const newConfig = { ...localConfig, hora_backup: e.target.value };
-                    setLocalConfig(newConfig);
-                  }}
-                  onBlur={() => salvarBackup(localConfig)}
-                  className="input-responsive"
+                  value={localConfig.hora_backup}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, hora_backup: e.target.value }))}
+                  onBlur={(e) => handleUpdateConfig('hora_backup', e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-responsive-sm">Email para Notificação (opcional):</Label>
+              <div className="space-y-3 sm:col-span-2">
+                <Label className="text-responsive-sm font-bold">Email para Lembrete (opcional):</Label>
                 <Input
                   type="email"
                   placeholder="seu@email.com"
-                  value={localConfig.email_backup || ''}
-                  onChange={(e) => {
-                    const newConfig = { ...localConfig, email_backup: e.target.value };
-                    setLocalConfig(newConfig);
-                    salvarBackup(newConfig);
-                  }}
-                  className="input-responsive"
+                  value={localConfig.email_backup}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, email_backup: e.target.value }))}
+                  onBlur={(e) => handleUpdateConfig('email_backup', e.target.value)}
+                  className="h-11 rounded-xl"
                 />
-                <p className="text-responsive-xs text-muted-foreground">
-                  Receba lembretes por email quando for hora de fazer backup
-                </p>
               </div>
 
               {configuracaoBackup?.ultimo_backup && (
-                <Alert>
-                  <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                  <AlertDescription className="text-responsive-xs">
-                    Último backup realizado em: {new Date(configuracaoBackup.ultimo_backup).toLocaleString('pt-BR')}
-                  </AlertDescription>
-                </Alert>
+                <div className="sm:col-span-2">
+                  <Alert className="bg-primary/5 border-primary/10 rounded-xl">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-responsive-xs font-medium text-primary">
+                      Último backup exportado em: {new Date(configuracaoBackup.ultimo_backup).toLocaleString('pt-BR')}
+                    </AlertDescription>
+                  </Alert>
+                </div>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Informações de Segurança */}
-      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader className="p-responsive">
-          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-responsive-lg">
+          <CardTitle className="flex items-center gap-2 text-primary text-responsive-lg">
             <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-            Informações Importantes
+            Segurança dos Seus Dados
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 p-responsive">
-          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Segurança:</strong> Os backups são gerados localmente no seu dispositivo</p>
-          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Privacidade:</strong> Nenhum dado é enviado para servidores externos</p>
-          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Formatos:</strong> JSON é recomendado para backup completo, CSV para análise em planilhas</p>
-          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">✅ <strong>Frequência:</strong> Recomendamos fazer backups semanalmente</p>
-          <p className="text-responsive-xs text-blue-700 dark:text-blue-300">⚠️ <strong>Atenção:</strong> Guarde seus backups em local seguro</p>
+        <CardContent className="space-y-3 p-responsive">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex items-start gap-2 text-responsive-xs">
+              <span className="text-primary font-bold">✓</span>
+              <p><strong>Privacidade Total:</strong> Os dados são gerados e processados localmente no seu navegador.</p>
+            </div>
+            <div className="flex items-start gap-2 text-responsive-xs">
+              <span className="text-primary font-bold">✓</span>
+              <p><strong>Backup Universal:</strong> O formato JSON permite que seus dados sejam lidos por qualquer sistema.</p>
+            </div>
+            <div className="flex items-start gap-2 text-responsive-xs">
+              <span className="text-primary font-bold">✓</span>
+              <p><strong>Recomendação:</strong> Faça backup semanalmente e guarde o arquivo em um local seguro (nuvem ou pendrive).</p>
+            </div>
+            <div className="flex items-start gap-2 text-responsive-xs">
+              <span className="text-primary font-bold">✓</span>
+              <p><strong>Restauração:</strong> Use a função de importar apenas em caso de perda de dados ou migração de conta.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
