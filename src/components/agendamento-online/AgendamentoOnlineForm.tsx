@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, User, Mail, Phone, CreditCard, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft, ShoppingBag, Check, Scissors, Star, Timer, Tag, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Calendar, Clock, User, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft, ShoppingBag, Check, Scissors, Timer, Tag, LayoutGrid, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
@@ -717,7 +718,7 @@ Você receberá uma confirmação em breve.
                             Selecione o Dia
                           </Label>
                           
-                          <div className="flex gap-3 overflow-x-auto pb-4 pt-2 px-1 no-scrollbar -mx-4 sm:mx-0 sm:px-0">
+                          <div className="flex gap-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide -mx-4 sm:mx-0 sm:px-0">
                             {Array.from({ length: 14 }).map((_, i) => {
                               const d = new Date();
                               d.setDate(d.getDate() + i);
