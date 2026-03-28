@@ -27,7 +27,9 @@ export function AgendamentoOnlineForm() {
   const {
     loading,
     servicos,
+    servicosError,
     produtos,
+    horariosError,
     carregarServicos,
     carregarProdutosPublicos,
     calcularHorariosDisponiveis,
@@ -375,7 +377,8 @@ Você receberá uma confirmação em breve.
     if (!data) return false;
     const dataSelecionada = new Date(data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
-    
+
+    if (configuracoes.length === 0) return true;
     return isDiaAtivo(diaSemana);
   };
 
@@ -635,6 +638,27 @@ Você receberá uma confirmação em breve.
                       </div>
                     </div>
 
+                    {loading && servicos.length === 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-[140px] rounded-[2rem] border border-primary/10 bg-white/50 animate-pulse"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {!loading && servicos.length === 0 && (
+                      <Alert className="rounded-2xl border-amber-200 bg-amber-50">
+                        <AlertCircle className="h-4 w-4 text-amber-700" />
+                        <AlertDescription className="text-amber-900 text-sm font-medium">
+                          Nenhum serviço disponível para agendamento agora.
+                          {servicosError ? ` (${servicosError})` : ''}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {servicos.map((servico) => (
                         <button
@@ -725,7 +749,7 @@ Você receberá uma confirmação em breve.
                               const iso = d.toISOString().split('T')[0];
                               const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
                               const diaMes = d.getDate();
-                              const isAtivo = isDiaAtivo(d.getDay());
+                              const isAtivo = configuracoes.length === 0 ? true : isDiaAtivo(d.getDay());
                               const isSelected = formData.data === iso;
 
                               return (
@@ -815,6 +839,11 @@ Você receberá uma confirmação em breve.
                                 <div className="col-span-full py-8 text-center text-muted-foreground bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
                                   <Timer className="w-8 h-8 mx-auto mb-2 opacity-20" />
                                   <span className="text-xs font-black uppercase">Sem horários para este dia</span>
+                                  {horariosError && (
+                                    <div className="mt-2 text-[10px] font-bold opacity-70">
+                                      {horariosError}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>

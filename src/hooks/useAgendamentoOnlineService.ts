@@ -8,7 +8,9 @@ export const useAgendamentoOnlineService = () => {
   const db = supabasePublic as any;
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
+  const [servicosError, setServicosError] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string }[]>([]);
+  const [horariosError, setHorariosError] = useState<string | null>(null);
   const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
 
   const resolveOwnerUserId = useCallback(async (): Promise<string | null> => {
@@ -38,18 +40,50 @@ export const useAgendamentoOnlineService = () => {
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
+    setLoading(true);
+    setServicosError(null);
     try {
-      const { data, error } = await db
-        .from('servicos_public')
-        .select('*');
+      const ownerId = await resolveOwnerUserId();
 
-      if (error) throw error;
-      setServicos(data || []);
+      const primary = await db.from('servicos_public').select('*');
+      if (!primary.error && Array.isArray(primary.data) && primary.data.length > 0) {
+        setServicos(primary.data);
+        return;
+      }
+
+      const fallback = ownerId
+        ? await db
+            .from('servicos')
+            .select('id, nome, descricao, valor, duracao, user_id')
+            .eq('user_id', ownerId)
+        : await db
+            .from('servicos')
+            .select('id, nome, descricao, valor, duracao, user_id')
+            .limit(200);
+
+      if (!fallback.error && Array.isArray(fallback.data) && fallback.data.length > 0) {
+        setServicos(fallback.data);
+        return;
+      }
+
+      const primaryErr = primary.error ? `${primary.error.code || ''} ${primary.error.message || ''}`.trim() : '';
+      const fallbackErr = fallback.error ? `${fallback.error.code || ''} ${fallback.error.message || ''}`.trim() : '';
+
+      if (primaryErr || fallbackErr) {
+        throw new Error([primaryErr, fallbackErr].filter(Boolean).join(' | '));
+      }
+
+      setServicos([]);
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
+      const msg = error instanceof Error ? error.message : 'Erro ao carregar serviços';
+      setServicosError(msg);
       toast.error("Não foi possível carregar a lista de serviços disponíveis.");
+      setServicos([]);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [resolveOwnerUserId]);
 
   // Carregar produtos disponíveis (públicos ou fallback)
   const carregarProdutosPublicos = useCallback(async () => {
@@ -87,6 +121,7 @@ export const useAgendamentoOnlineService = () => {
     servicoId: string, 
     data: string
   ): Promise<HorarioDisponivel[]> => {
+    setHorariosError(null);
     const servico = servicos.find(s => s.id === servicoId);
     if (!servico) {
       console.log('Serviço não encontrado:', servicoId);
@@ -96,7 +131,10 @@ export const useAgendamentoOnlineService = () => {
     try {
       const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
       const userId = servico.user_id || (await resolveOwnerUserId());
-      if (!userId) return [];
+      if (!userId) {
+        setHorariosError('Nenhum salão ativo encontrado (user_id não resolvido).');
+        return [];
+      }
 
       // Usar função melhorada do Supabase que considera duração e conflitos
       const { data: horariosResult, error } = await db.rpc('buscar_horarios_com_multiplos_intervalos', {
@@ -107,6 +145,7 @@ export const useAgendamentoOnlineService = () => {
 
       if (error) {
         console.error('Erro ao buscar horários:', error);
+        setHorariosError(`${error.code || ''} ${error.message || ''}`.trim() || 'Erro ao buscar horários');
         return [];
       }
 
@@ -123,6 +162,7 @@ export const useAgendamentoOnlineService = () => {
       return horariosFormatados;
     } catch (error) {
       console.error('Erro ao calcular horários disponíveis:', error);
+      setHorariosError(error instanceof Error ? error.message : 'Erro ao calcular horários disponíveis');
       return [];
     }
   }, [servicos]);
@@ -254,7 +294,9 @@ export const useAgendamentoOnlineService = () => {
   return {
     loading,
     servicos,
+    servicosError,
     produtos,
+    horariosError,
     carregarServicos,
     carregarProdutosPublicos,
     calcularHorariosDisponiveis,
