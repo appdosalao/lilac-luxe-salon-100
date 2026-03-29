@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioCadastro } from '@/types/usuario';
 import { AppLogo } from '@/components/branding/AppLogo';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthFooter } from '@/components/branding/AuthFooter';
@@ -333,8 +333,14 @@ const Cadastro = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 
-               planType === 'trial' ? 'Começar Teste Grátis' : 'Criar Conta e Assinar'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                planType === 'trial' ? 'Começar Teste Grátis' : 'Criar Conta e Assinar'
+              )}
             </Button>
 
             <div className="text-center">
