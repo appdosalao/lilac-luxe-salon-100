@@ -151,12 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nome_completo: dados.nome_completo,
           nome_personalizado_app: dados.nome_personalizado_app,
           telefone: dados.telefone,
+          tema_preferencia: dados.tema_preferencia,
         },
       },
     });
 
     if (error) {
-      return false;
+      console.error('Erro no Supabase Auth (Sign Up):', error.message);
+      throw error;
     }
 
     return true;

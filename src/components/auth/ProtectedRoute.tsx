@@ -58,8 +58,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   const subscriptionStatus = usuario?.subscription_status ?? null;
   const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date).getTime() : null;
+  const trialEligible =
+    subscriptionStatus === 'trial' ||
+    subscriptionStatus === 'inactive' ||
+    subscriptionStatus === null ||
+    subscriptionStatus === '';
   const trialValid =
-    subscriptionStatus === 'trial' &&
+    trialEligible &&
     typeof trialStart === 'number' &&
     Number.isFinite(trialStart) &&
     Date.now() < trialStart + 7 * 24 * 60 * 60 * 1000;

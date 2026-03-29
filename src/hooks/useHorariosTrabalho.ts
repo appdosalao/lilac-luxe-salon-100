@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useSupabaseConfiguracoes } from './useSupabaseConfiguracoes';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ConfiguracaoHorario {
@@ -22,25 +21,19 @@ export const useHorariosTrabalho = (userId?: string) => {
 
   const carregarConfiguracoes = async () => {
     try {
+      const resolvedUserId = userId || (await supabase.auth.getUser()).data.user?.id;
+      if (!resolvedUserId) {
+        setConfiguracoes([]);
+        return;
+      }
+
       let query = supabase
         .from('configuracoes_horarios')
         .select('*')
         .eq('ativo', true)
         .order('dia_semana');
 
-      // Se não foi passado userId específico, pegar o primeiro usuário disponível
-      if (!userId) {
-        const { data: usuarios } = await supabase
-          .from('usuarios')
-          .select('id')
-          .limit(1);
-        
-        if (usuarios && usuarios.length > 0) {
-          query = query.eq('user_id', usuarios[0].id);
-        }
-      } else {
-        query = query.eq('user_id', userId);
-      }
+      query = query.eq('user_id', resolvedUserId);
 
       const { data, error } = await query;
 
@@ -48,6 +41,7 @@ export const useHorariosTrabalho = (userId?: string) => {
       setConfiguracoes(data || []);
     } catch (error) {
       console.error('Erro ao carregar configurações de horário:', error);
+      setConfiguracoes([]);
     } finally {
       setLoading(false);
     }

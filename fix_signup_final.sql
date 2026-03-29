@@ -41,7 +41,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'nome_completo', split_part(NEW.email, '@', 1)),
     COALESCE(NEW.raw_user_meta_data->>'nome_personalizado_app', 'Meu Salão'),
     COALESCE(NEW.raw_user_meta_data->>'telefone', ''),
-    COALESCE(NEW.raw_user_meta_data->>'tema_preferencia', 'light'),
+    COALESCE(NEW.raw_user_meta_data->>'tema_preferencia', 'feminino'),
     NOW(),      -- Trial start
     FALSE,      -- Trial used
     'trial',    -- Status

@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "tsx src/server.ts",
-    "server:dev": "tsx watch src/server.ts"
+    "server:dev": "tsx watch src/server.ts",
+    "booking:smoke": "tsx scripts/booking-smoke.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

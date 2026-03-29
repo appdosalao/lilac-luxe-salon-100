@@ -11,10 +11,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UsuarioCadastro } from '@/types/usuario';
 import { AppLogo } from '@/components/branding/AppLogo';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, ShieldCheck, Sparkles, CreditCard, Clock, Scissors, Star } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthFooter } from '@/components/branding/AuthFooter';
+import { Badge } from '@/components/ui/badge';
 
 const cadastroSchema = z.object({
   nome_personalizado_app: z.string().min(1, 'Nome da profissional/salão é obrigatório'),
@@ -34,7 +35,7 @@ const Cadastro = () => {
   const { cadastrar } = useSupabaseAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [planType, setPlanType] = useState<'trial' | 'paid'>('trial');
+  const [isBuying, setIsBuying] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<UsuarioCadastro>({
     resolver: zodResolver(cadastroSchema),
@@ -48,6 +49,7 @@ const Cadastro = () => {
   const [showSenha, setShowSenha] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
   const calcStrength = (s: string) => {
     let score = 0;
     if (s.length >= 6) score += 25;
@@ -58,10 +60,8 @@ const Cadastro = () => {
   };
   const strength = calcStrength(senhaValor);
 
-  // Aplicar tema em tempo real quando o usuário escolhe
   useEffect(() => {
     if (temaEscolhido) {
-      console.log('Aplicando tema preview:', temaEscolhido);
       document.documentElement.setAttribute('data-theme', temaEscolhido);
       localStorage.setItem('app-theme', temaEscolhido);
     }
@@ -77,10 +77,15 @@ const Cadastro = () => {
         setIsLoading(false);
         return;
       }
+      
       const ok = await cadastrar(data);
 
       if (ok) {
-        navigate('/planos');
+        if (isBuying) {
+          navigate('/checkout');
+        } else {
+          navigate('/'); // Go to dashboard with trial
+        }
       } else {
         setError('Erro ao criar conta');
       }
@@ -91,264 +96,336 @@ const Cadastro = () => {
     }
   };
 
+  const handleBuyNow = (e: React.MouseEvent) => {
+    setIsBuying(true);
+    // Submit form manually
+    handleSubmit(onSubmit)(e);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-2">
-            <AppLogo size={56} rounded="xl" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4 lg:p-8">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        
+        {/* Lado Esquerdo - Marketing & Info */}
+        <div className="hidden lg:flex flex-col space-y-8 pr-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-2">
+              <Sparkles className="h-4 w-4" />
+              O Salão de Bolso evoluiu
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+              Gerencie seu salão de <span className="text-primary">forma profissional</span> e descomplicada.
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-lg">
+              A ferramenta completa que cabe na palma da sua mão. Agendamentos, clientes, financeiro e muito mais.
+            </p>
           </div>
-          <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
-          <CardDescription>
-            Cadastre-se para começar a usar o sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
-            {/* Seleção de Plano */}
-            <div className="space-y-3">
-              <Label className="text-base">Escolha seu plano *</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div 
-                  className="flex flex-col cursor-pointer"
-                  onClick={() => !isLoading && setPlanType('trial')}
-                >
-                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
-                    planType === 'trial' 
-                      ? 'border-primary shadow-lg' 
-                      : 'border-border'
-                  }`}>
-                    <div className="text-center">
-                      <div className="text-3xl mb-2">🎉</div>
-                      <p className="font-semibold text-lg mb-1">7 Dias Grátis</p>
-                      <p className="text-sm text-muted-foreground mb-3">Sem necessidade de cartão</p>
-                      <p className="text-xs text-muted-foreground">Acesso completo por 7 dias</p>
+          <div className="grid gap-6">
+            <div className="flex gap-4 items-start">
+              <div className="mt-1 h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Teste Grátis por 7 Dias</h3>
+                <p className="text-muted-foreground">Experimente todas as funcionalidades sem compromisso. Sem necessidade de cartão.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start">
+              <div className="mt-1 h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Segurança de Dados</h3>
+                <p className="text-muted-foreground">Suas informações e as de seus clientes estão seguras com criptografia de ponta.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start">
+              <div className="mt-1 h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Star className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Design Moderno e Intuitivo</h3>
+                <p className="text-muted-foreground">Feito pensando na agilidade do seu dia a dia, com interface clara e rápida.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-border/50">
+            <div className="flex items-center gap-6">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-10 w-10 rounded-full border-2 border-background bg-muted overflow-hidden">
+                    <img src={`https://i.pravatar.cc/150?u=${i}`} alt="Avatar" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-foreground">Junte-se a +1.000 profissionais</span> que já transformaram seus salões.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Lado Direito - Formulário */}
+        <div className="flex flex-col">
+          <Card className="shadow-2xl border-primary/10 overflow-hidden">
+            <div className="bg-primary/5 p-4 border-b border-primary/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary" />
+                <span className="text-sm font-semibold text-primary">7 DIAS DE TESTE GRÁTIS</span>
+              </div>
+              <Badge variant="secondary" className="bg-white dark:bg-black font-bold">OFERTA LIMITADA</Badge>
+            </div>
+            
+            <CardHeader className="space-y-1 text-center pt-8">
+              <div className="flex justify-center mb-2 lg:hidden">
+                <AppLogo size={48} rounded="xl" />
+              </div>
+              <CardTitle className="text-3xl font-bold">Crie sua conta</CardTitle>
+              <CardDescription className="text-base">
+                Comece agora mesmo a profissionalizar seu salão.
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="pt-2">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                {error && (
+                  <Alert variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
+                    <AlertDescription className="font-medium">{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome_personalizado_app" className="font-semibold">Nome do seu Negócio *</Label>
+                    <div className="relative">
+                      <Input
+                        id="nome_personalizado_app"
+                        placeholder="Ex: Studio Beauty"
+                        {...register('nome_personalizado_app')}
+                        disabled={isLoading}
+                      />
                     </div>
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
-                      planType === 'trial'
-                        ? 'bg-primary border-primary'
-                        : 'border-border'
-                    }`}></div>
+                    {errors.nome_personalizado_app && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.nome_personalizado_app.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nome_completo" className="font-semibold">Seu Nome Completo *</Label>
+                    <Input
+                      id="nome_completo"
+                      placeholder="Ex: Camila Lopes"
+                      {...register('nome_completo')}
+                      disabled={isLoading}
+                    />
+                    {errors.nome_completo && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.nome_completo.message}</p>
+                    )}
                   </div>
                 </div>
-                <div 
-                  className="flex flex-col cursor-pointer"
-                  onClick={() => !isLoading && setPlanType('paid')}
-                >
-                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
-                    planType === 'paid' 
-                      ? 'border-primary shadow-lg' 
-                      : 'border-border'
-                  }`}>
-                    <div className="text-center">
-                      <div className="text-3xl mb-2">💳</div>
-                      <p className="font-semibold text-lg mb-1">Assinar Agora</p>
-                      <p className="text-sm text-muted-foreground mb-3">R$ 20,00/mês</p>
-                      <p className="text-xs text-muted-foreground">Cobrança recorrente</p>
-                    </div>
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
-                      planType === 'paid'
-                        ? 'bg-primary border-primary'
-                        : 'border-border'
-                    }`}></div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="font-semibold">E-mail Profissional *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="contato@empresa.com"
+                      {...register('email')}
+                      disabled={isLoading}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="telefone" className="font-semibold">WhatsApp (com DDD) *</Label>
+                    <Input
+                      id="telefone"
+                      placeholder="(11) 99999-9999"
+                      {...register('telefone')}
+                      disabled={isLoading}
+                    />
+                    {errors.telefone && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.telefone.message}</p>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="nome_personalizado_app">Nome da Profissional / Nome do Salão *</Label>
-              <Input
-                id="nome_personalizado_app"
-                placeholder="Ex: Camila Hair Studio"
-                {...register('nome_personalizado_app')}
-                disabled={isLoading}
-              />
-              {errors.nome_personalizado_app && (
-                <p className="text-sm text-destructive">{errors.nome_personalizado_app.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="nome_completo">Nome Completo da Responsável *</Label>
-              <Input
-                id="nome_completo"
-                placeholder="Ex: Camila Lopes"
-                {...register('nome_completo')}
-                disabled={isLoading}
-              />
-              {errors.nome_completo && (
-                <p className="text-sm text-destructive">{errors.nome_completo.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                {...register('email')}
-                disabled={isLoading}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone com DDD *</Label>
-              <Input
-                id="telefone"
-                placeholder="(11) 99999-9999"
-                {...register('telefone')}
-                disabled={isLoading}
-              />
-              {errors.telefone && (
-                <p className="text-sm text-destructive">{errors.telefone.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-base">Escolha o Esquema de Cores do App *</Label>
-              <p className="text-sm text-muted-foreground">Esta escolha definirá as cores de todo o aplicativo</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div 
-                  className="flex flex-col cursor-pointer group"
-                  onClick={() => !isLoading && setValue('tema_preferencia', 'feminino')}
-                >
-                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
-                    temaEscolhido === 'feminino' 
-                      ? 'border-[hsl(267,83%,58%)] shadow-lg' 
-                      : 'border-border'
-                  }`}>
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(267 83% 58%), hsl(320 85% 75%))' }}></div>
-                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(320 85% 75%), hsl(267 83% 58%))' }}></div>
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Esquema de Cores do seu App</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div 
+                      className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-primary/50 bg-card ${
+                        temaEscolhido === 'feminino' 
+                          ? 'border-primary shadow-md ring-2 ring-primary/10' 
+                          : 'border-border'
+                      }`}
+                      onClick={() => !isLoading && setValue('tema_preferencia', 'feminino')}
+                    >
+                      <div className="flex justify-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, hsl(267 83% 58%), hsl(320 85% 75%))' }}></div>
+                      </div>
+                      <p className="text-center font-bold text-sm">Feminino</p>
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 transition-all ${
+                        temaEscolhido === 'feminino' ? 'bg-primary border-primary' : 'border-border'
+                      }`}></div>
                     </div>
-                    <p className="text-center font-semibold text-lg mb-1">Feminino</p>
-                    <p className="text-center text-sm text-muted-foreground">Lilás e Rosa</p>
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
-                      temaEscolhido === 'feminino'
-                        ? 'bg-[hsl(267,83%,58%)] border-[hsl(267,83%,58%)]'
-                        : 'border-border'
-                    }`}></div>
+                    
+                    <div 
+                      className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-primary/50 bg-card ${
+                        temaEscolhido === 'masculino' 
+                          ? 'border-primary shadow-md ring-2 ring-primary/10' 
+                          : 'border-border'
+                      }`}
+                      onClick={() => !isLoading && setValue('tema_preferencia', 'masculino')}
+                    >
+                      <div className="flex justify-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full" style={{ background: 'linear-gradient(135deg, hsl(217 91% 60%), hsl(220 60% 50%))' }}></div>
+                      </div>
+                      <p className="text-center font-bold text-sm">Masculino</p>
+                      <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 transition-all ${
+                        temaEscolhido === 'masculino' ? 'bg-primary border-primary' : 'border-border'
+                      }`}></div>
+                    </div>
                   </div>
                 </div>
-                <div 
-                  className="flex flex-col cursor-pointer group"
-                  onClick={() => !isLoading && setValue('tema_preferencia', 'masculino')}
-                >
-                  <div className={`relative w-full p-5 border-2 rounded-xl transition-all hover:shadow-md bg-card ${
-                    temaEscolhido === 'masculino' 
-                      ? 'border-[hsl(217,91%,60%)] shadow-lg' 
-                      : 'border-border'
-                  }`}>
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(217 91% 60%), hsl(220 60% 50%))' }}></div>
-                      <div className="w-10 h-10 rounded-full shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(220 60% 50%), hsl(217 91% 60%))' }}></div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="senha" title="Crie uma senha forte">Crie sua Senha *</Label>
+                    <div className="relative">
+                      <Input
+                        id="senha"
+                        type={showSenha ? 'text' : 'password'}
+                        placeholder="Mínimo 6 caracteres"
+                        {...register('senha')}
+                        disabled={isLoading}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSenha(v => !v)}
+                      >
+                        {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
-                    <p className="text-center font-semibold text-lg mb-1">Masculino</p>
-                    <p className="text-center text-sm text-muted-foreground">Azul e Cinza</p>
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all ${
-                      temaEscolhido === 'masculino'
-                        ? 'bg-[hsl(217,91%,60%)] border-[hsl(217,91%,60%)]'
-                        : 'border-border'
-                    }`}></div>
+                    <Progress value={strength} className="h-1.5 mt-2" />
+                    {errors.senha && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.senha.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmar_senha">Confirme a Senha *</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmar_senha"
+                        type={showConfirm ? 'text' : 'password'}
+                        placeholder="Digite novamente"
+                        {...register('confirmar_senha')}
+                        disabled={isLoading}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowConfirm(v => !v)}
+                      >
+                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.confirmar_senha && (
+                      <p className="text-xs text-destructive mt-1 font-medium">{errors.confirmar_senha.message}</p>
+                    )}
                   </div>
                 </div>
-              </div>
-              {errors.tema_preferencia && (
-                <p className="text-sm text-destructive">{errors.tema_preferencia.message}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="senha">Senha *</Label>
-              <div className="relative">
-                <Input
-                  id="senha"
-                  type={showSenha ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
-                  {...register('senha')}
-                  disabled={isLoading}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setShowSenha(v => !v)}
-                >
-                  {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <div className="space-y-2">
-                <Progress value={strength} className="h-2" />
-                <p className="text-xs text-muted-foreground">
-                  Força da senha: {strength <= 25 ? 'fraca' : strength <= 50 ? 'média' : strength <= 75 ? 'boa' : 'excelente'}
-                </p>
-              </div>
-              {errors.senha && (
-                <p className="text-sm text-destructive">{errors.senha.message}</p>
-              )}
-            </div>
+                <div className="flex items-start gap-3 pt-2">
+                  <Checkbox 
+                    id="terms" 
+                    checked={termsAccepted} 
+                    onCheckedChange={(c) => setTermsAccepted(!!c)} 
+                    className="mt-0.5 border-primary data-[state=checked]:bg-primary"
+                  />
+                  <Label htmlFor="terms" className="text-sm leading-tight text-muted-foreground">
+                    Eu aceito os <Link to="/termos" className="text-primary hover:underline font-semibold">termos de uso</Link> e <Link to="/privacidade" className="text-primary hover:underline font-semibold">políticas de privacidade</Link>.
+                  </Label>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmar_senha">Confirmar Senha *</Label>
-              <div className="relative">
-                <Input
-                  id="confirmar_senha"
-                  type={showConfirm ? 'text' : 'password'}
-                  placeholder="Digite a senha novamente"
-                  {...register('confirmar_senha')}
-                  disabled={isLoading}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  aria-label={showConfirm ? 'Ocultar senha' : 'Mostrar senha'}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setShowConfirm(v => !v)}
-                >
-                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {errors.confirmar_senha && (
-                <p className="text-sm text-destructive">{errors.confirmar_senha.message}</p>
-              )}
-            </div>
+                <div className="flex flex-col gap-4 pt-4">
+                  <Button 
+                    type="submit" 
+                    className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all" 
+                    disabled={isLoading}
+                    onClick={() => setIsBuying(false)}
+                  >
+                    {isLoading && !isBuying ? (
+                      <span className="flex items-center gap-2">Criando conta...</span>
+                    ) : (
+                      <span className="flex items-center gap-2">Começar Teste Grátis <Clock className="h-5 w-5 ml-1" /></span>
+                    )}
+                  </Button>
 
-            <div className="flex items-start gap-3">
-              <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(c) => setTermsAccepted(!!c)} />
-              <Label htmlFor="terms" className="text-sm text-muted-foreground">
-                Aceito os termos de uso e políticas de privacidade
-              </Label>
-            </div>
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground font-medium">Ou se preferir</span>
+                    </div>
+                  </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 
-               planType === 'trial' ? 'Começar Teste Grátis' : 'Criar Conta e Assinar'}
-            </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="w-full h-14 text-lg font-bold border-2 border-primary/20 hover:bg-primary/5 hover:border-primary/50 transition-all text-primary group"
+                    disabled={isLoading}
+                    onClick={handleBuyNow}
+                  >
+                    {isLoading && isBuying ? (
+                      <span className="flex items-center gap-2 text-primary">Processando...</span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Comprar Agora (Acesso Vitalício)
+                        <CreditCard className="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    )}
+                  </Button>
+                </div>
 
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">
-                Já tem uma conta?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Faça login aqui
-                </Link>
-              </div>
+                <div className="text-center pt-4">
+                  <div className="text-sm text-muted-foreground">
+                    Já tem uma conta?{' '}
+                    <Link to="/login" className="text-primary hover:underline font-bold">
+                      Faça login aqui
+                    </Link>
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+          
+          <div className="mt-8 flex items-center justify-center gap-6 grayscale opacity-60">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <ShieldCheck className="h-4 w-4" /> SSL SECURE
             </div>
-          </form>
-        </CardContent>
-        <AuthFooter />
-      </Card>
+            <div className="flex items-center gap-2 font-bold text-sm uppercase">
+              <CheckCircle2 className="h-4 w-4" /> Pagamento Seguro
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <AuthFooter />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

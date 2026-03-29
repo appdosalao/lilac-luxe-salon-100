@@ -63,14 +63,14 @@ const onboardingSteps = [
     ]
   },
   {
-    title: 'Sua Assinatura',
+    title: 'Seu Acesso',
     description: 'Aproveite todos os benefícios',
     icon: Bell,
     features: [
       '7 dias grátis para testar todas as funcionalidades',
-      'Apenas R$ 20,00/mês após o período de teste',
-      'Sem compromisso - cancele quando quiser',
-      'Suporte e atualizações constantes'
+      'Opção de Acesso Vitalício (pagamento único)',
+      'Sem mensalidades ou cobranças recorrentes',
+      'Suporte prioritário e atualizações constantes'
     ]
   }
 ];

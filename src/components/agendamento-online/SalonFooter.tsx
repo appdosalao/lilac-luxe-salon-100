@@ -1,8 +1,7 @@
 import { MapPin, Phone, Mail, Instagram, Facebook, Clock } from 'lucide-react';
-import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
+import type { ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 
-export function SalonFooter() {
-  const { config } = useConfigAgendamentoOnline();
+export function SalonFooter({ config }: { config: ConfigAgendamentoOnline }) {
 
   return (
     <footer className="w-full bg-card border-t border-border mt-8">

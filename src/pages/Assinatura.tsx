@@ -17,8 +17,13 @@ export default function Assinatura() {
   const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date) : null;
   const trialStartMs = trialStart ? trialStart.getTime() : null;
   const nowMs = Date.now();
+  const trialEligible =
+    usuario?.subscription_status === 'trial' ||
+    usuario?.subscription_status === 'inactive' ||
+    usuario?.subscription_status === null ||
+    usuario?.subscription_status === '';
   const trialValid =
-    usuario?.subscription_status === 'trial' &&
+    trialEligible &&
     typeof trialStartMs === 'number' &&
     Number.isFinite(trialStartMs) &&
     nowMs < trialStartMs + 7 * 24 * 60 * 60 * 1000;

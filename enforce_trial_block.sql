@@ -158,9 +158,9 @@ WITH CHECK (
   AND public.can_access_app(auth.uid())
 );
 
--- Tabela: FINANCEIRO / LANCAMENTOS
-DROP POLICY IF EXISTS "lancamentos_insert_policy" ON public.lancamentos_financeiros;
-CREATE POLICY "lancamentos_insert_policy" ON public.lancamentos_financeiros
+-- Tabela: LANCAMENTOS
+DROP POLICY IF EXISTS "lancamentos_insert_policy" ON public.lancamentos;
+CREATE POLICY "lancamentos_insert_policy" ON public.lancamentos
 FOR INSERT TO authenticated
 WITH CHECK (
   auth.uid() = user_id 
@@ -187,7 +187,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'nome_completo', split_part(NEW.email, '@', 1)),
     COALESCE(NEW.raw_user_meta_data->>'nome_personalizado_app', 'Meu Salão'),
     COALESCE(NEW.raw_user_meta_data->>'telefone', ''),
-    'light', 
+    COALESCE(NEW.raw_user_meta_data->>'tema_preferencia', 'feminino'), 
     NOW(),      -- INÍCIO DO TRIAL
     FALSE, 
     'trial',    -- STATUS INICIAL
@@ -196,7 +196,9 @@ BEGIN
   ON CONFLICT (id) DO UPDATE SET
     -- Se já existe, NÃO altera a data de trial original para evitar reset
     email = EXCLUDED.email,
-    updated_at = NOW();
+    updated_at = NOW(),
+    -- Garante que o tema seja respeitado se vier na meta
+    tema_preferencia = COALESCE(EXCLUDED.tema_preferencia, public.usuarios.tema_preferencia);
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN

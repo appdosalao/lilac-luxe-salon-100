@@ -1,17 +1,12 @@
 import { Camera } from 'lucide-react';
-import { useState } from 'react';
-import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 import { AppLogo } from '@/components/branding/AppLogo';
+import type { ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
 
-export function SalonHeader() {
-  const [imageError, setImageError] = useState(false);
-  const { config, loading } = useConfigAgendamentoOnline();
+export function SalonHeader({ config }: { config: ConfigAgendamentoOnline }) {
   
   // Imagem de capa grande (banner) - Prioridade para config.banner_url ou uma imagem padrão bonita de salão
   const bannerUrl = config.banner_url || "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600&auto=format&fit=crop";
   const logoUrl = config.logo_url;
-
-  if (loading) return <div className="h-48 sm:h-64 w-full bg-muted animate-pulse mb-12" />;
 
   return (
     <div className="w-full relative mb-12">

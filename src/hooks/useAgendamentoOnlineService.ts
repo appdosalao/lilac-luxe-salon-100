@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { supabasePublic } from '@/integrations/supabase/publicClient';
-import { supabase } from '@/integrations/supabase/client';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
 import { toast } from 'sonner';
 
@@ -14,10 +13,40 @@ export const useAgendamentoOnlineService = () => {
   const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
   const [publicIdCache, setPublicIdCache] = useState<string | null>(null);
 
+  const shouldDebug = () => {
+    try {
+      if (import.meta.env.DEV) return true;
+      return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugSupabase');
+    } catch {
+      return false;
+    }
+  };
+
+  const withTiming = async <T,>(op: string, fn: () => Promise<T>): Promise<T> => {
+    const startedAt = performance.now();
+    try {
+      const out = await fn();
+      if (shouldDebug()) console.debug('[booking]', op, 'ok', `${Math.round(performance.now() - startedAt)}ms`);
+      return out;
+    } catch (err) {
+      if (shouldDebug()) console.debug('[booking]', op, 'err', `${Math.round(performance.now() - startedAt)}ms`);
+      throw err;
+    }
+  };
+
   const getPublicIdFromUrl = () => {
     try {
       const params = new URLSearchParams(window.location.search);
       return params.get('s') || params.get('public_id') || params.get('salao') || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const getOwnerUserIdFromUrl = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('uid') || params.get('user_id') || params.get('owner') || '';
     } catch {
       return '';
     }
@@ -30,26 +59,23 @@ export const useAgendamentoOnlineService = () => {
       return fromUrl;
     }
     if (publicIdCache) return publicIdCache;
-
-    try {
-      const { data, error } = await db.rpc('get_default_public_id');
-      if (error) return '';
-      const next = data ? String(data) : '';
-      if (next) setPublicIdCache(next);
-      return next;
-    } catch {
-      return '';
-    }
+    return '';
   }, [publicIdCache]);
 
   const resolveOwnerUserId = useCallback(async (): Promise<string | null> => {
     if (ownerUserIdCache) return ownerUserIdCache;
 
     try {
+      const ownerFromUrl = getOwnerUserIdFromUrl();
+      if (ownerFromUrl) {
+        setOwnerUserIdCache(ownerFromUrl);
+        return ownerFromUrl;
+      }
+
       const publicId = await resolvePublicId();
 
       if (publicId) {
-        const { data, error } = await db.rpc('get_booking_owner_id', { p_public_id: publicId });
+        const { data, error } = await withTiming('rpc:get_booking_owner_id', () => db.rpc('get_booking_owner_id', { p_public_id: publicId }));
         if (error) {
           console.error('Erro ao resolver owner user_id pelo public_id:', error);
           return null;
@@ -58,22 +84,7 @@ export const useAgendamentoOnlineService = () => {
         setOwnerUserIdCache(next);
         return next;
       }
-
-      const { data, error } = await db
-        .from('configuracoes_agendamento_online')
-        .select('user_id')
-        .eq('ativo', true)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao carregar owner user_id da config pública:', error);
-        return null;
-      }
-
-      const next = (data as any)?.user_id ? String((data as any).user_id) : null;
-      setOwnerUserIdCache(next);
-      return next;
+      return null;
     } catch (error) {
       console.error('Erro ao resolver owner user_id:', error);
       return null;
@@ -87,7 +98,7 @@ export const useAgendamentoOnlineService = () => {
     try {
       const publicId = await resolvePublicId();
       if (publicId) {
-        const { data, error } = await db.rpc('get_public_services', { p_public_id: publicId });
+        const { data, error } = await withTiming('rpc:get_public_services', () => db.rpc('get_public_services', { p_public_id: publicId }));
         if (error) {
           const msg = `${error.code || ''} ${error.message || ''}`.trim() || 'Erro ao carregar serviços';
           setServicosError(msg);
@@ -99,36 +110,24 @@ export const useAgendamentoOnlineService = () => {
       }
 
       const ownerId = await resolveOwnerUserId();
-
-      const primary = await db.from('servicos_public').select('*');
-      if (!primary.error && Array.isArray(primary.data) && primary.data.length > 0) {
-        setServicos(primary.data);
+      if (!ownerId) {
+        setServicos([]);
+        setServicosError('Link do agendamento inválido. Peça ao salão um link com ?uid=...');
         return;
       }
 
-      const fallback = ownerId
-        ? await db
-            .from('servicos')
-            .select('id, nome, descricao, valor, duracao, user_id')
-            .eq('user_id', ownerId)
-        : await db
-            .from('servicos')
-            .select('id, nome, descricao, valor, duracao, user_id')
-            .limit(200);
+      const result = await withTiming('select:servicos', () =>
+        db
+          .from('servicos')
+          .select('id, nome, descricao, valor, duracao, user_id')
+          .eq('user_id', ownerId)
+      );
 
-      if (!fallback.error && Array.isArray(fallback.data) && fallback.data.length > 0) {
-        setServicos(fallback.data);
-        return;
+      if (result.error) {
+        throw result.error;
       }
 
-      const primaryErr = primary.error ? `${primary.error.code || ''} ${primary.error.message || ''}`.trim() : '';
-      const fallbackErr = fallback.error ? `${fallback.error.code || ''} ${fallback.error.message || ''}`.trim() : '';
-
-      if (primaryErr || fallbackErr) {
-        throw new Error([primaryErr, fallbackErr].filter(Boolean).join(' | '));
-      }
-
-      setServicos([]);
+      setServicos(Array.isArray(result.data) ? result.data : []);
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
       const msg = error instanceof Error ? error.message : 'Erro ao carregar serviços';
@@ -145,7 +144,7 @@ export const useAgendamentoOnlineService = () => {
     try {
       const publicId = await resolvePublicId();
       if (publicId) {
-        const { data, error } = await db.rpc('get_public_products', { p_public_id: publicId });
+        const { data, error } = await withTiming('rpc:get_public_products', () => db.rpc('get_public_products', { p_public_id: publicId }));
         if (error) {
           console.error('Erro ao carregar produtos públicos (rpc):', error);
           setProdutos([]);
@@ -155,31 +154,29 @@ export const useAgendamentoOnlineService = () => {
         return;
       }
 
-      // Tenta view pública se existir
-      let data: any[] | null = null;
-      const { data: primaryData, error } = await db
-        .from('produtos_public' as any)
-        .select('id, nome, valor, ativo, categoria')
-        .eq('ativo', true);
+      const ownerId = await resolveOwnerUserId();
+      if (!ownerId) {
+        setProdutos([]);
+        return;
+      }
 
-      data = primaryData;
-
-      if (error) {
-        // Fallback para tabela produtos (se RLS permitir)
-        const alt = await db
+      const { data, error } = await withTiming('select:produtos', () =>
+        db
           .from('produtos')
           .select('id, nome, preco_venda, ativo, categoria')
           .eq('ativo', true)
-          .eq('categoria', 'revenda');
-        data = alt.data;
-      }
+          .eq('categoria', 'revenda')
+          .eq('user_id', ownerId)
+          .limit(200)
+      );
 
-      setProdutos((data || []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor ?? p.preco_venda, categoria: p.categoria })));
+      if (error) throw error;
+      setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.preco_venda, categoria: p.categoria })));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
       setProdutos([]);
     }
-  }, [resolvePublicId]);
+  }, [resolveOwnerUserId, resolvePublicId]);
 
   // A verificação de disponibilidade agora é feita pela função RPC do Supabase
 
@@ -199,16 +196,20 @@ export const useAgendamentoOnlineService = () => {
       const publicId = await resolvePublicId();
 
       const horariosResultCall = publicId
-        ? await db.rpc('get_public_time_slots', {
-            p_public_id: publicId,
-            p_data: data,
-            p_servico_id: servicoId,
-          })
-        : await db.rpc('buscar_horarios_com_multiplos_intervalos', {
-            data_selecionada: data,
-            user_id_param: servico.user_id || (await resolveOwnerUserId()),
-            duracao_servico: typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60,
-          });
+        ? await withTiming('rpc:get_public_time_slots', () =>
+            db.rpc('get_public_time_slots', {
+              p_public_id: publicId,
+              p_data: data,
+              p_servico_id: servicoId,
+            })
+          )
+        : await withTiming('rpc:buscar_horarios_com_multiplos_intervalos', async () =>
+            db.rpc('buscar_horarios_com_multiplos_intervalos', {
+              data_selecionada: data,
+              user_id_param: servico.user_id || (await resolveOwnerUserId()),
+              duracao_servico: typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60,
+            })
+          );
 
       const horariosResult = horariosResultCall?.data;
       const error = horariosResultCall?.error;
@@ -242,12 +243,14 @@ export const useAgendamentoOnlineService = () => {
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
     try {
       // Usar função do Supabase para criar cliente
-      const { data, error } = await db.rpc('criar_cliente_agendamento_online', {
-        p_nome: dados.nome_completo,
-        p_telefone: dados.telefone,
-        p_email: dados.email,
-        p_observacoes: 'Cliente criado via agendamento online'
-      });
+      const { data, error } = await withTiming('rpc:criar_cliente_agendamento_online', () =>
+        db.rpc('criar_cliente_agendamento_online', {
+          p_nome: dados.nome_completo,
+          p_telefone: dados.telefone,
+          p_email: dados.email,
+          p_observacoes: 'Cliente criado via agendamento online'
+        })
+      );
 
       if (error) throw error;
       return data;
@@ -268,7 +271,7 @@ export const useAgendamentoOnlineService = () => {
 
       const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
       const valorEfetivo = typeof servico.valor === 'number' && servico.valor >= 0 ? servico.valor : 0;
-      const ownerUserId = servico.user_id || (await resolveOwnerUserId());
+      await resolveOwnerUserId();
 
       // Validação final de disponibilidade antes de criar
       // Se não for possível calcular horários (ex: erro de rede), tentamos prosseguir
@@ -307,40 +310,14 @@ export const useAgendamentoOnlineService = () => {
           observacoes: dados.observacoes,
           valor: valorEfetivo,
           duracao: duracaoEfetiva,
-          status: 'pendente',
+          status: 'confirmado',
           origem: 'formulario_online',
           user_agent: navigator.userAgent
       };
 
-      if (ownerUserId) {
-        baseInsert.owner_user_id = ownerUserId;
-      }
-
       let insertError: any = null;
-      const firstTry = await db.from('agendamentos_online').insert(baseInsert as any);
+      const firstTry = await withTiming('insert:agendamentos_online', () => db.from('agendamentos_online').insert(baseInsert as any));
       insertError = firstTry.error;
-
-      if (insertError?.code === 'PGRST204') {
-        delete baseInsert.owner_user_id;
-        const secondTry = await db.from('agendamentos_online').insert(baseInsert as any);
-        insertError = secondTry.error;
-      }
-
-      if (insertError) {
-        const msg = String(insertError?.message || '');
-        const isRls = insertError?.code === '42501' || msg.toLowerCase().includes('row-level security');
-        if (isRls) {
-          try {
-            const { data: sessionData } = await supabase.auth.getSession();
-            if (sessionData?.session) {
-              const authDb = supabase as any;
-              const retry = await authDb.from('agendamentos_online').insert(baseInsert as any);
-              insertError = retry.error;
-            }
-          } catch {
-          }
-        }
-      }
 
       if (insertError) throw insertError;
 
@@ -368,6 +345,8 @@ export const useAgendamentoOnlineService = () => {
     servicosError,
     produtos,
     horariosError,
+    ownerUserId: ownerUserIdCache,
+    publicId: publicIdCache,
     carregarServicos,
     carregarProdutosPublicos,
     calcularHorariosDisponiveis,

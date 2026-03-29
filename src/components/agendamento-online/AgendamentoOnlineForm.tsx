@@ -11,12 +11,11 @@ import { Calendar, Clock, User, AlertCircle, Share2, Copy, ArrowRight, ArrowLeft
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { useAgendamentoOnlineService } from '@/hooks/useAgendamentoOnlineService';
-import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
+import { useHorariosTrabalhoPublic } from '@/hooks/useHorariosTrabalhoPublic';
 import { useShare } from '@/hooks/useShare';
-import { useConfiguracoesRealTime } from '@/hooks/useConfiguracoesRealTime';
-import { useConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
+import { useConfigAgendamentoOnlinePublic } from '@/hooks/useConfigAgendamentoOnlinePublic';
 import { AgendamentoOnlineData, HorarioDisponivel, FormErrors } from '@/types/agendamento-online';
-import { supabase } from '@/integrations/supabase/client';
+import { supabasePublic } from '@/integrations/supabase/publicClient';
 import { ProgressSteps } from './ProgressSteps';
 import { SalonHeader } from './SalonHeader';
 import { SalonFooter } from './SalonFooter';
@@ -30,6 +29,7 @@ export function AgendamentoOnlineForm() {
     servicosError,
     produtos,
     horariosError,
+    ownerUserId,
     carregarServicos,
     carregarProdutosPublicos,
     calcularHorariosDisponiveis,
@@ -40,11 +40,10 @@ export function AgendamentoOnlineForm() {
     isDiaAtivo,
     loading: loadingHorarios,
     configuracoes
-  } = useHorariosTrabalho();
+  } = useHorariosTrabalhoPublic(ownerUserId || undefined);
 
   const { shareContent, copyToClipboard, isSharing } = useShare();
-  const { lastUpdate } = useConfiguracoesRealTime();
-  const { config: configOnline } = useConfigAgendamentoOnline();
+  const { config: configOnline } = useConfigAgendamentoOnlinePublic(ownerUserId);
 
   // Cores dinâmicas do formulário
   const primaryColor = configOnline.cor_primaria || '#8B5CF6';
@@ -171,7 +170,24 @@ export function AgendamentoOnlineForm() {
         return { horario: String(h), disponivel: false }; // Fallback seguro
       });
 
-      setHorariosDisponiveis(horariosFormatados);
+      const minAntecedenciaMin = typeof configOnline.tempo_minimo_antecedencia === 'number' && configOnline.tempo_minimo_antecedencia > 0
+        ? configOnline.tempo_minimo_antecedencia
+        : 0;
+      const agora = new Date();
+      const minDateTime = new Date(agora.getTime() + minAntecedenciaMin * 60 * 1000);
+      const isHoje = formData.data === agora.toISOString().split('T')[0];
+
+      const horariosFiltrados = isHoje
+        ? horariosFormatados.filter(h => {
+            const [hh, mm] = String(h.horario).slice(0, 5).split(':').map(Number);
+            if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+            const slot = new Date(agora);
+            slot.setHours(hh, mm, 0, 0);
+            return slot >= minDateTime;
+          })
+        : horariosFormatados;
+
+      setHorariosDisponiveis(horariosFiltrados);
     } catch (error) {
       console.error('Erro ao carregar horários:', error);
       setHorariosDisponiveis([]);
@@ -187,7 +203,7 @@ export function AgendamentoOnlineForm() {
 
   useEffect(() => {
     if (formData.servico_id && formData.data) {
-      const channel = supabase
+      const channel = supabasePublic
         .channel('configuracoes_horarios_online')
         .on('postgres_changes', {
           event: '*',
@@ -200,10 +216,10 @@ export function AgendamentoOnlineForm() {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(channel);
+        supabasePublic.removeChannel(channel);
       };
     }
-  }, [formData.servico_id, formData.data, carregarHorariosDisponiveis, lastUpdate]);
+  }, [formData.servico_id, formData.data, carregarHorariosDisponiveis]);
 
   const handleInputChange = (field: keyof AgendamentoOnlineData, value: string) => {
     if (field === 'telefone') {
@@ -264,7 +280,7 @@ export function AgendamentoOnlineForm() {
       toast.error('Você deve aceitar os termos e condições para continuar.');
       return;
     }
-    if (!taxaAccepted) {
+    if (configOnline.taxa_sinal_percentual > 0 && !taxaAccepted) {
       toast.error('Você deve aceitar as condições da taxa antecipada para continuar.');
       return;
     }
@@ -290,7 +306,13 @@ export function AgendamentoOnlineForm() {
           forma_pagamento_produto: produtoForma
         };
         const prefix = validatedData.observacoes ? validatedData.observacoes + '\n' : '';
-        validatedData.observacoes = `${prefix}Compra de produto: ${JSON.stringify(compra)}`;
+        const nextObs = `${prefix}Compra de produto: ${JSON.stringify(compra)}`;
+        if (nextObs.length > 500) {
+          toast.error('As observações ficaram muito longas. Remova texto ou a compra do produto.');
+          setIsSubmitting(false);
+          return;
+        }
+        validatedData.observacoes = nextObs;
       }
       setIsSubmitting(true);
       const sucesso = await criarAgendamento(validatedData as AgendamentoOnlineData);
@@ -319,8 +341,16 @@ export function AgendamentoOnlineForm() {
 
   const hoje = new Date();
   const dataMinima = hoje.toISOString().split('T')[0];
-  const dataMaxima = new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const maxMinutos = typeof configOnline.tempo_maximo_antecedencia === 'number' && configOnline.tempo_maximo_antecedencia > 0
+    ? configOnline.tempo_maximo_antecedencia
+    : 90 * 24 * 60;
+  const dataMaxima = new Date(hoje.getTime() + maxMinutos * 60 * 1000).toISOString().split('T')[0];
   const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
+  const produtoSelecionado = produtos.find(p => p.id === produtoId);
+  const valorServico = typeof servicoSelecionado?.valor === 'number' && Number.isFinite(servicoSelecionado.valor) ? servicoSelecionado.valor : 0;
+  const valorProdutoUnit = typeof produtoSelecionado?.valor === 'number' && Number.isFinite(produtoSelecionado.valor) ? produtoSelecionado.valor : 0;
+  const valorProdutoTotal = produtoEnabled && produtoId ? valorProdutoUnit * Math.max(1, produtoQtd || 1) : 0;
+  const valorTotal = valorServico + valorProdutoTotal;
 
   const compartilharComprovante = async () => {
     const dataFormatada = new Date(formData.data).toLocaleDateString('pt-BR', {
@@ -336,7 +366,7 @@ export function AgendamentoOnlineForm() {
 💇 Serviço: ${servicoSelecionado?.nome}
 📅 Data: ${dataFormatada}
 ⏰ Horário: ${formData.horario}
-💰 Valor: R$ ${servicoSelecionado?.valor.toFixed(2).replace('.', ',')}
+💰 Valor: R$ ${valorTotal.toFixed(2).replace('.', ',')}
 
 ✅ Seu agendamento foi confirmado com sucesso!
 Você receberá uma confirmação em breve.
@@ -363,7 +393,7 @@ Você receberá uma confirmação em breve.
 💇 Serviço: ${servicoSelecionado?.nome}
 📅 Data: ${dataFormatada}
 ⏰ Horário: ${formData.horario}
-💰 Valor: R$ ${servicoSelecionado?.valor.toFixed(2).replace('.', ',')}
+💰 Valor: R$ ${valorTotal.toFixed(2).replace('.', ',')}
 
 ✅ Seu agendamento foi confirmado com sucesso!
 Você receberá uma confirmação em breve.
@@ -452,7 +482,7 @@ Você receberá uma confirmação em breve.
   if (success) {
     return (
       <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl } as React.CSSProperties}>
-        <SalonHeader />
+        <SalonHeader config={configOnline} />
         <div className="flex-1 bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
           <Card className="w-full max-w-md border-none shadow-[0_30px_60px_rgba(0,0,0,0.12)] bg-white/90 backdrop-blur-xl rounded-[3rem] overflow-hidden animate-in zoom-in duration-500">
             <div className="bg-primary h-2 w-full" />
@@ -494,7 +524,7 @@ Você receberá uma confirmação em breve.
 
                 <div className="pt-4 border-t border-primary/10 flex justify-between items-center relative z-10">
                   <span className="text-sm font-bold text-muted-foreground">Valor Total</span>
-                  <span className="text-2xl font-black text-primary">R$ {servicoSelecionado?.valor.toFixed(2)}</span>
+                  <span className="text-2xl font-black text-primary">R$ {valorTotal.toFixed(2)}</span>
                 </div>
 
                 {produtoEnabled && produtoId && (
@@ -505,8 +535,7 @@ Você receberá uma confirmação em breve.
                     </div>
                     <p className="text-xs font-bold text-muted-foreground bg-white/50 p-2 rounded-xl">
                       {(() => {
-                        const p = produtos.find(pr => pr.id === produtoId);
-                        return `${p?.nome || 'Produto'} • Qtd: ${produtoQtd}`;
+                        return `${produtoSelecionado?.nome || 'Produto'} • Qtd: ${produtoQtd}`;
                       })()}
                     </p>
                   </div>
@@ -544,14 +573,14 @@ Você receberá uma confirmação em breve.
             </CardContent>
           </Card>
         </div>
-        <SalonFooter />
+        <SalonFooter config={configOnline} />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl, '--ring': primaryHsl } as React.CSSProperties}>
-      <SalonHeader />
+      <SalonHeader config={configOnline} />
       <div className="flex-1 bg-gradient-to-b from-transparent to-primary/5 p-4 sm:p-6">
         <div className="max-w-2xl mx-auto">
           <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden animate-in fade-in zoom-in duration-500">
@@ -1096,7 +1125,7 @@ Você receberá uma confirmação em breve.
           </Card>
         </div>
       </div>
-      <SalonFooter />
+      <SalonFooter config={configOnline} />
     </div>
   );
 }
