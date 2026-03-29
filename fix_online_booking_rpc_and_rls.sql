@@ -256,8 +256,8 @@ BEGIN
   -- mas como esta função é chamada antes de sabermos o dono em alguns fluxos, 
   -- o trigger de sincronização posterior ajustará se necessário.
   
-  INSERT INTO public.clientes (nome, nome_completo, telefone, email, observacoes)
-  VALUES (p_nome, p_nome, p_telefone, p_email, p_observacoes)
+  INSERT INTO public.clientes (nome, telefone, email, observacoes)
+  VALUES (p_nome, p_telefone, p_email, p_observacoes)
   RETURNING id INTO v_cliente_id;
 
   RETURN v_cliente_id;

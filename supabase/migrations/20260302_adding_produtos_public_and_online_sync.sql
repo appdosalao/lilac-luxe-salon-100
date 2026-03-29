@@ -65,8 +65,8 @@ BEGIN
            OR (COALESCE(c.telefone,'') <> '' AND c.telefone = NEW.telefone)
         LIMIT 1;
         IF v_cliente_id IS NULL THEN
-          INSERT INTO public.clientes (id, usuario_id, nome, nome_completo, email, telefone, observacoes)
-          VALUES (gen_random_uuid(), v_user_id, NEW.nome_completo, NEW.nome_completo, NEW.email, NEW.telefone, 'Criado via online')
+          INSERT INTO public.clientes (id, usuario_id, nome, email, telefone, observacoes)
+          VALUES (gen_random_uuid(), v_user_id, NEW.nome_completo, NEW.email, NEW.telefone, 'Criado via online')
           RETURNING id INTO v_cliente_id;
         END IF;
     END;
