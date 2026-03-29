@@ -186,7 +186,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" title="Filtrar entidades" aria-label="Filtrar entidades">
                 <Filter className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -298,6 +298,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
                         onClick={() => irParaEntidade(problema.entidade)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Ir para a entidade"
+                        aria-label="Ir para a entidade"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -315,6 +316,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
                           }}
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Marcar resolvido"
+                          aria-label="Marcar resolvido"
                         >
                           <Check className="h-4 w-4" />
                         </Button>
