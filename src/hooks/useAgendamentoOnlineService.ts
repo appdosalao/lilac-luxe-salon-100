@@ -66,24 +66,44 @@ export const useAgendamentoOnlineService = () => {
     if (ownerUserIdCache) return ownerUserIdCache;
 
     try {
+      // 1. Tentar pelo UID direto na URL
       const ownerFromUrl = getOwnerUserIdFromUrl();
       if (ownerFromUrl) {
         setOwnerUserIdCache(ownerFromUrl);
         return ownerFromUrl;
       }
 
+      // 2. Tentar pelo publicId (slug) na URL
       const publicId = await resolvePublicId();
 
       if (publicId) {
         const { data, error } = await withTiming('rpc:get_booking_owner_id', () => db.rpc('get_booking_owner_id', { p_public_id: publicId }));
         if (error) {
           console.error('Erro ao resolver owner user_id pelo public_id:', error);
-          return null;
+        } else if (data) {
+          const next = String(data);
+          setOwnerUserIdCache(next);
+          return next;
         }
-        const next = data ? String(data) : null;
-        setOwnerUserIdCache(next);
-        return next;
       }
+
+      // 3. FALLBACK: Se não houver nada na URL, tentar o primeiro salão ativo da base
+      // Isso permite que o link puro /agendamento-online funcione para o salão principal
+      const { data: fallbackData, error: fallbackError } = await withTiming('select:fallback_owner', () =>
+        db
+          .from('configuracoes_agendamento_online')
+          .select('user_id')
+          .eq('ativo', true)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      );
+
+      if (!fallbackError && fallbackData?.user_id) {
+        setOwnerUserIdCache(fallbackData.user_id);
+        return fallbackData.user_id;
+      }
+
       return null;
     } catch (error) {
       console.error('Erro ao resolver owner user_id:', error);
@@ -100,19 +120,22 @@ export const useAgendamentoOnlineService = () => {
       if (publicId) {
         const { data, error } = await withTiming('rpc:get_public_services', () => db.rpc('get_public_services', { p_public_id: publicId }));
         if (error) {
-          const msg = `${error.code || ''} ${error.message || ''}`.trim() || 'Erro ao carregar serviços';
+          const msg = `Erro RPC (serviços): ${error.code || ''} ${error.message || ''}`.trim();
           setServicosError(msg);
           setServicos([]);
           return;
         }
-        setServicos(Array.isArray(data) ? data : []);
-        return;
+        if (data && Array.isArray(data) && data.length > 0) {
+          setServicos(data);
+          return;
+        }
+        // Se o RPC retornou vazio, tenta o método tradicional como fallback
       }
 
       const ownerId = await resolveOwnerUserId();
       if (!ownerId) {
         setServicos([]);
-        setServicosError('Link do agendamento inválido. Peça ao salão um link com ?uid=...');
+        setServicosError('Link do agendamento inválido ou salão não encontrado. Use ?uid= ou ?s= na URL.');
         return;
       }
 
@@ -124,10 +147,17 @@ export const useAgendamentoOnlineService = () => {
       );
 
       if (result.error) {
-        throw result.error;
+        const msg = `Erro DB (serviços): ${result.error.code || ''} ${result.error.message || ''}`.trim();
+        setServicosError(msg);
+        setServicos([]);
+        return;
       }
 
-      setServicos(Array.isArray(result.data) ? result.data : []);
+      const data = Array.isArray(result.data) ? result.data : [];
+      if (data.length === 0) {
+        setServicosError('Nenhum serviço ativo encontrado para este salão.');
+      }
+      setServicos(data);
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
       const msg = error instanceof Error ? error.message : 'Erro ao carregar serviços';
