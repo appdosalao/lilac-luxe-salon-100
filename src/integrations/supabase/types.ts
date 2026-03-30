@@ -1835,6 +1835,8 @@ export type Database = {
           id: string
           nome_completo: string
           nome_personalizado_app: string
+          paid_access: boolean
+          paid_at: string | null
           payment_provider: string | null
           plan_type: string | null
           subscription_status: string | null
@@ -1858,7 +1860,9 @@ export type Database = {
           email: string
           id: string
           nome_completo: string
-          nome_personalizado_app?: string
+          nome_personalizado_app?: string | null
+          paid_access?: boolean | null
+          paid_at?: string | null
           payment_provider?: string | null
           plan_type?: string | null
           subscription_status?: string | null
@@ -1882,7 +1886,9 @@ export type Database = {
           email?: string
           id?: string
           nome_completo?: string
-          nome_personalizado_app?: string
+          nome_personalizado_app?: string | null
+          paid_access?: boolean | null
+          paid_at?: string | null
           payment_provider?: string | null
           plan_type?: string | null
           subscription_status?: string | null

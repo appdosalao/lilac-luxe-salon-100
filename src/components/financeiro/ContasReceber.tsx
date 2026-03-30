@@ -21,7 +21,7 @@ export default function ContasReceber({ agendamentos }: ContasReceberProps) {
     (agendamento.statusPagamento === 'em_aberto' || agendamento.statusPagamento === 'parcial') &&
     agendamento.valorDevido > 0
   ).filter(agendamento =>
-    agendamento.clienteNome.toLowerCase().includes(busca.toLowerCase())
+    (agendamento.clienteNome || '').toLowerCase().includes(busca.toLowerCase())
   );
 
   const totalReceber = contasReceber.reduce((total, agendamento) => total + agendamento.valorDevido, 0);

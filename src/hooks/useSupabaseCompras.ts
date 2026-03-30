@@ -81,22 +81,6 @@ export function useSupabaseCompras() {
 
       if (movError) throw movError;
 
-      // Criar lançamento financeiro (despesa)
-      const { error: lancError } = await supabase
-        .from('lancamentos')
-        .insert([{
-          user_id: user.id,
-          tipo: 'saida',
-          valor: compra.valor_total,
-          data: compra.data_compra,
-          descricao: `Compra de produtos${compra.numero_nota ? ` - Nota ${compra.numero_nota}` : ''}`,
-          categoria: 'Compra de Produtos',
-          origem_id: compraData.id,
-          origem_tipo: 'compra_produto',
-        }]);
-
-      if (lancError) throw lancError;
-
       toast.success('Compra registrada com sucesso!');
       await loadCompras();
     } catch (error: any) {

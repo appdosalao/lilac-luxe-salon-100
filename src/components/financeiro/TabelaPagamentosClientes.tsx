@@ -34,7 +34,7 @@ export default function TabelaPagamentosClientes({ agendamentos }: TabelaPagamen
   // Filtrar apenas agendamentos que tenham valores pendentes ou concluídos
   const agendamentosComPagamento = agendamentos.filter(agendamento => 
     (agendamento.status === 'concluido' || agendamento.valorPago > 0) &&
-    agendamento.clienteNome.toLowerCase().includes(busca.toLowerCase())
+    (agendamento.clienteNome || '').toLowerCase().includes(busca.toLowerCase())
   );
 
   const formatarValor = (valor: number) => {

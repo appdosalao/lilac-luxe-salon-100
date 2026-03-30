@@ -83,23 +83,6 @@ export function useSupabaseVendas() {
 
       if (movError) throw movError;
 
-      // Criar lançamento financeiro (receita)
-      const { error: lancError } = await supabase
-        .from('lancamentos')
-        .insert([{
-          user_id: user.id,
-          tipo: 'entrada',
-          valor: valorTotal,
-          data: venda.data_venda,
-          descricao: 'Venda de produtos',
-          categoria: 'Venda de Produtos',
-          origem_id: vendaData.id,
-          origem_tipo: 'venda_produto',
-          cliente_id: venda.cliente_id,
-        }]);
-
-      if (lancError) throw lancError;
-
       toast.success('Venda registrada com sucesso!');
       await loadVendas();
     } catch (error: any) {

@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Plus, Receipt, AlertTriangle, FileText, Users, TrendingUp } from "lucide-react";
+import { Plus, Receipt, AlertTriangle, FileText, Users, TrendingUp, Package, BadgeDollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLancamentos } from "@/hooks/useLancamentos";
 import { useContasFixas } from "@/hooks/useContasFixas";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useSupabaseAgendamentos } from "@/hooks/useSupabaseAgendamentos";
+import { useAgendamentos } from "@/hooks/useAgendamentos";
 import { Lancamento, NovoLancamento } from "@/types/lancamento";
 import { ContaFixa, NovaContaFixa } from "@/types/contaFixa";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import ResumoFinanceiro from "@/components/financeiro/ResumoFinanceiro";
 import LancamentosList from "@/components/financeiro/LancamentosList";
 import { LancamentosListMobile } from "@/components/financeiro/LancamentosListMobile";
@@ -31,6 +35,7 @@ export default function Financeiro() {
   const { isMobile } = useBreakpoint();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [formType, setFormType] = useState<FormType>('lancamento');
+  const [activeTab, setActiveTab] = useState('lancamentos');
   const [lancamentoEditando, setLancamentoEditando] = useState<Lancamento | undefined>();
   const [contaEditando, setContaEditando] = useState<ContaFixa | undefined>();
   
@@ -45,9 +50,12 @@ export default function Financeiro() {
     removerLancamento,
   } = useLancamentos();
 
-  // TODO: Integrar com useSupabaseAgendamentos quando necessário
-  const agendamentos: any[] = [];
+  const { agendamentosFiltrados: agendamentosRaw } = useSupabaseAgendamentos();
+  const { todosAgendamentos: agendamentosEnriquecidos } = useAgendamentos();
   
+  // Usamos os enriquecidos para as listas e o raw filtrado para os contadores se necessário
+  const agendamentos = useMemo(() => agendamentosEnriquecidos || [], [agendamentosEnriquecidos]);
+
   const { 
     contasFixas, 
     categorias: categoriasContasFixas, 
@@ -59,6 +67,33 @@ export default function Financeiro() {
     criarCategoria,
     estatisticas: estatisticasContasFixas 
   } = useContasFixas();
+
+  // Contadores dinâmicos para as abas
+  const counts = useMemo(() => {
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    return {
+      lancamentosHoje: (lancamentos || []).filter(l => {
+        try {
+          const dataStr = l.data instanceof Date ? l.data.toISOString().split('T')[0] : String(l.data).split('T')[0];
+          return dataStr === hoje;
+        } catch {
+          return false;
+        }
+      }).length,
+      contasPendentes: (contasFixas || []).filter(c => c.status === 'em_aberto' && c.ativa).length,
+      contasVencidas: (contasFixas || []).filter(c => {
+        if (!c.ativa || c.status === 'pago') return false;
+        try {
+          const venc = c.proximoVencimento ? new Date(c.proximoVencimento) : null;
+          return venc && venc < new Date();
+        } catch {
+          return false;
+        }
+      }).length,
+      receberPendentes: (agendamentos || []).filter(a => a.statusPagamento === 'em_aberto' || a.statusPagamento === 'parcial').length,
+    };
+  }, [lancamentos, contasFixas, agendamentos]);
 
   const handleNovoLancamento = () => {
     setLancamentoEditando(undefined);
@@ -154,57 +189,99 @@ export default function Financeiro() {
       <ResumoFinanceiro resumo={resumoFinanceiro} />
 
       {/* Abas do Sistema Financeiro */}
-      <Tabs defaultValue="lancamentos" className="space-y-4 sm:space-y-8">
-        <ScrollArea className="w-full whitespace-nowrap">
-          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-7 gap-1 p-1 bg-muted rounded-lg">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-8">
+        <ScrollArea className="w-full whitespace-nowrap pb-1">
+          <TabsList className="inline-flex h-auto w-max min-w-full md:w-full md:grid md:grid-cols-7 gap-1 p-1.5 bg-muted/50 backdrop-blur-sm rounded-xl border border-border/50">
             <TabsTrigger 
               value="lancamentos" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
               <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Lançamentos
+              <span>Lançamentos</span>
+              {counts.lancamentosHoje > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1 bg-primary/10 text-primary border-none text-[10px] animate-in zoom-in duration-300">
+                  {counts.lancamentosHoje}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="contas-fixas" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
               <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Contas Fixas
+              <span>Contas Fixas</span>
+              {counts.contasPendentes > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className={cn(
+                    "ml-1 h-5 min-w-[20px] px-1 border-none text-[10px] animate-pulse",
+                    counts.contasVencidas > 0 ? "bg-destructive text-destructive-foreground" : "bg-orange-500 text-white"
+                  )}
+                >
+                  {counts.contasPendentes}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="produtos" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
-              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Produtos
+              <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Produtos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="contas-receber" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              A Receber
+              <span>A Receber</span>
+              {counts.receberPendentes > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1 bg-green-500/10 text-green-600 border-none text-[10px]">
+                  {counts.receberPendentes}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="pagamentos" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
-              <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Pagamentos
+              <BadgeDollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Pagamentos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="graficos" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
               <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Gráficos
+              <span>Gráficos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="relatorios" 
-              className="text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] px-3 sm:px-4 flex items-center gap-2"
+              className={cn(
+                "relative text-xs sm:text-sm min-h-[44px] px-3 sm:px-4 flex items-center gap-2 rounded-lg transition-all duration-200",
+                "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
+              )}
             >
               <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Relatórios
+              <span>Relatórios</span>
             </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" className="md:hidden" />

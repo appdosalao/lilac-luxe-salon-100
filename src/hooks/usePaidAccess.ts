@@ -49,8 +49,8 @@ export const usePaidAccess = () => {
     retry: 1,
     queryFn: async () => {
       if (!userId) return false;
-      const { data, error } = await supabase
-        .from('usuarios')
+      const { data, error } = await (supabase
+        .from('usuarios') as any)
         .select('paid_access')
         .eq('id', userId)
         .maybeSingle();

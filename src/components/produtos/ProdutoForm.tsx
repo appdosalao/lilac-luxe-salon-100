@@ -26,6 +26,7 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
     descricao: '',
     codigo_barras: '',
     categoria: 'uso_profissional',
+    categoria_id: '',
     fornecedor_id: '',
     estoque_minimo: 0,
     unidade_medida: 'un',
@@ -41,6 +42,7 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
         descricao: produto.descricao || '',
         codigo_barras: produto.codigo_barras || '',
         categoria: produto.categoria,
+        categoria_id: produto.categoria_id || '',
         fornecedor_id: produto.fornecedor_id || '',
         estoque_minimo: produto.estoque_minimo,
         unidade_medida: produto.unidade_medida,
@@ -106,7 +108,18 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
           <Label htmlFor="categoria_id">Categoria Personalizada</Label>
           <Select
             value={formData.categoria_id || 'none'}
-            onValueChange={(value) => setFormData({ ...formData, categoria_id: value === 'none' ? undefined : value })}
+            onValueChange={(value) => {
+              const selectedCat = categorias.find(c => c.id === value);
+              if (selectedCat) {
+                setFormData({ 
+                  ...formData, 
+                  categoria_id: value,
+                  categoria: selectedCat.tipo as any
+                });
+              } else {
+                setFormData({ ...formData, categoria_id: value === 'none' ? undefined : value });
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Nenhuma" />
@@ -114,10 +127,10 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
             <SelectContent>
               <SelectItem value="none">Nenhuma</SelectItem>
               {categorias
-                .filter(c => c.tipo === formData.categoria && c.ativo)
+                .filter(c => c.ativo)
                 .map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.nome}
+                    {c.nome} ({c.tipo === 'revenda' ? 'Revenda' : c.tipo === 'uso_profissional' ? 'Uso Profissional' : 'Consumo'})
                   </SelectItem>
                 ))}
             </SelectContent>

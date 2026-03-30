@@ -39,7 +39,10 @@ export default function Produtos() {
 
       {/* Dashboard de estatísticas - Responsivo */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        <Card className="p-3 sm:p-4">
+        <Card 
+          className="p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setActiveTab('produtos')}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
               <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
@@ -51,7 +54,10 @@ export default function Produtos() {
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4">
+        <Card 
+          className="p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setActiveTab('produtos')}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="p-2 bg-green-500/10 rounded-lg flex-shrink-0">
               <Package className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
@@ -63,7 +69,10 @@ export default function Produtos() {
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4">
+        <Card 
+          className="p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setActiveTab('produtos')}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="p-2 bg-blue-500/10 rounded-lg flex-shrink-0">
               <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
@@ -75,7 +84,10 @@ export default function Produtos() {
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4">
+        <Card 
+          className="p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setActiveTab('compras')}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="p-2 bg-purple-500/10 rounded-lg flex-shrink-0">
               <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
@@ -87,7 +99,10 @@ export default function Produtos() {
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4">
+        <Card 
+          className="p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => setActiveTab('vendas')}
+        >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <div className="p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
               <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />

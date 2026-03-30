@@ -82,14 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Se não houver sessão nova, e já tivermos um usuário, não limpamos imediatamente
     // para evitar "flicker" de redirecionamento em falhas temporárias de rede ao retomar foco
     if (!nextSession?.user) {
-      // Só limpamos se tivermos certeza absoluta que não há sessão (logout real)
-      const { data: currentSession } = await supabase.auth.getSession();
-      if (!currentSession.session) {
-        setSession(null);
-        setUser(null);
-        setUsuario(null);
-        applyTheme(localStorage.getItem('app-theme') as any);
-      }
+      // Limpamos o estado se não houver sessão ativa
+      setSession(null);
+      setUser(null);
+      setUsuario(null);
+      applyTheme(localStorage.getItem('app-theme') as any);
       return;
     }
 
@@ -109,9 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let profile: any = null;
     let profileError: any = null;
     try {
+      // Aumentado timeout para 15s para carregar perfil
       const res = await withTimeout(
         supabase.from('usuarios').select('*').eq('id', nextSession.user.id).single(),
-        8000
+        15000
       );
       profile = (res as any).data;
       profileError = (res as any).error;
@@ -235,13 +233,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const init = async () => {
       setIsLoading(true);
       try {
-        const { data } = await withTimeout(supabase.auth.getSession(), 8000);
+        // Aumentado o timeout para 15 segundos para conexões mais lentas
+        const { data } = await withTimeout(supabase.auth.getSession(), 15000);
         if (!active) return;
         await hydrateFromSession(data.session);
       } catch (error) {
-        console.error('Erro ao inicializar autenticação:', error);
+        // Se der timeout ou erro, tentamos hidratar sem sessão (o que levará ao login)
+        console.warn('Falha ao recuperar sessão inicial (timeout ou rede):', error);
         if (!active) return;
-        await hydrateFromSession(null);
+        
+        // Em caso de erro de rede/timeout, tentamos carregar o que estiver no cache local do Supabase
+        // sem forçar uma nova requisição de rede imediatamente se possível
+        try {
+          const { data: localSession } = await supabase.auth.getSession();
+          await hydrateFromSession(localSession.session);
+        } catch {
+          await hydrateFromSession(null);
+        }
       } finally {
         if (active) setIsLoading(false);
       }

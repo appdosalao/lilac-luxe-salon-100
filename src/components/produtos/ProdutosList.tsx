@@ -9,6 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { MovimentacaoEstoqueDialog } from './MovimentacaoEstoqueDialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
 
 export function ProdutosList() {
   const { produtos, loading, deleteProduto, movimentarEstoque } = useSupabaseProdutos();
@@ -19,10 +30,23 @@ export function ProdutosList() {
   const [somenteBaixoEstoque, setSomenteBaixoEstoque] = useState(false);
   const [movOpenId, setMovOpenId] = useState<string | null>(null);
   const [movs, setMovs] = useState<Record<string, any[]>>({});
+  
+  // Estados para diálogos
+  const [movDialog, setMovDialog] = useState<{ open: boolean; produto: any; tipo: 'entrada' | 'saida' }>({
+    open: false,
+    produto: null,
+    tipo: 'entrada'
+  });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; nome: string }>({
+    open: false,
+    id: '',
+    nome: ''
+  });
 
-  const handleDelete = async (id: string, nome: string) => {
-    if (confirm(`Desativar o produto "${nome}"? Ele ficará oculto mas o histórico será preservado.`)) {
-      await deleteProduto(id);
+  const handleDelete = async () => {
+    if (deleteDialog.id) {
+      await deleteProduto(deleteDialog.id);
+      setDeleteDialog({ open: false, id: '', nome: '' });
     }
   };
 
@@ -44,18 +68,6 @@ export function ProdutosList() {
       return matchBusca && matchTipo && matchEstoque;
     });
   }, [produtos, busca, filtroTipo, somenteBaixoEstoque]);
-
-  const ajustarEstoque = async (produto: any, tipo: 'entrada' | 'saida') => {
-    const qtdStr = prompt(`Quantidade para ${tipo === 'entrada' ? 'entrada' : 'saída'} de "${produto.nome}":`, '1');
-    if (!qtdStr) return;
-    const quantidade = Number(qtdStr);
-    if (!Number.isFinite(quantidade) || quantidade <= 0) {
-      alert('Quantidade inválida');
-      return;
-    }
-    const motivo = prompt('Motivo (opcional):', '') || undefined;
-    await movimentarEstoque({ produto_id: produto.id, tipo, quantidade, motivo });
-  };
 
   if (loading) {
     return <div className="flex justify-center p-8">Carregando...</div>;
@@ -172,7 +184,7 @@ export function ProdutosList() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => ajustarEstoque(produto, 'entrada')}
+                  onClick={() => setMovDialog({ open: true, produto, tipo: 'entrada' })}
                   className="flex-1 sm:flex-none h-10 btn-touch"
                   title="Entrada de estoque"
                 >
@@ -182,7 +194,7 @@ export function ProdutosList() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => ajustarEstoque(produto, 'saida')}
+                  onClick={() => setMovDialog({ open: true, produto, tipo: 'saida' })}
                   className="flex-1 sm:flex-none h-10 btn-touch"
                   title="Saída de estoque"
                 >
@@ -226,7 +238,7 @@ export function ProdutosList() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(produto.id, produto.nome)}
+                  onClick={() => setDeleteDialog({ open: true, id: produto.id, nome: produto.nome })}
                   className="flex-1 sm:flex-none h-10 btn-touch hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-3 w-3 sm:mr-2" />
@@ -259,6 +271,50 @@ export function ProdutosList() {
           </Card>
         )}
       </div>
+
+      {/* Diálogos */}
+      {movDialog.produto && (
+        <MovimentacaoEstoqueDialog
+          open={movDialog.open}
+          onOpenChange={(open) => setMovDialog(prev => ({ ...prev, open }))}
+          produto={movDialog.produto}
+          tipo={movDialog.tipo}
+          onSuccess={() => {
+            // Recarregar movimentações se estiverem abertas
+            if (movOpenId === movDialog.produto.id) {
+              setMovs(prev => {
+                const newMovs = { ...prev };
+                delete newMovs[movDialog.produto.id];
+                return newMovs;
+              });
+            }
+          }}
+        />
+      )}
+
+      <AlertDialog 
+        open={deleteDialog.open} 
+        onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar Produto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desativar o produto "{deleteDialog.nome}"? 
+              Ele ficará oculto da lista, mas todo o histórico de estoque e vendas será preservado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Desativar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
