@@ -52,6 +52,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  const isPublicRoute = window.location.pathname.startsWith('/login') || 
+                        window.location.pathname.startsWith('/cadastro') || 
+                        window.location.pathname.startsWith('/agendamento-online');
+
+  // Se o usuário está autenticado mas o objeto 'usuario' (perfil) ainda não carregou,
+  // mostramos o loader em vez de redirecionar para o Paywall preventivamente.
+  if (!usuario && !isPublicRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ScissorsLoader />
+      </div>
+    );
+  }
+
   if (isPaid) {
     return <>{children}</>;
   }

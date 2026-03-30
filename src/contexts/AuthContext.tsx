@@ -79,14 +79,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const hydrateFromSession = async (nextSession: Session | null) => {
-    setSession(nextSession);
-    setUser(nextSession?.user ?? null);
-
+    // Se não houver sessão nova, e já tivermos um usuário, não limpamos imediatamente
+    // para evitar "flicker" de redirecionamento em falhas temporárias de rede ao retomar foco
     if (!nextSession?.user) {
-      setUsuario(null);
-      applyTheme(localStorage.getItem('app-theme') as any);
+      // Só limpamos se tivermos certeza que não há sessão (logout real)
+      const { data: currentSession } = await supabase.auth.getSession();
+      if (!currentSession.session) {
+        setSession(null);
+        setUser(null);
+        setUsuario(null);
+        applyTheme(localStorage.getItem('app-theme') as any);
+      }
       return;
     }
+
+    setSession(nextSession);
+    setUser(nextSession.user);
 
     let profile: any = null;
     let profileError: any = null;
@@ -103,6 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (profileError) {
+      // Se houver erro ao carregar o perfil (ex: timeout ao voltar da suspensão),
+      // mantemos o usuário atual se o ID for o mesmo para evitar logout indesejado
+      if (usuario && usuario.id === nextSession.user.id) {
+        console.warn('Falha temporária ao carregar perfil, mantendo estado atual.');
+        return;
+      }
       setUsuario(null);
       return;
     }

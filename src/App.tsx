@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import { ScissorsLoader } from '@/components/ScissorsLoader';
+import { PersistenceGuard } from "./components/PersistenceGuard";
 
 const queryClient = new QueryClient();
 
@@ -181,17 +182,19 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <SupabaseAuthProvider>
-          <NotificationProviderAvancado>
-            <PWAProvider>
-              <AppContent />
-            </PWAProvider>
-          </NotificationProviderAvancado>
-        </SupabaseAuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <PersistenceGuard>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <SupabaseAuthProvider>
+            <NotificationProviderAvancado>
+              <PWAProvider>
+                <AppContent />
+              </PWAProvider>
+            </NotificationProviderAvancado>
+          </SupabaseAuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </PersistenceGuard>
   );
 };
 
