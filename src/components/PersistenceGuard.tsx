@@ -10,40 +10,27 @@ export const PersistenceGuard: React.FC<{ children: React.ReactNode }> = ({ chil
     // 1. Bloqueio de recarga indesejada em eventos de visibilidade
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // App restaurado
+        console.log('[PersistenceGuard] Foco recuperado. Estado preservado.');
       }
     };
 
-    // 2. Interceptar recargas/fechamentos acidentais
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Nota: Browsers modernos só mostram o prompt se houver interação do usuário com a página
-    };
-
-    // 3. Capturar cliques em links globais para evitar href="#" disparando reload ou scroll indesejado
+    // 2. Capturar cliques em links globais para evitar href="#" disparando reload ou scroll indesejado
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a');
       
       if (anchor && anchor.getAttribute('href') === '#') {
         e.preventDefault();
+        console.warn('[PersistenceGuard] Clique em link vazio (#) bloqueado.');
       }
     };
 
-    // 4. Auditoria de Formulários
-    const handleGlobalSubmit = (e: SubmitEvent) => {
-      // O React já lida com preventDefault na maioria dos casos via onSubmit
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('click', handleGlobalClick);
-    document.addEventListener('submit', handleGlobalSubmit);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('click', handleGlobalClick);
-      document.removeEventListener('submit', handleGlobalSubmit);
     };
   }, []);
 

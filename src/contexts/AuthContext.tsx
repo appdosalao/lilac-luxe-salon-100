@@ -242,24 +242,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!active) return;
 
-      // Só mostrar o loader em eventos críticos se ainda não tivermos sessão
-      // TOKEN_REFRESHED e SIGNED_IN (quando já logado) podem ser feitos em background
-      const shouldShowLoader = event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && !session);
+      // Eventos que requerem recarregamento do perfil
+      const profileEvents = ['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'];
       
-      if (shouldShowLoader) {
-        setIsLoading(true);
+      // Se não houver sessão, limpa tudo e para o loader (se houver)
+      if (!nextSession) {
+        setSession(null);
+        setUser(null);
+        setUsuario(null);
+        setIsLoading(false);
+        return;
       }
+
+      // Se já temos a mesma sessão e o usuário já está carregado, não fazemos nada
+      // Isso evita o flicker ao mudar de aba quando o Supabase refresca o token silenciosamente
+      if (session?.access_token === nextSession.access_token && usuario) {
+        return;
+      }
+
+      // Só mostramos o loader se ainda não tivermos o perfil carregado
+      const needsLoader = !usuario;
+      if (needsLoader) setIsLoading(true);
 
       try {
         await hydrateFromSession(nextSession);
-      } catch (error) {
-        console.error('Erro ao sincronizar autenticação:', error);
-        if (!active) return;
-        await hydrateFromSession(null);
       } finally {
-        if (active && shouldShowLoader) {
-          setIsLoading(false);
-        }
+        if (active && needsLoader) setIsLoading(false);
       }
     });
 

@@ -52,6 +52,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Se o usuário está autenticado mas o perfil ainda não carregou,
+  // mantemos o loader para evitar redirecionamento incorreto para o paywall
+  if (!usuario) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ScissorsLoader />
+      </div>
+    );
+  }
+
   if (isPaid) {
     return <>{children}</>;
   }

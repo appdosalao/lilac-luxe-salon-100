@@ -11,7 +11,14 @@ import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
 import { ScissorsLoader } from '@/components/ScissorsLoader';
 import { PersistenceGuard } from "./components/PersistenceGuard";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Desativar recarregamento de dados ao focar na janela
+      retry: 1,
+    },
+  },
+});
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const MinhaAgenda = lazy(() => import('./pages/MinhaAgenda'));
@@ -182,19 +189,19 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <PersistenceGuard>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <SupabaseAuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <SupabaseAuthProvider>
+          <PersistenceGuard>
             <NotificationProviderAvancado>
               <PWAProvider>
                 <AppContent />
               </PWAProvider>
             </NotificationProviderAvancado>
-          </SupabaseAuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </PersistenceGuard>
+          </PersistenceGuard>
+        </SupabaseAuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
