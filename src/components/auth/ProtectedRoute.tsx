@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { ScissorsLoader } from '@/components/ScissorsLoader';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePaidAccess } from '@/hooks/usePaidAccess';
 import { PaywallScreen } from '@/components/PaywallScreen';
@@ -35,7 +35,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <ScissorsLoader />
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
           {loadingTimeout ? (
             <div className="flex flex-col items-center gap-2">
               <div className="text-sm text-muted-foreground">Carregamento demorando…</div>

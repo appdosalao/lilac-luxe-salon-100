@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScissorsLoader } from '@/components/ScissorsLoader';
+import { Loader2 } from 'lucide-react';
 
 // Lazy load do formulário para evitar problemas de carregamento
 const AgendamentoOnlineForm = React.lazy(() => 
@@ -23,7 +23,7 @@ export default function AgendamentoOnline() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center py-8">
-                <ScissorsLoader />
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </CardContent>
             </Card>
           }

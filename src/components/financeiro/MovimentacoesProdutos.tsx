@@ -4,11 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, ShoppingCart, Search, Filter, TrendingUp, TrendingDown, Download } from "lucide-react";
+import { Package, ShoppingCart, Search, Filter, TrendingUp, TrendingDown, Download, Loader2 } from "lucide-react";
 import { useSupabaseCompras } from "@/hooks/useSupabaseCompras";
 import { useSupabaseVendas } from "@/hooks/useSupabaseVendas";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
-import { ScissorsLoader } from "@/components/ScissorsLoader";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { exportMovimentacoesEstoqueCSV, exportMovimentacoesEstoquePDF } from "@/lib/export";
@@ -128,8 +127,8 @@ export default function MovimentacoesProdutos() {
 
   if (loadingCompras || loadingVendas) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <ScissorsLoader />
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

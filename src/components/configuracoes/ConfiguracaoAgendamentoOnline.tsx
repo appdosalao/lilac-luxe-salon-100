@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image, Upload, X, Palette, Eye, Layout } from 'lucide-react';
+import { Store, Phone, Mail, MapPin, Instagram, Facebook, MessageCircle, DollarSign, Clock, FileText, Image, Upload, X, Palette, Eye, Layout, Loader2 } from 'lucide-react';
 import { useConfigAgendamentoOnline, ConfigAgendamentoOnline } from '@/hooks/useConfigAgendamentoOnline';
-import { ScissorsLoader } from '@/components/ScissorsLoader';
 
 export function ConfiguracaoAgendamentoOnline() {
   const { config, loading, saving, setConfig, salvarConfig } = useConfigAgendamentoOnline();
@@ -114,13 +113,9 @@ export function ConfiguracaoAgendamentoOnline() {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <ScissorsLoader />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
