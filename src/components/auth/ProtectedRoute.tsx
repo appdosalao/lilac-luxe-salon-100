@@ -36,7 +36,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             <div className="flex flex-col items-center gap-2">
               <div className="text-sm text-muted-foreground">Carregamento demorando…</div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => {
+                  if (typeof window.location.reload === 'function') {
+                    // @ts-ignore
+                    window.location.reload(true);
+                  } else {
+                    window.location.reload();
+                  }
+                }}>
                   Recarregar
                 </Button>
                 <Button onClick={() => navigate('/login')}>Ir para login</Button>
