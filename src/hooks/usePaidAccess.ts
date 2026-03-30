@@ -73,7 +73,7 @@ export const usePaidAccess = () => {
 
   return {
     isPaid: paidFromProfile ?? !!query.data,
-    isLoading: paidFromProfile === undefined && query.isFetching && query.data === undefined,
+    isLoading: paidFromProfile === undefined && !query.data && query.isLoading,
     refetch: query.refetch,
   };
 };

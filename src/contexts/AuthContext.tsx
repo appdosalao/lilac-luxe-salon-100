@@ -263,8 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Se já temos a mesma sessão (pelo ID do usuário), atualizamos a sessão silenciosamente
       // Isso evita o flicker ao mudar de aba quando o Supabase refresca o token
-      const isSameUser = user?.id === nextSession.user.id;
-      if (isSameUser && usuario) {
+      if (user?.id === nextSession.user.id && usuario) {
         setSession(nextSession);
         setUser(nextSession.user);
         return;

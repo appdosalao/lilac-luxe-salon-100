@@ -8,8 +8,6 @@ import { PWAProvider } from "./components/pwa/PWAProvider";
 import Layout from "./components/Layout";
 import { NotificationProviderAvancado } from "./components/notificacoes/NotificationProviderAvancado";
 import { BackupPrompt } from "./components/configuracoes/BackupPrompt";
-import { ScissorsLoader } from '@/components/ScissorsLoader';
-import { PersistenceGuard } from "./components/PersistenceGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -195,13 +193,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SupabaseAuthProvider>
-          <PersistenceGuard>
-            <NotificationProviderAvancado>
-              <PWAProvider>
-                <AppContent />
-              </PWAProvider>
-            </NotificationProviderAvancado>
-          </PersistenceGuard>
+          <NotificationProviderAvancado>
+            <PWAProvider>
+              <AppContent />
+            </PWAProvider>
+          </NotificationProviderAvancado>
         </SupabaseAuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
