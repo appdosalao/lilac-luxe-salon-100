@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       strategies: 'injectManifest', // Mudar para usar arquivo customizado
       srcDir: 'src',
       filename: 'service-worker.js',
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // Mudar de autoUpdate para prompt para evitar recarregamentos automáticos
       injectRegister: 'auto',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,

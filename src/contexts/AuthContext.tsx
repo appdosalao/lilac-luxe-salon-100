@@ -225,9 +225,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void init();
 
-    const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const { data } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!active) return;
-      setIsLoading(true);
+
+      // Só mostrar o loader em eventos críticos se ainda não tivermos sessão
+      // TOKEN_REFRESHED e SIGNED_IN (quando já logado) podem ser feitos em background
+      const shouldShowLoader = event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && !session);
+      
+      if (shouldShowLoader) {
+        setIsLoading(true);
+      }
+
       try {
         await hydrateFromSession(nextSession);
       } catch (error) {
@@ -235,7 +243,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         await hydrateFromSession(null);
       } finally {
-        if (active) setIsLoading(false);
+        if (active && shouldShowLoader) {
+          setIsLoading(false);
+        }
       }
     });
 
