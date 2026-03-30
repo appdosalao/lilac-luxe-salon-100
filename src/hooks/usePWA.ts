@@ -87,8 +87,9 @@ export const usePWA = (): PWAState & PWAActions => {
     try {
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.addEventListener('appinstalled', handleAppInstalled);
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
+      // Removidos listeners de online/offline que podem disparar re-renders desnecessários
+      // window.addEventListener('online', handleOnline);
+      // window.addEventListener('offline', handleOffline);
     } catch (error) {
       console.warn('Erro ao registrar event listeners:', error);
     }

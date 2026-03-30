@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Se não houver sessão nova, e já tivermos um usuário, não limpamos imediatamente
     // para evitar "flicker" de redirecionamento em falhas temporárias de rede ao retomar foco
     if (!nextSession?.user) {
-      // Só limpamos se tivermos certeza que não há sessão (logout real)
+      // Só limpamos se tivermos certeza absoluta que não há sessão (logout real)
       const { data: currentSession } = await supabase.auth.getSession();
       if (!currentSession.session) {
         setSession(null);
@@ -93,8 +93,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Se já temos o mesmo usuário e o perfil já está carregado, evitamos sobrescrever
+    // o estado de 'usuario' se não for necessário, prevenindo triggers em outros hooks
+    const isSameUser = user?.id === nextSession.user.id;
+    
     setSession(nextSession);
     setUser(nextSession.user);
+
+    // Se for o mesmo usuário e já tivermos o objeto 'usuario', só atualizamos se houver mudança real
+    // Isso evita que o useEffect de hooks dependentes (como useSupabaseConfiguracoes) disparem sem necessidade
+    if (isSameUser && usuario) {
+      return;
+    }
 
     let profile: any = null;
     let profileError: any = null;
