@@ -16,7 +16,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  const isLoading = authLoading || paidLoading;
+  // Consideramos carregado assim que temos a autenticação e o perfil (usuario)
+  // Se usuario já existe, ignoramos novos carregamentos de fundo para evitar o flicker
+  const isActuallyLoading = (!isAuthenticated && authLoading) || (isAuthenticated && !usuario && authLoading);
+  const isLoading = isActuallyLoading || paidLoading;
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,7 +30,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return () => window.clearTimeout(t);
   }, [isLoading]);
 
-  if (isLoading) {
+  if (isLoading && !usuario) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
