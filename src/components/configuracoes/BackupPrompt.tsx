@@ -12,11 +12,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Database, AlertTriangle } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 export function BackupPrompt() {
   const { user } = useSupabaseAuth();
   const { configuracaoBackup } = useSupabaseConfiguracoes();
   const [showPrompt, setShowPrompt] = useState(false);
   const [diasDesdeBackup, setDiasDesdeBackup] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user?.id || !configuracaoBackup?.backup_automatico) return;
@@ -65,7 +68,7 @@ export function BackupPrompt() {
 
   const handleIrParaBackup = () => {
     setShowPrompt(false);
-    window.location.href = '/configuracoes?tab=backup';
+    navigate('/configuracoes?tab=backup');
   };
 
   if (!showPrompt) return null;

@@ -173,7 +173,7 @@ export const usePWA = (): PWAState & PWAActions => {
         navigator.serviceWorker.getRegistration().then((registration) => {
           if (registration && registration.waiting) {
             registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            window.location.reload();
+            // window.location.reload(); // Removido reload automático ao atualizar
           }
         });
       }

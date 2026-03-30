@@ -69,6 +69,8 @@ const statusConfig = {
   },
 };
 
+import { useNavigate } from "react-router-dom";
+
 export default function AgendamentoDetalhes({
   agendamento,
   cliente,
@@ -79,6 +81,7 @@ export default function AgendamentoDetalhes({
   onMarcarPagamento,
 }: AgendamentoDetalhesProps) {
   const { user } = useSupabaseAuth();
+  const navigate = useNavigate();
   const { config } = useConfigAgendamentoOnline();
   const [pontos, setPontos] = useState<number | null>(null);
   const [pontosPotenciais, setPontosPotenciais] = useState<number | null>(null);
@@ -409,7 +412,7 @@ export default function AgendamentoDetalhes({
                   <span className="text-sm text-muted-foreground">Sem pontos registrados</span>
                 )}
               </div>
-              <Button variant="outline" onClick={() => (window.location.href = '/marketing')} className="gap-2">
+              <Button variant="outline" onClick={() => navigate('/marketing')} className="gap-2">
                 Abrir Marketing
               </Button>
             </div>
