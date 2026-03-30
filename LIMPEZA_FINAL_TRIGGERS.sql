@@ -73,7 +73,7 @@ BEGIN
     )
     VALUES (
       v_ag_id, v_user_id, v_cliente_id, NEW.servico_id,
-      NEW.data, NEW.horario::text, (NEW.data || ' ' || NEW.horario)::timestamp with time zone,
+      NEW.data, NEW.horario::time, (NEW.data || ' ' || NEW.horario)::timestamp with time zone,
       COALESCE(NEW.duracao, 60), COALESCE(NEW.valor, 0), 0, COALESCE(NEW.valor, 0),
       'fiado', 'em_aberto', 'agendado', 'online', true, NEW.observacoes
     );

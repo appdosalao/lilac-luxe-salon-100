@@ -134,13 +134,13 @@ BEGIN
     -- 4. Criar agendamento real na agenda principal
     v_ag_id := gen_random_uuid();
     INSERT INTO public.agendamentos (
-      id, usuario_id, cliente_id, servico_id,
+      id, user_id, cliente_id, servico_id,
       data, hora, data_hora, duracao, valor, valor_pago, valor_devido,
       forma_pagamento, status_pagamento, status, origem, confirmado, observacoes
     )
     VALUES (
-      v_ag_id, v_usuario_id, v_cliente_id, NEW.servico_id,
-      NEW.data, NEW.horario::text, (NEW.data || ' ' || NEW.horario)::timestamp with time zone,
+      v_ag_id, v_user_id, v_cliente_id, NEW.servico_id,
+      NEW.data, NEW.horario::time, (NEW.data || ' ' || NEW.horario)::timestamp with time zone,
       v_duracao_final, v_valor_final, 0, v_valor_final,
       'fiado', 'em_aberto', 'agendado', 'online', true, NEW.observacoes
     );
