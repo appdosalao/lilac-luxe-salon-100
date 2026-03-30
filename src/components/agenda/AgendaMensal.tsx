@@ -365,19 +365,26 @@ export function AgendaMensal({ buscaTexto = '' }: AgendaMensalProps) {
       {/* Diálogo de Detalhes simples */}
       <Dialog open={detalhesAgendamentoAberto} onOpenChange={setDetalhesAgendamentoAberto}>
         <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{agendamentoSelecionado ? agendamentoSelecionado.clienteNome : 'Detalhes do Agendamento'}</span>
+              {agendamentoSelecionado && (
+                <Badge className="bg-info/20 text-info border-0 capitalize">
+                  {agendamentoSelecionado.status}
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {agendamentoSelecionado ? (
+                `${agendamentoSelecionado.hora} - ${agendamentoSelecionado.servicoNome}`
+              ) : (
+                'Informações do agendamento selecionado.'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
           {agendamentoSelecionado && (
             <div className="space-y-4">
-              <DialogHeader>
-                <DialogTitle className="flex items-center justify-between">
-                  <span>{agendamentoSelecionado.clienteNome}</span>
-                  <Badge className="border-0 capitalize bg-info/20 text-info">
-                    {agendamentoSelecionado.status}
-                  </Badge>
-                </DialogTitle>
-                <DialogDescription>
-                  {format(formatarDataLocal(agendamentoSelecionado.data as any), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </DialogDescription>
-              </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <div className="text-muted-foreground">Horário</div>

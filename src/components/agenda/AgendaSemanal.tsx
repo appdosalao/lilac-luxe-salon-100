@@ -342,17 +342,17 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
       {/* Dialog de Horários do Dia */}
       <Dialog open={diaDialogAberto} onOpenChange={setDiaDialogAberto}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {diaSelecionado ? format(diaSelecionado, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Detalhes do Dia'}
+            </DialogTitle>
+            <DialogDescription>
+              Todos os horários agendados e disponíveis para o dia.
+            </DialogDescription>
+          </DialogHeader>
+
           {diaSelecionado && (
             <div className="space-y-4">
-              <DialogHeader>
-                <DialogTitle>
-                  {format(diaSelecionado, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </DialogTitle>
-                <DialogDescription>
-                  Todos os horários agendados e disponíveis para o dia.
-                </DialogDescription>
-              </DialogHeader>
-
               {(() => {
                 const ags = getAgendamentosDoDia(diaSelecionado);
                 const disponiveis = getHorariosDisponiveisDoDia(diaSelecionado);
