@@ -196,17 +196,27 @@ export const useSupabaseFidelidade = () => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('ranking_fidelidade')
         .select('*')
         .eq('user_id', user.id)
-        .lte('ranking', limite)
-        .order('ranking', { ascending: true });
+        .gt('pontos_totais', 0)
+        .order('pontos_totais', { ascending: false })
+        .limit(limite);
 
       if (error) throw error;
-      setRanking((data || []) as RankingFidelidade[]);
+
+      const rankingRecalculado = (data || []).map((item, index) => ({
+        ...item,
+        ranking: index + 1
+      }));
+
+      setRanking(rankingRecalculado as RankingFidelidade[]);
     } catch (error: any) {
       console.error('Erro ao carregar ranking:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

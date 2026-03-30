@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trophy, Medal, Award, Gift } from 'lucide-react';
+import { Trophy, Medal, Award, Gift, RefreshCw } from 'lucide-react';
 import { useSupabaseFidelidade } from '@/hooks/useSupabaseFidelidade';
 import { ResgateRecompensaDialog } from './ResgateRecompensaDialog';
 import type { RankingFidelidade } from '@/types/fidelidade';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 
 export const RankingClientes = () => {
-  const { ranking, carregarRanking, classes } = useSupabaseFidelidade();
+  const { ranking, carregarRanking, classes, sincronizarDoHistorico, loading } = useSupabaseFidelidade();
   const [clienteSelecionado, setClienteSelecionado] = useState<RankingFidelidade | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [limite, setLimite] = useState<number>(10);
@@ -31,22 +31,30 @@ export const RankingClientes = () => {
     carregarRanking(limite);
   };
 
+  const handleSincronizar = async () => {
+    const sucesso = await sincronizarDoHistorico();
+    if (sucesso) {
+      carregarRanking(limite);
+    }
+  };
+
   useEffect(() => {
     carregarRanking(limite);
   }, [limite]);
 
   const listaFiltrada = useMemo(() => {
-    return ranking
+    return (ranking || [])
+      .filter(c => (c.pontos_totais || 0) > 0)
       .filter(c => classeFiltro === 'todas' || c.classe_nome === classeFiltro)
       .filter(c => {
         if (!busca.trim()) return true;
         const s = busca.toLowerCase();
         return (c.cliente_nome || '').toLowerCase().includes(s) || (c.telefone || '').includes(s);
-      });
+      })
+      .sort((a, b) => (b.pontos_totais || 0) - (a.pontos_totais || 0));
   }, [ranking, classeFiltro, busca]);
 
   const getNivelBadge = (cliente: typeof ranking[0]) => {
-    // Usar classe_nome e classe_cor da view se disponíveis
     if (cliente.classe_nome && cliente.classe_cor) {
       return {
         color: 'border',
@@ -55,7 +63,6 @@ export const RankingClientes = () => {
       };
     }
     
-    // Fallback se não houver classe
     return {
       color: 'bg-muted text-muted-foreground',
       label: 'Sem classe',
@@ -108,8 +115,19 @@ export const RankingClientes = () => {
       </CardHeader>
       <CardContent>
         {listaFiltrada.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Nenhum cliente no programa ainda
+          <div className="text-center py-12 space-y-4">
+            <p className="text-muted-foreground">
+              Nenhum cliente com pontos encontrado no programa ainda.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={handleSincronizar}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Sincronizar Pontos do Histórico
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
