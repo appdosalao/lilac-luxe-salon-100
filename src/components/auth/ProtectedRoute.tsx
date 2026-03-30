@@ -61,7 +61,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (!usuario) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <ScissorsLoader />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -75,8 +75,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const trialEligible =
     subscriptionStatus === 'trial' ||
     subscriptionStatus === 'inactive' ||
-    subscriptionStatus === null ||
-    subscriptionStatus === '';
+    subscriptionStatus === null;
   const trialValid =
     trialEligible &&
     typeof trialStart === 'number' &&
