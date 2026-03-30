@@ -36,14 +36,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             <div className="flex flex-col items-center gap-2">
               <div className="text-sm text-muted-foreground">Carregamento demorando…</div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => {
-                  if (typeof window.location.reload === 'function') {
-                    // @ts-ignore
-                    window.location.reload(true);
-                  } else {
-                    window.location.reload();
-                  }
-                }}>
+                <Button variant="outline" onClick={() => window.location.reload()}>
                   Recarregar
                 </Button>
                 <Button onClick={() => navigate('/login')}>Ir para login</Button>
@@ -57,20 +50,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
-  }
-
-  const isPublicRoute = window.location.pathname.startsWith('/login') || 
-                        window.location.pathname.startsWith('/cadastro') || 
-                        window.location.pathname.startsWith('/agendamento-online');
-
-  // Se o usuário está autenticado mas o objeto 'usuario' (perfil) ainda não carregou,
-  // mostramos o loader em vez de redirecionar para o Paywall preventivamente.
-  if (!usuario && !isPublicRoute) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <ScissorsLoader />
-      </div>
-    );
   }
 
   if (isPaid) {

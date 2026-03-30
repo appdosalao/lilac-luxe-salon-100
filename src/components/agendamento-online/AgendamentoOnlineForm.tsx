@@ -563,14 +563,7 @@ Você receberá uma confirmação em breve.
                     Copiar
                   </Button>
                   <Button 
-                    onClick={() => {
-                      if (typeof window.location.reload === 'function') {
-                        // @ts-ignore
-                        window.location.reload(true);
-                      } else {
-                        window.location.reload();
-                      }
-                    }} 
+                    onClick={() => window.location.reload()} 
                     variant="ghost"
                     className="h-12 rounded-2xl font-bold text-muted-foreground hover:text-primary"
                   >
