@@ -244,8 +244,8 @@ export function AgendamentoOnlineForm() {
       }
       if (!formData.telefone.trim()) {
         newErrors.telefone = 'Telefone é obrigatório';
-      } else if (formData.telefone.replace(/\D/g, '').length < 10) {
-        newErrors.telefone = 'Telefone inválido';
+      } else if (formData.telefone.replace(/\D/g, '').length < 8) {
+        newErrors.telefone = 'Telefone inválido (mínimo 8 dígitos)';
       }
       
       if (Object.keys(newErrors).length > 0) {
@@ -326,14 +326,15 @@ export function AgendamentoOnlineForm() {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: FormErrors = {};
+        const firstErrorMessage = error.issues[0]?.message || 'Erro de validação';
         error.issues.forEach((err) => {
           const field = err.path[0] as keyof FormErrors;
           newErrors[field] = err.message;
         });
         setErrors(newErrors);
-        toast.error('Por favor, corrija os erros no formulário');
+        toast.error(`Erro no formulário: ${firstErrorMessage}`);
       } else {
-        toast.error('Erro ao validar dados do formulário');
+        toast.error('Erro ao validar dados do formulário: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
       }
       setIsSubmitting(false);
     }

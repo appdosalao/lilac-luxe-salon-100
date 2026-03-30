@@ -77,7 +77,9 @@ export const useAgendamentoOnlineService = () => {
       const publicId = await resolvePublicId();
 
       if (publicId) {
-        const { data, error } = await withTiming('rpc:get_booking_owner_id', () => db.rpc('get_booking_owner_id', { p_public_id: publicId }));
+        const { data, error } = (await withTiming('rpc:get_booking_owner_id', () => 
+          db.rpc('get_booking_owner_id', { p_public_id: publicId })
+        )) as any;
         if (error) {
           console.error('Erro ao resolver owner user_id pelo public_id:', error);
         } else if (data) {
@@ -89,7 +91,7 @@ export const useAgendamentoOnlineService = () => {
 
       // 3. FALLBACK: Se não houver nada na URL, tentar o primeiro salão ativo da base
       // Isso permite que o link puro /agendamento-online funcione para o salão principal
-      const { data: fallbackData, error: fallbackError } = await withTiming('select:fallback_owner', () =>
+      const { data: fallbackData, error: fallbackError } = (await withTiming('select:fallback_owner', () =>
         db
           .from('configuracoes_agendamento_online')
           .select('user_id')
@@ -97,7 +99,7 @@ export const useAgendamentoOnlineService = () => {
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle()
-      );
+      )) as any;
 
       if (!fallbackError && fallbackData?.user_id) {
         setOwnerUserIdCache(fallbackData.user_id);
@@ -118,7 +120,9 @@ export const useAgendamentoOnlineService = () => {
     try {
       const publicId = await resolvePublicId();
       if (publicId) {
-        const { data, error } = await withTiming('rpc:get_public_services', () => db.rpc('get_public_services', { p_public_id: publicId }));
+        const { data, error } = (await withTiming('rpc:get_public_services', () => 
+          db.rpc('get_public_services', { p_public_id: publicId })
+        )) as any;
         if (error) {
           const msg = `Erro RPC (serviços): ${error.code || ''} ${error.message || ''}`.trim();
           setServicosError(msg);
@@ -139,12 +143,12 @@ export const useAgendamentoOnlineService = () => {
         return;
       }
 
-      const result = await withTiming('select:servicos', () =>
+      const result = (await withTiming('select:servicos', () =>
         db
           .from('servicos')
           .select('id, nome, descricao, valor, duracao, user_id')
           .eq('user_id', ownerId)
-      );
+      )) as any;
 
       if (result.error) {
         const msg = `Erro DB (serviços): ${result.error.code || ''} ${result.error.message || ''}`.trim();
@@ -174,7 +178,9 @@ export const useAgendamentoOnlineService = () => {
     try {
       const publicId = await resolvePublicId();
       if (publicId) {
-        const { data, error } = await withTiming('rpc:get_public_products', () => db.rpc('get_public_products', { p_public_id: publicId }));
+        const { data, error } = (await withTiming('rpc:get_public_products', () => 
+          db.rpc('get_public_products', { p_public_id: publicId })
+        )) as any;
         if (error) {
           console.error('Erro ao carregar produtos públicos (rpc):', error);
           setProdutos([]);
@@ -190,7 +196,7 @@ export const useAgendamentoOnlineService = () => {
         return;
       }
 
-      const { data, error } = await withTiming('select:produtos', () =>
+      const { data, error } = (await withTiming('select:produtos', () =>
         db
           .from('produtos')
           .select('id, nome, preco_venda, ativo, categoria')
@@ -198,7 +204,7 @@ export const useAgendamentoOnlineService = () => {
           .eq('categoria', 'revenda')
           .eq('user_id', ownerId)
           .limit(200)
-      );
+      )) as any;
 
       if (error) throw error;
       setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.preco_venda, categoria: p.categoria })));
@@ -225,7 +231,7 @@ export const useAgendamentoOnlineService = () => {
     try {
       const publicId = await resolvePublicId();
 
-      const horariosResultCall = publicId
+      const horariosResultCall = (publicId
         ? await withTiming('rpc:get_public_time_slots', () =>
             db.rpc('get_public_time_slots', {
               p_public_id: publicId,
@@ -239,7 +245,7 @@ export const useAgendamentoOnlineService = () => {
               user_id_param: servico.user_id || (await resolveOwnerUserId()),
               duracao_servico: typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60,
             })
-          );
+          )) as any;
 
       const horariosResult = horariosResultCall?.data;
       const error = horariosResultCall?.error;
@@ -273,14 +279,14 @@ export const useAgendamentoOnlineService = () => {
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
     try {
       // Usar função do Supabase para criar cliente
-      const { data, error } = await withTiming('rpc:criar_cliente_agendamento_online', () =>
+      const { data, error } = (await withTiming('rpc:criar_cliente_agendamento_online', () =>
         db.rpc('criar_cliente_agendamento_online', {
           p_nome: dados.nome_completo,
           p_telefone: dados.telefone,
           p_email: dados.email,
           p_observacoes: 'Cliente criado via agendamento online'
         })
-      );
+      )) as any;
 
       if (error) throw error;
       return data;
@@ -342,11 +348,12 @@ export const useAgendamentoOnlineService = () => {
           duracao: duracaoEfetiva,
           status: 'confirmado',
           origem: 'formulario_online',
-          user_agent: navigator.userAgent
+          user_agent: navigator.userAgent,
+          user_id: await resolveOwnerUserId()
       };
 
       let insertError: any = null;
-      const firstTry = await withTiming('insert:agendamentos_online', () => db.from('agendamentos_online').insert(baseInsert as any));
+      const firstTry = (await withTiming('insert:agendamentos_online', () => db.from('agendamentos_online').insert(baseInsert as any))) as any;
       insertError = firstTry.error;
 
       if (insertError) throw insertError;
