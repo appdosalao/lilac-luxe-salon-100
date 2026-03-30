@@ -252,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!active) return;
 
+      // Se não houver sessão, limpa tudo e para o loader (se houver)
       if (!nextSession) {
         setSession(null);
         setUser(null);
@@ -260,22 +261,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Se for apenas atualização de token (comum ao mudar de aba), atualizamos a sessão silenciosamente
-      if (event === 'TOKEN_REFRESHED') {
+      // Se já temos a mesma sessão (pelo ID do usuário), atualizamos a sessão silenciosamente
+      // Isso evita o flicker ao mudar de aba quando o Supabase refresca o token
+      const isSameUser = user?.id === nextSession.user.id;
+      if (isSameUser && usuario) {
         setSession(nextSession);
         setUser(nextSession.user);
         return;
       }
 
-      // Se já temos a mesma sessão e o usuário já está carregado, não fazemos nada
-      if (session?.access_token === nextSession.access_token && usuario) {
-        return;
-      }
-
-      // Só mostramos o loader se ainda não tivermos o perfil carregado e for um evento de login real
-      const isInitialOrSignIn = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
-      const needsLoader = isInitialOrSignIn && !usuario;
-      
+      // Só mostramos o loader se ainda não tivermos NENHUMA sessão carregada
+      // Se o usuário já está logado, nunca mais ativamos o isLoading global
+      const needsLoader = !session && !usuario;
       if (needsLoader) setIsLoading(true);
 
       try {

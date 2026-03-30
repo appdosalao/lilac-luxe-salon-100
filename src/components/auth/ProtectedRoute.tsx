@@ -11,15 +11,15 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading: authLoading, usuario } = useSupabaseAuth();
+  const { isAuthenticated, isLoading: authLoading, usuario, session } = useSupabaseAuth();
   const { isPaid, isLoading: paidLoading } = usePaidAccess();
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Consideramos carregado assim que temos a autenticação e o perfil (usuario)
-  // Se usuario já existe, ignoramos novos carregamentos de fundo para evitar o flicker
-  const isActuallyLoading = (!isAuthenticated && authLoading) || (isAuthenticated && !usuario && authLoading);
-  const isLoading = isActuallyLoading || paidLoading;
+  // Consideramos carregando APENAS se não houver NENHUMA sessão e o auth estiver trabalhando
+  // Se já temos session ou usuario, ignoramos QUALQUER carregamento de fundo para estabilidade total
+  const isInitialBoot = !session && !usuario && authLoading;
+  const isLoading = isInitialBoot || (isAuthenticated && !usuario && authLoading);
 
   useEffect(() => {
     if (!isLoading) {
@@ -30,6 +30,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return () => window.clearTimeout(t);
   }, [isLoading]);
 
+  // Nunca mostramos o loader de tela cheia se já temos o objeto de usuário (perfil)
   if (isLoading && !usuario) {
     return (
       <div className="min-h-screen flex items-center justify-center">
