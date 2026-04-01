@@ -116,6 +116,8 @@ export default function ContaFixaForm({
         <Button 
           variant="outline" 
           size="icon"
+          aria-label="Voltar"
+          title="Voltar"
           onClick={onCancel}
         >
           <ArrowLeft className="h-4 w-4" />
