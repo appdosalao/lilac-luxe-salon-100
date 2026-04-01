@@ -215,6 +215,8 @@ export function CompraForm({ onSuccess }: { onSuccess: () => void }) {
                     type="button"
                     variant="outline"
                     size="icon"
+                    aria-label="Remover item da compra"
+                    title="Remover item da compra"
                     onClick={() => removerItem(index)}
                     disabled={itens.length === 1}
                   >
