@@ -103,6 +103,7 @@ export function ProdutosList() {
             onClick={() => setSomenteBaixoEstoque(v => !v)}
             className="gap-2"
             title="Apenas com estoque abaixo do mínimo"
+            aria-label="Filtrar por baixo estoque"
           >
             <Filter className="h-4 w-4" />
             Baixo estoque
@@ -187,6 +188,7 @@ export function ProdutosList() {
                   onClick={() => setMovDialog({ open: true, produto, tipo: 'entrada' })}
                   className="flex-1 sm:flex-none h-10 btn-touch"
                   title="Entrada de estoque"
+                  aria-label="Dar entrada no estoque"
                 >
                   <PackagePlus className="h-3 w-3 sm:mr-2" />
                   <span className="hidden sm:inline">Entrada</span>
@@ -197,6 +199,7 @@ export function ProdutosList() {
                   onClick={() => setMovDialog({ open: true, produto, tipo: 'saida' })}
                   className="flex-1 sm:flex-none h-10 btn-touch"
                   title="Saída de estoque"
+                  aria-label="Dar saída no estoque"
                 >
                   <PackageMinus className="h-3 w-3 sm:mr-2" />
                   <span className="hidden sm:inline">Saída</span>
@@ -209,6 +212,7 @@ export function ProdutosList() {
                     setShowForm(true);
                   }}
                   className="flex-1 sm:flex-none h-10 btn-touch"
+                  aria-label="Editar produto"
                 >
                   <Pencil className="h-3 w-3 sm:mr-2" />
                   <span className="hidden sm:inline">Editar</span>
@@ -231,6 +235,7 @@ export function ProdutosList() {
                   }}
                   className="flex-1 sm:flex-none h-10 btn-touch"
                   title="Ver movimentações recentes"
+                  aria-label="Ver movimentações"
                 >
                   <ChevronDown className="h-3 w-3 sm:mr-2" />
                   <span className="hidden sm:inline">Movimentações</span>
@@ -240,6 +245,7 @@ export function ProdutosList() {
                   size="sm"
                   onClick={() => setDeleteDialog({ open: true, id: produto.id, nome: produto.nome })}
                   className="flex-1 sm:flex-none h-10 btn-touch hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Desativar produto"
                 >
                   <Trash2 className="h-3 w-3 sm:mr-2" />
                   <span className="hidden sm:inline">Desativar</span>
