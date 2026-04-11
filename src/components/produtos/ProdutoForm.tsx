@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { useSupabaseFornecedores } from '@/hooks/useSupabaseFornecedores';
 import { useSupabaseCategorias } from '@/hooks/useSupabaseCategorias';
 import { NovoProduto } from '@/types/produto';
 import { Switch } from '@/components/ui/switch';
+import { ImagePlus, X, Loader2 } from 'lucide-react';
 
 interface ProdutoFormProps {
   produto?: any;
@@ -17,9 +18,11 @@ interface ProdutoFormProps {
 }
 
 export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) {
-  const { createProduto, updateProduto } = useSupabaseProdutos();
+  const { createProduto, updateProduto, uploadImagem } = useSupabaseProdutos();
   const { fornecedores } = useSupabaseFornecedores();
   const { categorias } = useSupabaseCategorias();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState<NovoProduto>({
     nome: '',
@@ -32,6 +35,7 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
     unidade_medida: 'un',
     preco_custo: 0,
     preco_venda: 0,
+    imagem_url: '',
     ativo: true,
   });
 
@@ -48,10 +52,31 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
         unidade_medida: produto.unidade_medida,
         preco_custo: produto.preco_custo,
         preco_venda: produto.preco_venda,
+        imagem_url: produto.imagem_url || '',
         ativo: produto.ativo,
       });
     }
   }, [produto]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const url = await uploadImagem(file);
+      if (url) {
+        setFormData(prev => ({ ...prev, imagem_url: url }));
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, imagem_url: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,6 +236,57 @@ export function ProdutoForm({ produto, onSuccess, onCancel }: ProdutoFormProps) 
             value={formData.preco_venda}
             onChange={(e) => setFormData({ ...formData, preco_venda: parseFloat(e.target.value) || 0 })}
           />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <Label>Imagem do Produto</Label>
+        <div className="flex flex-col gap-4">
+          {formData.imagem_url ? (
+            <div className="relative w-full max-w-[200px] aspect-square rounded-2xl overflow-hidden border-2 border-primary/10 shadow-lg group">
+              <img 
+                src={formData.imagem_url} 
+                alt="Prévia do produto" 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-xl shadow-lg hover:scale-110 transition-transform"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full max-w-[200px] aspect-square rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-all group"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <span className="text-xs font-bold text-primary/70 uppercase tracking-widest">Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <div className="p-4 bg-primary/10 rounded-2xl group-hover:scale-110 transition-transform">
+                    <ImagePlus className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="text-xs font-bold text-primary/70 uppercase tracking-widest">Adicionar Foto</span>
+                </>
+              )}
+            </div>
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
+          <p className="text-xs text-muted-foreground">
+            Recomendado: Imagem quadrada (1:1), formato PNG ou JPG, até 2MB.
+          </p>
         </div>
       </div>
 

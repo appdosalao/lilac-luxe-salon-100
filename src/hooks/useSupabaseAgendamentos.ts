@@ -68,14 +68,43 @@ export function useSupabaseAgendamentos() {
   };
 
   // Carregar agendamentos regulares do Supabase
-  const carregarAgendamentosRegulares = async (): Promise<Agendamento[]> => {
+  const carregarAgendamentosRegulares = async (mesFiltro?: string): Promise<Agendamento[]> => {
     if (!user) return [];
     
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('agendamentos')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
+
+      if (mesFiltro) {
+        // Se houver filtro de mês (YYYY-MM), carregar aquele mês completo
+        // Adicionamos uma margem de segurança de alguns dias antes e depois
+        const [ano, mes] = mesFiltro.split('-').map(Number);
+        const dataInicio = new Date(ano, mes - 1, 1);
+        dataInicio.setDate(dataInicio.getDate() - 7); // 7 dias antes
+        
+        const dataFim = new Date(ano, mes, 0); // último dia do mês
+        dataFim.setDate(dataFim.getDate() + 15); // 15 dias depois para ver o início do próximo
+        
+        const dataInicioStr = dataInicio.toISOString().split('T')[0];
+        const dataFimStr = dataFim.toISOString().split('T')[0];
+        
+        query = query.gte('data', dataInicioStr).lte('data', dataFimStr);
+      } else {
+        // Por padrão, carregar apenas de 30 dias atrás até 90 dias no futuro para performance
+        const trintaDiasAtras = new Date();
+        trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+        const dataInicio = trintaDiasAtras.toISOString().split('T')[0];
+
+        const noventaDiasAFrente = new Date();
+        noventaDiasAFrente.setDate(noventaDiasAFrente.getDate() + 90);
+        const dataFim = noventaDiasAFrente.toISOString().split('T')[0];
+        
+        query = query.gte('data', dataInicio).lte('data', dataFim);
+      }
+
+      const { data, error } = await query
         .order('data')
         .order('hora');
 
@@ -114,10 +143,13 @@ export function useSupabaseAgendamentos() {
 
   // Carregar agendamentos online
   const carregarAgendamentosOnline = async (): Promise<AgendamentoOnlineData[]> => {
+    if (!user) return [];
+    
     try {
       const { data, error } = await supabase
         .from('agendamentos_online')
         .select('*')
+        .eq('user_id', user.id)
         .in('status', ['pendente', 'confirmado'])
         .order('created_at', { ascending: false });
 
@@ -174,11 +206,12 @@ export function useSupabaseAgendamentos() {
   };
 
   // Carregar todos os agendamentos
-  const carregarAgendamentos = async () => {
+  const carregarAgendamentos = async (mesFiltroArg?: string) => {
+    const mesFiltro = mesFiltroArg || filtros.mes;
     setLoading(true);
     try {
       const [agendamentosReg, agendamentosOnl] = await Promise.all([
-        carregarAgendamentosRegulares(),
+        carregarAgendamentosRegulares(mesFiltro),
         carregarAgendamentosOnline()
       ]);
 
@@ -199,7 +232,7 @@ export function useSupabaseAgendamentos() {
   }, [agendamentos, agendamentosOnline]);
 
   useEffect(() => {
-    carregarAgendamentos();
+    carregarAgendamentos(filtros.mes);
 
     // Setup real-time subscriptions para agendamentos online
     const channelOnline = supabase
@@ -209,10 +242,11 @@ export function useSupabaseAgendamentos() {
         {
           event: '*',
           schema: 'public',
-          table: 'agendamentos_online'
+          table: 'agendamentos_online',
+          filter: user ? `user_id=eq.${user.id}` : undefined
         },
         () => {
-          carregarAgendamentos();
+          carregarAgendamentos(filtros.mes);
         }
       )
       .subscribe();
@@ -229,7 +263,7 @@ export function useSupabaseAgendamentos() {
           filter: user ? `user_id=eq.${user.id}` : undefined
         },
         () => {
-          carregarAgendamentos();
+          carregarAgendamentos(filtros.mes);
         }
       )
       .subscribe();
@@ -238,7 +272,7 @@ export function useSupabaseAgendamentos() {
       supabase.removeChannel(channelOnline);
       supabase.removeChannel(channelRegular);
     };
-  }, [user]);
+  }, [user, filtros.mes]);
 
   // Filtrar agendamentos combinados
   const agendamentosFiltrados = useMemo(() => {
@@ -323,12 +357,14 @@ export function useSupabaseAgendamentos() {
 
   // Confirmar agendamento online
   const confirmarAgendamentoOnline = async (agendamentoOnlineId: string) => {
+    if (!user) return false;
     setLoading(true);
     try {
       const { error } = await supabase
         .from('agendamentos_online')
         .update({ status: 'confirmado' })
-        .eq('id', agendamentoOnlineId);
+        .eq('id', agendamentoOnlineId)
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Erro ao confirmar agendamento:', error);
@@ -459,57 +495,6 @@ export function useSupabaseAgendamentos() {
         return false;
       }
 
-      try {
-        const { data: agAtual } = await supabase
-          .from('agendamentos')
-          .select('*')
-          .eq('id', id)
-          .single();
-        if (
-          agAtual &&
-          (agAtual.status === 'concluido' || updates.status === 'concluido') &&
-          (agAtual.status_pagamento === 'pago' || updates.status_pagamento === 'pago')
-        ) {
-          const { data: jaExiste } = await supabase
-            .from('pontos_fidelidade')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('origem', 'agendamento')
-            .eq('origem_id', id)
-            .limit(1);
-          if (!jaExiste || jaExiste.length === 0) {
-            const { data: programa } = await supabase
-              .from('programas_fidelidade')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('ativo', true)
-              .limit(1)
-              .single();
-            const ppr = Number(programa?.pontos_por_real ?? 1);
-            const pontosGanhos = Math.floor(Number(agAtual.valor) * (isNaN(ppr) ? 1 : ppr));
-            if (pontosGanhos > 0) {
-              await supabase.from('pontos_fidelidade').insert({
-                user_id: user.id,
-                cliente_id: agAtual.cliente_id,
-                pontos: pontosGanhos,
-                origem: 'agendamento',
-                origem_id: id,
-                descricao: 'Pontos ganhos no serviço concluído',
-                data_expiracao:
-                  programa?.expiracao_pontos_dias && programa.expiracao_pontos_dias > 0
-                    ? new Date(Date.now() + programa.expiracao_pontos_dias * 24 * 60 * 60 * 1000)
-                        .toISOString()
-                        .slice(0, 10)
-                    : null,
-                expirado: false,
-              });
-            }
-          }
-        }
-      } catch (ptsErr) {
-        console.warn('Falha ao registrar pontos automaticamente (continuando):', ptsErr);
-      }
-
       await carregarAgendamentos();
       toast.success('Agendamento atualizado com sucesso!');
       return true;
@@ -537,7 +522,8 @@ export function useSupabaseAgendamentos() {
         const { error } = await supabase
           .from('agendamentos_online')
           .delete()
-          .eq('id', agendamentoOnlineId);
+          .eq('id', agendamentoOnlineId)
+          .eq('user_id', user.id);
 
         if (error) {
           console.error('❌ Erro do Supabase ao excluir agendamento online:', error);

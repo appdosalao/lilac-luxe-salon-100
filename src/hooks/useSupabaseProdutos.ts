@@ -35,13 +35,18 @@ export function useSupabaseProdutos() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Sanitizar IDs vazios para null
+      const produtoSanitizado = {
+        ...produto,
+        user_id: user.id,
+        estoque_atual: 0,
+        categoria_id: produto.categoria_id === '' || produto.categoria_id === 'none' ? null : produto.categoria_id,
+        fornecedor_id: produto.fornecedor_id === '' ? null : produto.fornecedor_id,
+      };
+
       const { error } = await supabase
         .from('produtos')
-        .insert([{ 
-          ...produto,
-          user_id: user.id,
-          estoque_atual: 0,
-        }]);
+        .insert([produtoSanitizado]);
 
       if (error) throw error;
       toast.success('Produto cadastrado com sucesso!');
@@ -54,9 +59,14 @@ export function useSupabaseProdutos() {
 
   const updateProduto = async (id: string, produto: Partial<NovoProduto>) => {
     try {
+      // Sanitizar IDs vazios para null
+      const updates: any = { ...produto };
+      if (updates.categoria_id === '' || updates.categoria_id === 'none') updates.categoria_id = null;
+      if (updates.fornecedor_id === '') updates.fornecedor_id = null;
+
       const { error } = await supabase
         .from('produtos')
-        .update(produto)
+        .update(updates)
         .eq('id', id);
 
       if (error) throw error;
@@ -65,6 +75,31 @@ export function useSupabaseProdutos() {
     } catch (error: any) {
       toast.error('Erro ao atualizar produto: ' + error.message);
       throw error;
+    }
+  };
+
+  const uploadImagem = async (file: File) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('produtos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('produtos')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error: any) {
+      toast.error('Erro ao fazer upload da imagem: ' + error.message);
+      return null;
     }
   };
 
@@ -131,6 +166,7 @@ export function useSupabaseProdutos() {
     createProduto,
     updateProduto,
     deleteProduto,
+    uploadImagem,
     movimentarEstoque,
     recarregar: loadProdutos,
   };

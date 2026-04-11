@@ -994,6 +994,19 @@ Você receberá uma confirmação em breve.
                                       </div>
                                     )}
                                   </div>
+
+                                  <div className="w-full aspect-video rounded-xl overflow-hidden mb-3 border border-primary/5 bg-primary/5 flex items-center justify-center">
+                                    {p.imagem_url ? (
+                                      <img 
+                                        src={p.imagem_url} 
+                                        alt={p.nome} 
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <ShoppingBag className="w-8 h-8 text-primary/20" />
+                                    )}
+                                  </div>
+
                                   <span className="font-bold text-sm text-foreground line-clamp-1">{p.nome}</span>
                                   <span className="text-primary font-black text-lg mt-1">R$ {Number(p.valor).toFixed(2)}</span>
                                   

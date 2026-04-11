@@ -13,6 +13,7 @@ export interface Produto {
   unidade_medida: string;
   preco_custo: number;
   preco_venda: number;
+  imagem_url?: string | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
@@ -29,5 +30,6 @@ export interface NovoProduto {
   unidade_medida?: string;
   preco_custo: number;
   preco_venda: number;
+  imagem_url?: string | null;
   ativo?: boolean;
 }

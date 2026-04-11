@@ -8,7 +8,7 @@ export const useAgendamentoOnlineService = () => {
   const [loading, setLoading] = useState(false);
   const [servicos, setServicos] = useState<ServicoDisponivel[]>([]);
   const [servicosError, setServicosError] = useState<string | null>(null);
-  const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string }[]>([]);
+  const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string; imagem_url?: string | null }[]>([]);
   const [horariosError, setHorariosError] = useState<string | null>(null);
   const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
   const [publicIdCache, setPublicIdCache] = useState<string | null>(null);
@@ -89,23 +89,9 @@ export const useAgendamentoOnlineService = () => {
         }
       }
 
-      // 3. FALLBACK: Se não houver nada na URL, tentar o primeiro salão ativo da base
-      // Isso permite que o link puro /agendamento-online funcione para o salão principal
-      const { data: fallbackData, error: fallbackError } = (await withTiming('select:fallback_owner', () =>
-        db
-          .from('configuracoes_agendamento_online')
-          .select('user_id')
-          .eq('ativo', true)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      )) as any;
-
-      if (!fallbackError && fallbackData?.user_id) {
-        setOwnerUserIdCache(fallbackData.user_id);
-        return fallbackData.user_id;
-      }
-
+      // 3. FALLBACK: Se não houver nada na URL, não devemos mostrar dados aleatórios de outros usuários.
+      // O agendamento online DEVE ter um identificador (uid ou s) para garantir o isolamento.
+      // Se você quiser permitir um salão "padrão", ele deve ser configurado explicitamente.
       return null;
     } catch (error) {
       console.error('Erro ao resolver owner user_id:', error);
@@ -186,7 +172,13 @@ export const useAgendamentoOnlineService = () => {
           setProdutos([]);
           return;
         }
-        setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.valor, categoria: p.categoria })));
+        setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ 
+          id: p.id, 
+          nome: p.nome, 
+          valor: p.valor, 
+          categoria: p.categoria,
+          imagem_url: p.imagem_url
+        })));
         return;
       }
 
@@ -199,7 +191,7 @@ export const useAgendamentoOnlineService = () => {
       const { data, error } = (await withTiming('select:produtos', () =>
         db
           .from('produtos')
-          .select('id, nome, preco_venda, ativo, categoria')
+          .select('id, nome, preco_venda, ativo, categoria, imagem_url')
           .eq('ativo', true)
           .eq('categoria', 'revenda')
           .eq('user_id', ownerId)
@@ -207,7 +199,13 @@ export const useAgendamentoOnlineService = () => {
       )) as any;
 
       if (error) throw error;
-      setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ id: p.id, nome: p.nome, valor: p.preco_venda, categoria: p.categoria })));
+      setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ 
+        id: p.id, 
+        nome: p.nome, 
+        valor: p.preco_venda, 
+        categoria: p.categoria,
+        imagem_url: p.imagem_url
+      })));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
       setProdutos([]);

@@ -8,12 +8,32 @@ export const useSupabaseLancamentos = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Carregar lançamentos
-  const loadLancamentos = async () => {
+  const loadLancamentos = async (dataInicioParam?: string, dataFimParam?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      let query = supabase
         .from('lancamentos')
         .select('*')
+        .eq('user_id', user.user.id);
+
+      if (dataInicioParam) {
+        query = query.gte('data', dataInicioParam);
+      } else {
+        // Por padrão, carregar apenas os últimos 90 dias para performance
+        const noventaDiasAtras = new Date();
+        noventaDiasAtras.setDate(noventaDiasAtras.getDate() - 90);
+        const dataFiltro = noventaDiasAtras.toISOString().split('T')[0];
+        query = query.gte('data', dataFiltro);
+      }
+
+      if (dataFimParam) {
+        query = query.lte('data', dataFimParam);
+      }
+
+      const { data, error } = await query
         .order('data', { ascending: false });
 
       if (error) throw error;
@@ -74,6 +94,9 @@ export const useSupabaseLancamentos = () => {
   // Atualizar lançamento
   const updateLancamento = async (id: string, updates: Partial<Lancamento>) => {
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
       const updateData: any = {};
       
       if (updates.tipo) updateData.tipo = updates.tipo;
@@ -88,7 +111,8 @@ export const useSupabaseLancamentos = () => {
       const { error } = await supabase
         .from('lancamentos')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.user.id);
 
       if (error) throw error;
       await loadLancamentos();
@@ -101,15 +125,80 @@ export const useSupabaseLancamentos = () => {
   // Deletar lançamento
   const deleteLancamento = async (id: string) => {
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
       const { error } = await supabase
         .from('lancamentos')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.user.id);
 
       if (error) throw error;
       await loadLancamentos();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao deletar lançamento');
+      throw err;
+    }
+  };
+
+  // Criar lançamento a partir de um agendamento
+  const createLancamentoFromAgendamento = async (agendamento: any) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('lancamentos')
+        .insert({
+          user_id: user.user.id,
+          tipo: 'entrada',
+          valor: agendamento.valorPago || agendamento.valor,
+          data: agendamento.data,
+          descricao: `Agendamento: ${agendamento.clienteNome || 'Cliente'} - ${agendamento.servicoNome || 'Serviço'}`,
+          categoria: 'Serviços',
+          origem_id: agendamento.id,
+          origem_tipo: 'agendamento',
+          cliente_id: agendamento.clienteId,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      await loadLancamentos();
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar lançamento de agendamento');
+      throw err;
+    }
+  };
+
+  // Criar lançamento a partir de uma conta fixa
+  const createLancamentoFromContaFixa = async (contaFixa: any, valorPago: number, dataPagamento: Date) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('lancamentos')
+        .insert({
+          user_id: user.user.id,
+          tipo: 'saida',
+          valor: valorPago,
+          data: dataPagamento.toISOString().split('T')[0],
+          descricao: `Pagamento: ${contaFixa.nome}`,
+          categoria: contaFixa.categoria,
+          origem_id: contaFixa.id,
+          origem_tipo: 'conta_fixa',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      await loadLancamentos();
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar lançamento de conta fixa');
       throw err;
     }
   };
@@ -172,33 +261,6 @@ export const useSupabaseLancamentos = () => {
       valorEmAberto: 0, // Seria calculado com base em agendamentos não pagos
       contasAPagar: 0, // Seria calculado com base em contas fixas em aberto
     };
-  };
-
-  // Criar lançamento automático de agendamento
-  const createLancamentoFromAgendamento = async (agendamentoId: string, valor: number, clienteId: string, descricao: string) => {
-    return createLancamento({
-      tipo: 'entrada',
-      valor,
-      data: new Date(),
-      descricao,
-      categoria: 'Serviços',
-      origemId: agendamentoId,
-      origemTipo: 'agendamento',
-      clienteId,
-    });
-  };
-
-  // Criar lançamento automático de conta fixa
-  const createLancamentoFromContaFixa = async (contaFixaId: string, valor: number, descricao: string, categoria?: string) => {
-    return createLancamento({
-      tipo: 'saida',
-      valor,
-      data: new Date(),
-      descricao,
-      categoria: categoria || 'Contas Fixas',
-      origemId: contaFixaId,
-      origemTipo: 'conta_fixa',
-    });
   };
 
   useEffect(() => {

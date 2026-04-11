@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, AlertTriangle, Search, Filter, PackagePlus, PackageMinus, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, AlertTriangle, Search, Filter, PackagePlus, PackageMinus, ChevronDown, Package } from 'lucide-react';
 import { useSupabaseProdutos } from '@/hooks/useSupabaseProdutos';
 import { Badge } from '@/components/ui/badge';
 import { ProdutoForm } from './ProdutoForm';
@@ -137,6 +137,17 @@ export function ProdutosList() {
         {produtosFiltrados.map((produto) => (
           <Card key={produto.id} className="p-4 sm:p-5 border-border/50 bg-card/50 backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="w-full sm:w-24 h-32 sm:h-24 rounded-xl overflow-hidden border border-border/50 flex-shrink-0 bg-primary/5 flex items-center justify-center">
+                {produto.imagem_url ? (
+                  <img 
+                    src={produto.imagem_url} 
+                    alt={produto.nome} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Package className="w-8 h-8 text-primary/20" />
+                )}
+              </div>
               <div className="flex-1 w-full min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <h3 className="text-base sm:text-lg font-semibold">{produto.nome}</h3>

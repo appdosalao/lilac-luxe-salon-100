@@ -44,9 +44,15 @@ export function useConfigAgendamentoOnlinePublic(ownerUserId?: string | null) {
           .select('*')
           .eq('ativo', true);
 
-        const { data, error } = ownerUserId
-          ? await query.eq('user_id', ownerUserId).maybeSingle()
-          : await query.order('updated_at', { ascending: false }).limit(1).maybeSingle();
+        if (!ownerUserId) {
+          if (active) {
+            setConfig(defaultConfig);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const { data, error } = await query.eq('user_id', ownerUserId).maybeSingle();
 
         if (!active) return;
         if (error) {
