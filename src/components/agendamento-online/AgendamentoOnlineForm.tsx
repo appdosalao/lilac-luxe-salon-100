@@ -102,6 +102,18 @@ export function AgendamentoOnlineForm() {
   const [produtoCategoria, setProdutoCategoria] = useState<string>('todas');
   const [produtoOrdenacao, setProdutoOrdenacao] = useState<'nome' | 'preco'>('nome');
 
+  const agora = new Date();
+  const minAntecedenciaMin = typeof configOnline.tempo_minimo_antecedencia === 'number' && configOnline.tempo_minimo_antecedencia > 0
+    ? configOnline.tempo_minimo_antecedencia
+    : 0;
+  const minDateTime = new Date(agora.getTime() + minAntecedenciaMin * 60 * 1000);
+  const dataMinima = minDateTime.toISOString().split('T')[0];
+  
+  const maxMinutos = typeof configOnline.tempo_maximo_antecedencia === 'number' && configOnline.tempo_maximo_antecedencia > 0
+    ? configOnline.tempo_maximo_antecedencia
+    : 90 * 24 * 60;
+  const dataMaxima = new Date(agora.getTime() + maxMinutos * 60 * 1000).toISOString().split('T')[0];
+
   const steps = ['Dados', 'Agendamento', 'Finalização'];
 
   useEffect(() => {
@@ -167,25 +179,18 @@ export function AgendamentoOnlineForm() {
         if (h && typeof h === 'object' && 'horario' in h) {
           return h as HorarioDisponivel;
         }
-        return { horario: String(h), disponivel: false }; // Fallback seguro
-      });
+        return { horario: String(h), disponivel: false }; // Filtrar horários passados e antecedência mínima se for hoje
+    const isHoje = formData.data === agora.toISOString().split('T')[0];
 
-      const minAntecedenciaMin = typeof configOnline.tempo_minimo_antecedencia === 'number' && configOnline.tempo_minimo_antecedencia > 0
-        ? configOnline.tempo_minimo_antecedencia
-        : 0;
-      const agora = new Date();
-      const minDateTime = new Date(agora.getTime() + minAntecedenciaMin * 60 * 1000);
-      const isHoje = formData.data === agora.toISOString().split('T')[0];
-
-      const horariosFiltrados = isHoje
-        ? horariosFormatados.filter(h => {
-            const [hh, mm] = String(h.horario).slice(0, 5).split(':').map(Number);
-            if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
-            const slot = new Date(agora);
-            slot.setHours(hh, mm, 0, 0);
-            return slot >= minDateTime;
-          })
-        : horariosFormatados;
+    const horariosFiltrados = isHoje
+      ? horariosFormatados.filter(h => {
+          const [hh, mm] = String(h.horario).slice(0, 5).split(':').map(Number);
+          if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+          const slot = new Date(agora);
+          slot.setHours(hh, mm, 0, 0);
+          return slot >= minDateTime;
+        })
+      : horariosFormatados;
 
       setHorariosDisponiveis(horariosFiltrados);
     } catch (error) {
@@ -340,12 +345,6 @@ export function AgendamentoOnlineForm() {
     }
   };
 
-  const hoje = new Date();
-  const dataMinima = hoje.toISOString().split('T')[0];
-  const maxMinutos = typeof configOnline.tempo_maximo_antecedencia === 'number' && configOnline.tempo_maximo_antecedencia > 0
-    ? configOnline.tempo_maximo_antecedencia
-    : 90 * 24 * 60;
-  const dataMaxima = new Date(hoje.getTime() + maxMinutos * 60 * 1000).toISOString().split('T')[0];
   const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
   const produtoSelecionado = produtos.find(p => p.id === produtoId);
   const valorServico = typeof servicoSelecionado?.valor === 'number' && Number.isFinite(servicoSelecionado.valor) ? servicoSelecionado.valor : 0;
@@ -572,6 +571,39 @@ Você receberá uma confirmação em breve.
                 </div>
               </div>
             </CardContent>
+          </Card>
+        </div>
+        <SalonFooter config={configOnline} />
+      </div>
+    );
+  }
+
+  // Se o agendamento online estiver desativado nas configurações
+  if (!configOnline.ativo && !loading) {
+    return (
+      <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl } as React.CSSProperties}>
+        <SalonHeader config={configOnline} />
+        <div className="flex-1 bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md border-none shadow-[0_30px_60px_rgba(0,0,0,0.12)] bg-white/90 backdrop-blur-xl rounded-[3rem] overflow-hidden p-8 text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-amber-600" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-foreground tracking-tighter">Agendamento Indisponível</h2>
+              <p className="text-muted-foreground font-medium">
+                No momento, o agendamento online para este salão está temporariamente desativado.
+              </p>
+            </div>
+            {configOnline.telefone && (
+              <Button 
+                asChild
+                className="w-full h-12 rounded-2xl bg-primary text-white font-bold"
+              >
+                <a href={`tel:${configOnline.telefone.replace(/\D/g, '')}`}>
+                  Ligar para o Salão
+                </a>
+              </Button>
+            )}
           </Card>
         </div>
         <SalonFooter config={configOnline} />

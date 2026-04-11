@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 export interface ConfigAgendamentoOnline {
   id?: string;
   user_id?: string;
+  public_id?: string;
   ativo: boolean;
   nome_salao: string;
   descricao: string;
@@ -119,6 +120,7 @@ export function useConfigAgendamentoOnline() {
         cor_primaria: newConfig.cor_primaria,
         mostrar_precos: newConfig.mostrar_precos,
         mostrar_duracao: newConfig.mostrar_duracao,
+        public_id: newConfig.public_id,
         user_id: user.id,
         updated_at: new Date().toISOString()
       };

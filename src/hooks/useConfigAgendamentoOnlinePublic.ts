@@ -35,14 +35,12 @@ export function useConfigAgendamentoOnlinePublic(ownerUserId?: string | null) {
   useEffect(() => {
     let active = true;
 
-    const load = async () => {
+    async function fetchConfig() {
       try {
         setLoading(true);
-
         const query = supabasePublic
           .from('configuracoes_agendamento_online' as any)
-          .select('*')
-          .eq('ativo', true);
+          .select('*');
 
         if (!ownerUserId) {
           if (active) {
@@ -55,20 +53,22 @@ export function useConfigAgendamentoOnlinePublic(ownerUserId?: string | null) {
         const { data, error } = await query.eq('user_id', ownerUserId).maybeSingle();
 
         if (!active) return;
-        if (error) {
-          setConfig(defaultConfig);
-          return;
-        }
 
-        setConfig((data as unknown as ConfigAgendamentoOnline) || defaultConfig);
-      } catch {
-        if (active) setConfig(defaultConfig);
+        if (error) {
+          console.error('Erro ao carregar config pública:', error);
+          setConfig(defaultConfig);
+        } else {
+          setConfig((data as unknown as ConfigAgendamentoOnline) || defaultConfig);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configuração pública:', error);
+        setConfig(defaultConfig);
       } finally {
         if (active) setLoading(false);
       }
-    };
+    }
 
-    load();
+    fetchConfig();
 
     return () => {
       active = false;

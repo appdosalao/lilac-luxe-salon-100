@@ -315,6 +315,25 @@ export function ConfiguracaoAgendamentoOnline() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="public_id" className="font-bold">Link Personalizado (Slug)</Label>
+            <div className="flex gap-2">
+              <div className="flex items-center px-3 bg-muted rounded-l-xl border border-r-0 border-primary/10 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                .../agendamento-online?s=
+              </div>
+              <Input
+                id="public_id"
+                value={config.public_id || ''}
+                onChange={(e) => handleChange('public_id', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="nome-do-seu-salao"
+                className="h-12 rounded-l-none rounded-r-xl font-mono"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground px-1">
+              Use apenas letras minúsculas, números e hífens. Este será o identificador do seu link.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="descricao" className="font-bold">Descrição Curta</Label>
             <Textarea
               id="descricao"
@@ -441,13 +460,14 @@ export function ConfiguracaoAgendamentoOnline() {
                 <div className="flex gap-2 pt-2">
                   <Input
                     readOnly
-                    value={`${window.location.origin}/agendamento-online`}
+                    value={`${window.location.origin}/agendamento-online?${config.public_id ? `s=${config.public_id}` : `uid=${config.user_id}`}`}
                     className="bg-background/50 h-11 rounded-xl font-medium"
                   />
                   <Button
                     variant="default"
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/agendamento-online`);
+                      const link = `${window.location.origin}/agendamento-online?${config.public_id ? `s=${config.public_id}` : `uid=${config.user_id}`}`;
+                      navigator.clipboard.writeText(link);
                       toast.success('Link copiado com sucesso! 🚀');
                     }}
                     className="h-11 rounded-xl px-6"
