@@ -179,18 +179,21 @@ export function AgendamentoOnlineForm() {
         if (h && typeof h === 'object' && 'horario' in h) {
           return h as HorarioDisponivel;
         }
-        return { horario: String(h), disponivel: false }; // Filtrar horários passados e antecedência mínima se for hoje
-    const isHoje = formData.data === agora.toISOString().split('T')[0];
+        return { horario: String(h), disponivel: false };
+      });
 
-    const horariosFiltrados = isHoje
-      ? horariosFormatados.filter(h => {
-          const [hh, mm] = String(h.horario).slice(0, 5).split(':').map(Number);
-          if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
-          const slot = new Date(agora);
-          slot.setHours(hh, mm, 0, 0);
-          return slot >= minDateTime;
-        })
-      : horariosFormatados;
+      // Filtrar horários passados e antecedência mínima se for hoje
+      const isHoje = formData.data === agora.toISOString().split('T')[0];
+
+      const horariosFiltrados = isHoje
+        ? horariosFormatados.filter(h => {
+            const [hh, mm] = String(h.horario).slice(0, 5).split(':').map(Number);
+            if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+            const slot = new Date(agora);
+            slot.setHours(hh, mm, 0, 0);
+            return slot >= minDateTime;
+          })
+        : horariosFormatados;
 
       setHorariosDisponiveis(horariosFiltrados);
     } catch (error) {
