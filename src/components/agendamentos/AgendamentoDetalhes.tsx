@@ -172,6 +172,17 @@ export default function AgendamentoDetalhes({
 
   const StatusIcon = statusConfig[agendamento.status].icon;
 
+  // Extrair produto das observações (Agendamento Online)
+  const produtoAgendamentoOnline = (() => {
+    if (!agendamento.observacoes || !agendamento.observacoes.includes('Compra de produto:')) return null;
+    try {
+      const jsonStr = agendamento.observacoes.split('Compra de produto:')[1].trim();
+      return JSON.parse(jsonStr);
+    } catch {
+      return null;
+    }
+  })();
+
   useEffect(() => {
     const carregarVenda = async () => {
       if (!user) return;
@@ -342,51 +353,89 @@ export default function AgendamentoDetalhes({
               </h3>
               
               <div className="pl-7 space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Valor Total</Label>
-                  <p className="text-2xl font-bold text-primary">{formatarValor(agendamento.valor)}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Valor Pago</Label>
-                    <p className="text-lg font-semibold text-success">{formatarValor(agendamento.valorPago)}</p>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Valor Devido</Label>
-                    <p className={`text-lg font-semibold ${agendamento.valorDevido > 0 ? 'text-destructive' : 'text-success'}`}>
-                      {formatarValor(agendamento.valorDevido)}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Forma de Pagamento</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <CreditCard className="h-4 w-4" />
-                      <span className="capitalize">
-                        {agendamento.formaPagamento === 'cartao' ? 'Cartão' :
-                         agendamento.formaPagamento === 'pix' ? 'PIX' :
-                         agendamento.formaPagamento === 'dinheiro' ? 'Dinheiro' : 'Fiado'}
-                      </span>
+                {/* Detalhamento de Produto solicitado online (Se houver) */}
+                {produtoAgendamentoOnline && (
+                  <div className="bg-primary/5 p-4 rounded-2xl border-2 border-primary/10 space-y-3 mb-2 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-primary">
+                        <ShoppingBag className="h-4 w-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Produto Solicitado Online</span>
+                      </div>
+                      <Badge className="bg-primary text-white text-[10px] uppercase font-black">Pedido Realizado</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-base font-bold text-foreground">{produtoAgendamentoOnline.produto_nome} <span className="text-muted-foreground text-xs font-medium ml-1">x{produtoAgendamentoOnline.quantidade}</span></span>
+                      <span className="text-base font-black text-primary">{formatarValor(produtoAgendamentoOnline.valor_total || 0)}</span>
+                    </div>
+                    <Separator className="bg-primary/10" />
+                    <div className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-tight">
+                      <div className="flex justify-between">
+                        <span>Valor do Serviço</span>
+                        <span>{formatarValor(agendamento.valor - (produtoAgendamentoOnline.valor_total || 0))}</span>
+                      </div>
+                      <div className="flex justify-between text-primary/60">
+                        <span>Valor do Produto</span>
+                        <span>+ {formatarValor(produtoAgendamentoOnline.valor_total || 0)}</span>
+                      </div>
                     </div>
                   </div>
-                  
+                )}
+                
+                {!produtoAgendamentoOnline && (
+                  <div className="flex items-center gap-2 text-muted-foreground/40 mb-2 border border-dashed border-muted-foreground/20 p-3 rounded-xl bg-muted/5">
+                    <ShoppingBag className="h-4 w-4 opacity-50" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Nenhum produto solicitado no agendamento</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-end bg-primary/5 p-4 rounded-2xl border-2 border-primary/5 shadow-inner">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Status do Pagamento</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor Total Combinado</Label>
+                    <p className="text-3xl font-black text-primary tracking-tighter">{formatarValor(agendamento.valor)}</p>
+                  </div>
+                  <div className="text-right">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</Label>
                     <Badge 
-                      className={`mt-1 ${
+                      className={`block w-fit ml-auto ${
                         agendamento.statusPagamento === 'pago' ? 'bg-success text-success-foreground' :
                         agendamento.statusPagamento === 'parcial' ? 'bg-warning text-warning-foreground' :
                         'bg-destructive text-destructive-foreground'
                       }`}
                     >
-                      {agendamento.statusPagamento === 'pago' ? '✓ Pago' :
-                       agendamento.statusPagamento === 'parcial' ? '⚠ Parcial' :
-                       '⏳ Em aberto'}
+                      {agendamento.statusPagamento === 'pago' ? 'TOTAL PAGO' :
+                       agendamento.statusPagamento === 'parcial' ? 'PAGAMENTO PARCIAL' :
+                       'PENDENTE'}
                     </Badge>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-success/5 p-3 rounded-xl border border-success/10">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-success/70">Valor Já Pago</Label>
+                    <p className="text-lg font-black text-success tracking-tight">{formatarValor(agendamento.valorPago)}</p>
+                  </div>
+                  
+                  <div className={`p-3 rounded-xl border ${agendamento.valorDevido > 0 ? 'bg-destructive/5 border-destructive/10' : 'bg-success/5 border-success/10'}`}>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor a Receber</Label>
+                    <p className={`text-lg font-black tracking-tight ${agendamento.valorDevido > 0 ? 'text-destructive' : 'text-success'}`}>
+                      {formatarValor(agendamento.valorDevido)}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-muted/30 p-3 rounded-xl border border-muted-foreground/10 flex items-center justify-between">
+                    <div>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Método de Pagamento</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <CreditCard className="h-4 w-4 text-primary/70" />
+                        <span className="font-bold text-sm uppercase tracking-tight">
+                          {agendamento.formaPagamento === 'cartao' ? 'Cartão' :
+                           agendamento.formaPagamento === 'pix' ? 'PIX' :
+                           agendamento.formaPagamento === 'dinheiro' ? 'Dinheiro' : 'Fiado'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -542,9 +591,58 @@ export default function AgendamentoDetalhes({
                 </h3>
                 
                 <div className="pl-7">
-                  <p className="text-base leading-relaxed bg-muted/50 p-4 rounded-lg">
-                    {agendamento.observacoes}
-                  </p>
+                  {agendamento.observacoes.includes('Compra de produto:') ? (
+                    <div className="space-y-4">
+                      {/* Mostrar observações normais antes se existirem */}
+                      {agendamento.observacoes.split('Compra de produto:')[0].trim() && (
+                        <p className="text-base leading-relaxed bg-muted/50 p-4 rounded-lg mb-2">
+                          {agendamento.observacoes.split('Compra de produto:')[0].trim()}
+                        </p>
+                      )}
+                      
+                      {/* Bloco de produto estilizado */}
+                      <div className="bg-primary/5 border-2 border-primary/10 p-6 rounded-[1.5rem] shadow-sm animate-in fade-in zoom-in duration-300">
+                        <div className="flex items-start gap-4">
+                          <div className="bg-white p-3 rounded-2xl shadow-sm border border-primary/5">
+                            <ShoppingBag className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-primary/70 mb-1">Produto Adquirido</h4>
+                            {(() => {
+                              try {
+                                const jsonStr = agendamento.observacoes.split('Compra de produto:')[1].trim();
+                                const compra = JSON.parse(jsonStr);
+                                return (
+                                  <div className="space-y-2">
+                                    <p className="text-xl font-bold text-foreground">{compra.produto_nome}</p>
+                                    <div className="flex flex-wrap gap-4 text-sm font-medium text-muted-foreground">
+                                      <div className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-primary/5">
+                                        <span className="text-primary font-black">{compra.quantidade}x</span> unidades
+                                      </div>
+                                      <div className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-primary/5 uppercase tracking-tight">
+                                        Pagamento: <span className="text-foreground font-bold">{compra.forma_pagamento_produto}</span>
+                                      </div>
+                                      {compra.valor_total && (
+                                        <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/10">
+                                          Total: <span className="font-bold">R$ {compra.valor_total.toFixed(2).replace('.', ',')}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              } catch (e) {
+                                return <p className="text-sm text-red-500">Erro ao processar dados do produto.</p>;
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-base leading-relaxed bg-muted/50 p-4 rounded-lg">
+                      {agendamento.observacoes}
+                    </p>
+                  )}
                 </div>
               </div>
             </>

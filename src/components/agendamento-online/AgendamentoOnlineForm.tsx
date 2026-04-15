@@ -19,6 +19,7 @@ import { supabasePublic } from '@/integrations/supabase/publicClient';
 import { ProgressSteps } from './ProgressSteps';
 import { SalonHeader } from './SalonHeader';
 import { SalonFooter } from './SalonFooter';
+import { Separator } from '@/components/ui/separator';
 import { agendamentoOnlineSchema } from '@/lib/validation';
 import { toast } from 'sonner';
 
@@ -312,7 +313,9 @@ export function AgendamentoOnlineForm() {
           produto_id: produtoId,
           produto_nome: pSel?.nome || '',
           quantidade: produtoQtd,
-          forma_pagamento_produto: produtoForma
+          forma_pagamento_produto: produtoForma,
+          valor_unitario: pSel?.valor || 0,
+          valor_total: (pSel?.valor || 0) * produtoQtd
         };
         const prefix = validatedData.observacoes ? validatedData.observacoes + '\n' : '';
         const nextObs = `${prefix}Compra de produto: ${JSON.stringify(compra)}`;
@@ -322,6 +325,11 @@ export function AgendamentoOnlineForm() {
           return;
         }
         validatedData.observacoes = nextObs;
+        
+        // Somar o valor do produto ao valor do agendamento
+        const valorServico = servicos.find(s => s.id === formData.servico_id)?.valor || 0;
+        const valorTotal = valorServico + (compra.valor_total);
+        (validatedData as any).valor = valorTotal;
       }
       setIsSubmitting(true);
       const sucesso = await criarAgendamento(validatedData as AgendamentoOnlineData);
@@ -368,9 +376,10 @@ export function AgendamentoOnlineForm() {
 📋 *Detalhes do Agendamento:*
 👤 Cliente: ${formData.nome_completo}
 💇 Serviço: ${servicoSelecionado?.nome}
+${produtoEnabled && produtoId ? `📦 Produto: ${produtoSelecionado?.nome} (${produtoQtd}x)\n` : ''}
 📅 Data: ${dataFormatada}
 ⏰ Horário: ${formData.horario}
-💰 Valor: R$ ${valorTotal.toFixed(2).replace('.', ',')}
+💰 Valor Total: R$ ${valorTotal.toFixed(2).replace('.', ',')}
 
 ✅ Seu agendamento foi confirmado com sucesso!
 Você receberá uma confirmação em breve.
@@ -395,9 +404,10 @@ Você receberá uma confirmação em breve.
 📋 Detalhes do Agendamento:
 👤 Cliente: ${formData.nome_completo}
 💇 Serviço: ${servicoSelecionado?.nome}
+${produtoEnabled && produtoId ? `📦 Produto: ${produtoSelecionado?.nome} (${produtoQtd}x)\n` : ''}
 📅 Data: ${dataFormatada}
 ⏰ Horário: ${formData.horario}
-💰 Valor: R$ ${valorTotal.toFixed(2).replace('.', ',')}
+💰 Valor Total: R$ ${valorTotal.toFixed(2).replace('.', ',')}
 
 ✅ Seu agendamento foi confirmado com sucesso!
 Você receberá uma confirmação em breve.
@@ -459,9 +469,22 @@ Você receberá uma confirmação em breve.
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-primary/10 flex justify-between items-center relative z-10">
-                  <span className="text-sm font-bold text-muted-foreground">Valor Total</span>
-                  <span className="text-2xl font-black text-primary">R$ {valorTotal.toFixed(2)}</span>
+                <div className="pt-4 border-t border-primary/10 flex flex-col gap-2 relative z-10">
+                  <div className="flex justify-between items-center text-sm font-medium text-muted-foreground/70 uppercase tracking-widest">
+                    <span>Serviço</span>
+                    <span>R$ {valorServico.toFixed(2)}</span>
+                  </div>
+                  {produtoEnabled && produtoId && (
+                    <div className="flex justify-between items-center text-sm font-medium text-primary/70 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
+                      <span>Produto ({produtoQtd}x)</span>
+                      <span>+ R$ {valorProdutoTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <Separator className="bg-primary/5 my-1" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-black text-foreground uppercase tracking-tighter">Valor Total</span>
+                    <span className="text-3xl font-black text-primary tracking-tighter">R$ {valorTotal.toFixed(2)}</span>
+                  </div>
                 </div>
 
                 {produtoEnabled && produtoId && (

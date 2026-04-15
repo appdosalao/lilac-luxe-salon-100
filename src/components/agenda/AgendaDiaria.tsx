@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign, Edit } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign, Edit, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { cn, toISODate, timeToMinutes, overlaps } from '@/lib/utils';
 import { getOrigemBadge, getStatusBadgeClass } from '@/components/agenda/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 
 type AgendaDiariaProps = {
   buscaTexto?: string;
@@ -405,9 +406,49 @@ export function AgendaDiaria({ buscaTexto = '', onSlotClick }: AgendaDiariaProps
                   )}
                   {agendamento.observacoes && (
                     <div className="mt-4 pt-3 border-t border-border/50">
-                      <p className="text-sm text-muted-foreground italic">
-                        "{agendamento.observacoes}"
-                      </p>
+                      {agendamento.observacoes.includes('Compra de produto:') ? (
+                        <div className="space-y-2">
+                          {/* Mostrar observações normais antes se existirem */}
+                          {agendamento.observacoes.split('Compra de produto:')[0].trim() && (
+                            <p className="text-sm text-muted-foreground italic mb-1">
+                              "{agendamento.observacoes.split('Compra de produto:')[0].trim()}"
+                            </p>
+                          )}
+                          
+                          {/* Bloco de produto simplificado para a lista da agenda */}
+                          <div className="flex items-center gap-2 bg-primary/5 p-2.5 rounded-xl border border-primary/10 animate-in fade-in zoom-in duration-300">
+                            <div className="bg-white p-1.5 rounded-lg shadow-sm">
+                              <ShoppingBag className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              {(() => {
+                                try {
+                                  const jsonStr = agendamento.observacoes.split('Compra de produto:')[1].trim();
+                                  const compra = JSON.parse(jsonStr);
+                                  return (
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-xs font-bold text-foreground truncate">
+                                        {compra.produto_nome} <span className="text-muted-foreground font-medium ml-1">x{compra.quantidade}</span>
+                                      </p>
+                                      {compra.valor_total && (
+                                        <span className="text-[10px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                                          + R$ {compra.valor_total.toFixed(2).replace('.', ',')}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                } catch (e) {
+                                  return <p className="text-[10px] text-red-500">Erro nos dados do produto</p>;
+                                }
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                          "{agendamento.observacoes}"
+                        </p>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -471,9 +512,48 @@ export function AgendaDiaria({ buscaTexto = '', onSlotClick }: AgendaDiariaProps
                   </div>
                 )}
                 {agendamentoSelecionado.observacoes && (
-                  <div className="mt-2 p-3 rounded-md bg-muted/60">
-                    <div className="text-muted-foreground mb-1">Observações</div>
-                    <div className="italic">"{agendamentoSelecionado.observacoes}"</div>
+                  <div className="mt-2 p-3 rounded-xl bg-muted/40 border border-border/50">
+                    <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Observações e Pedidos</div>
+                    {agendamentoSelecionado.observacoes.includes('Compra de produto:') ? (
+                      <div className="space-y-3">
+                        {/* Observação de texto normal */}
+                        {agendamentoSelecionado.observacoes.split('Compra de produto:')[0].trim() && (
+                          <div className="text-sm italic text-foreground/80 mb-2">
+                            "{agendamentoSelecionado.observacoes.split('Compra de produto:')[0].trim()}"
+                          </div>
+                        )}
+                        
+                        {/* Bloco de produto no detalhe */}
+                        <div className="bg-primary/5 p-3 rounded-xl border-2 border-primary/10 flex items-center gap-3">
+                          <div className="bg-white p-2 rounded-lg shadow-sm">
+                            <ShoppingBag className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            {(() => {
+                              try {
+                                const jsonStr = agendamentoSelecionado.observacoes.split('Compra de produto:')[1].trim();
+                                const compra = JSON.parse(jsonStr);
+                                return (
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-foreground">{compra.produto_nome}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="text-[10px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">x{compra.quantidade} unidades</span>
+                                      {compra.valor_total && (
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Total: R$ {compra.valor_total.toFixed(2).replace('.', ',')}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              } catch (e) {
+                                return <p className="text-xs text-red-500">Erro nos dados do produto</p>;
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="italic text-sm">"{agendamentoSelecionado.observacoes}"</div>
+                    )}
                   </div>
                 )}
               </div>

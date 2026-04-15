@@ -291,19 +291,22 @@ export const useAgendamentoOnlineService = () => {
       }
 
       const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
-      const valorEfetivo = typeof servico.valor === 'number' && servico.valor >= 0 ? servico.valor : 0;
+      // Se o valor já vier calculado no objeto dados (ex: soma de produtos), usamos ele
+      const valorEfetivo = typeof (dados as any).valor === 'number' ? (dados as any).valor : (typeof servico.valor === 'number' && servico.valor >= 0 ? servico.valor : 0);
 
       // Validação final de disponibilidade antes de criar
       // Se não for possível calcular horários (ex: erro de rede), tentamos prosseguir
       // A trigger no banco de dados fará a validação final se necessário
       try {
         const horariosDisponiveis = await calcularHorariosDisponiveis(dados.servico_id, dados.data);
+        
         // Se a lista de horários não estiver vazia, verificamos se o horário escolhido ainda está lá
         if (horariosDisponiveis.length > 0) {
           const alvo = String(dados.horario).slice(0, 5);
-          const horarioDisponivel = horariosDisponiveis.find(h => h.disponivel && String(h.horario).slice(0, 5) === alvo);
-          if (!horarioDisponivel) {
-            toast.error("Este horário acabou de ser reservado. Por favor, selecione outro.");
+          const horarioDisponivel = horariosDisponiveis.find(h => String(h.horario).slice(0, 5) === alvo);
+          
+          if (!horarioDisponivel || !horarioDisponivel.disponivel) {
+            toast.error("Este horário acabou de ser reservado por outro cliente. Por favor, selecione outro horário.");
             return false;
           }
         }

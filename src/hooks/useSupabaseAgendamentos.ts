@@ -223,9 +223,18 @@ export function useSupabaseAgendamentos() {
     }
   };
 
-  // Combinar agendamentos regulares e online
+  // Combinar agendamentos regulares e online sem duplicatas
   const agendamentosCombinados = useMemo(() => {
-    const agendamentosOnlineConvertidos = agendamentosOnline.map(converterAgendamentoOnline);
+    // Filtrar agendamentos online: 
+    // 1. Não incluir 'convertido' ou 'excluido' para evitar duplicidade com a tabela principal
+    // 2. Não incluir 'cancelado' se você não quiser ver no calendário
+    const onlineAtivos = agendamentosOnline.filter(ag => 
+      ag.status !== 'convertido' && 
+      ag.status !== 'excluido' && 
+      ag.status !== 'cancelado'
+    );
+    
+    const agendamentosOnlineConvertidos = onlineAtivos.map(converterAgendamentoOnline);
     return [...agendamentos, ...agendamentosOnlineConvertidos];
   }, [agendamentos, agendamentosOnline]);
 
