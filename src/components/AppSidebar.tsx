@@ -31,6 +31,7 @@ import {
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { AppLogo } from "@/components/branding/AppLogo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
 import { toast } from "sonner";
 
 const navigationItems = [
@@ -91,6 +92,7 @@ export function AppSidebar() {
   const isMobileDevice = useIsMobile();
   const location = useLocation();
   const { usuario, logout } = useSupabaseAuth();
+  const { config } = useConfigAgendamentoOnline();
   const { isInstallable, isInstalled, installApp } = usePWAContext();
   const currentPath = location.pathname;
 
@@ -108,6 +110,9 @@ export function AppSidebar() {
       }
     } catch {}
   };
+
+  // Gerar o link público do agendamento online com o slug (s) ou o ID do usuário (uid)
+  const onlineBookingLink = `/agendamento-online?${config.public_id ? `s=${config.public_id}` : config.user_id ? `uid=${config.user_id}` : ''}`;
 
   const badgeFor = (href: string) => {
     if (href === "/") return "from-primary to-lilac-primary";
@@ -234,16 +239,17 @@ export function AppSidebar() {
                   asChild
                   className="group h-11 rounded-xl px-3 py-2 transition-all duration-200 hover:bg-white/40 hover:-translate-y-px active:translate-y-0 dark:hover:bg-white/10"
                 >
-                  <Link 
-                    to="/agendamento-online" 
+                  <a 
+                    href={onlineBookingLink} 
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-primary"
                   >
                     <div className={iconWrapClass(false, "from-primary to-lilac-primary")}>
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </div>
                     <span className="truncate">Agendamento Online</span>
-                  </Link>
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

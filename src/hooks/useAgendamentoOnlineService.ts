@@ -27,7 +27,8 @@ const withTiming = async <T,>(op: string, fn: () => Promise<T>): Promise<T> => {
 const getPublicIdFromUrl = () => {
   try {
     const params = new URLSearchParams(window.location.search);
-    return params.get('s') || params.get('public_id') || params.get('salao') || '';
+    // Prioridade para 's' (slug/public_id) ou 'uid' (user_id)
+    return params.get('s') || params.get('public_id') || params.get('salao') || params.get('slug') || '';
   } catch {
     return '';
   }
@@ -36,7 +37,7 @@ const getPublicIdFromUrl = () => {
 const getOwnerUserIdFromUrl = () => {
   try {
     const params = new URLSearchParams(window.location.search);
-    return params.get('uid') || params.get('user_id') || params.get('owner') || '';
+    return params.get('uid') || params.get('user_id') || params.get('owner') || params.get('id') || '';
   } catch {
     return '';
   }
@@ -49,154 +50,125 @@ export const useAgendamentoOnlineService = () => {
   const [servicosError, setServicosError] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<{ id: string; nome: string; valor?: number; categoria?: string; imagem_url?: string | null }[]>([]);
   const [horariosError, setHorariosError] = useState<string | null>(null);
-  const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
-  const [publicIdCache, setPublicIdCache] = useState<string | null>(null);
+  const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
+  const [publicId, setPublicId] = useState<string | null>(null);
 
-  const resolvePublicId = useCallback(async (): Promise<string> => {
-    const fromUrl = getPublicIdFromUrl();
-    if (fromUrl) {
-      if (publicIdCache !== fromUrl) setPublicIdCache(fromUrl);
-      return fromUrl;
-    }
-    if (publicIdCache) return publicIdCache;
-    
-    // Tentar buscar um ID público padrão se nada for fornecido
-    try {
-      const { data, error } = await db.rpc('get_default_public_id');
-      if (!error && data) {
-        const defaultId = String(data);
-        if (publicIdCache !== defaultId) setPublicIdCache(defaultId);
-        return defaultId;
-      }
-    } catch (e) {
-      console.warn('Erro ao buscar public_id padrão:', e);
-    }
-
-    return '';
-  }, [publicIdCache, db]);
-
-  const resolveOwnerUserId = useCallback(async (): Promise<string | null> => {
-    if (ownerUserIdCache) return ownerUserIdCache;
+  // Resolver identificadores da URL de forma única e estável
+  const resolveIdentifiers = useCallback(async () => {
+    if (ownerUserId && publicId) return { ownerUserId, publicId };
 
     try {
-      // 1. Tentar pelo UID direto na URL
-      const ownerFromUrl = getOwnerUserIdFromUrl();
-      if (ownerFromUrl) {
-        if (ownerUserIdCache !== ownerFromUrl) setOwnerUserIdCache(ownerFromUrl);
-        return ownerFromUrl;
+      const urlPublicId = getPublicIdFromUrl();
+      const urlOwnerId = getOwnerUserIdFromUrl();
+
+      // 1. Se temos o UID direto, ele é soberano
+      if (urlOwnerId) {
+        setOwnerUserId(urlOwnerId);
+        return { ownerUserId: urlOwnerId, publicId: urlPublicId };
       }
 
-      // 2. Tentar pelo publicId (slug) na URL
-      const publicId = await resolvePublicId();
-
-      if (publicId) {
+      // 2. Se temos o publicId (slug), resolvemos o owner via RPC
+      if (urlPublicId) {
+        setPublicId(urlPublicId);
         const { data, error } = (await withTiming('rpc:get_booking_owner_id', () => 
-          db.rpc('get_booking_owner_id', { p_public_id: publicId })
+          db.rpc('get_booking_owner_id', { p_public_id: urlPublicId })
         )) as any;
+        
         if (error) {
-          console.error('Erro ao resolver owner user_id pelo public_id:', error);
+          console.error('[booking] Erro ao resolver owner pelo slug:', error);
         } else if (data) {
-          const next = String(data);
-          if (ownerUserIdCache !== next) setOwnerUserIdCache(next);
-          return next;
+          const resolvedId = String(data);
+          setOwnerUserId(resolvedId);
+          return { ownerUserId: resolvedId, publicId: urlPublicId };
         }
       }
 
-      // 3. FALLBACK: Se não houver nada na URL, não devemos mostrar dados aleatórios de outros usuários.
-      // O agendamento online DEVE ter um identificador (uid ou s) para garantir o isolamento.
-      // Se você quiser permitir um salão "padrão", ele deve ser configurado explicitamente.
-      return null;
+      // 3. Fallback para modo demo em desenvolvimento
+      if (import.meta.env.DEV && (urlPublicId === 'demo' || urlOwnerId === 'demo')) {
+        return { ownerUserId: 'demo', publicId: 'demo' };
+      }
+
+      return { ownerUserId: null, publicId: urlPublicId };
     } catch (error) {
-      console.error('Erro ao resolver owner user_id:', error);
-      return null;
+      console.error('[booking] Erro ao resolver identificadores:', error);
+      return { ownerUserId: null, publicId: null };
     }
-  }, [ownerUserIdCache, resolvePublicId, db]);
+  }, [ownerUserId, publicId, db]);
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
     setLoading(true);
     setServicosError(null);
     try {
-      const publicId = await resolvePublicId();
-      if (publicId) {
-        const { data, error } = (await withTiming('rpc:get_public_services', () => 
-          db.rpc('get_public_services', { p_public_id: publicId })
-        )) as any;
-        if (error) {
-          const msg = `Erro RPC (serviços): ${error.code || ''} ${error.message || ''}`.trim();
-          setServicosError(msg);
-          setServicos([]);
-          return;
-        }
-        if (data && Array.isArray(data) && data.length > 0) {
-          setServicos(data);
-          return;
-        }
-        // Se o RPC retornou vazio, tenta o método tradicional como fallback
-      }
-
-      const ownerId = await resolveOwnerUserId();
-      if (!ownerId) {
+      const { ownerUserId: resolvedOwnerId, publicId: resolvedPublicId } = await resolveIdentifiers();
+      
+      if (!resolvedOwnerId) {
         setServicos([]);
-        setServicosError('Link do agendamento inválido ou salão não encontrado. Use ?uid= ou ?s= na URL.');
+        setServicosError('Link do agendamento incompleto ou salão não encontrado. Use o link oficial fornecido pelo estabelecimento.');
         return;
       }
 
-      const result = (await withTiming('select:servicos', () =>
+      // Tentar primeiro via RPC de serviços públicos (mais seguro e segue regras do banco)
+      if (resolvedPublicId) {
+        const { data, error } = (await withTiming('rpc:get_public_services', () => 
+          db.rpc('get_public_services', { p_public_id: resolvedPublicId })
+        )) as any;
+        
+        if (!error && Array.isArray(data) && data.length > 0) {
+          setServicos(data);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback para query direta (garantindo o filtro por user_id)
+      const { data, error } = (await withTiming('select:servicos', () =>
         db
           .from('servicos')
           .select('id, nome, descricao, valor, duracao, user_id')
-          .eq('user_id', ownerId)
+          .eq('user_id', resolvedOwnerId)
+          .order('nome')
       )) as any;
 
-      if (result.error) {
-        const msg = `Erro DB (serviços): ${result.error.code || ''} ${result.error.message || ''}`.trim();
-        setServicosError(msg);
-        setServicos([]);
-        return;
+      if (error) {
+        throw error;
       }
 
-      const data = Array.isArray(result.data) ? result.data : [];
-      if (data.length === 0) {
-        setServicosError('Nenhum serviço ativo encontrado para este salão.');
+      setServicos(data || []);
+      if (!data || data.length === 0) {
+        setServicosError('Nenhum serviço disponível para agendamento online neste salão.');
       }
-      setServicos(data);
     } catch (error) {
-      console.error('Erro ao carregar serviços:', error);
-      const msg = error instanceof Error ? error.message : 'Erro ao carregar serviços';
-      setServicosError(msg);
-      toast.error("Não foi possível carregar a lista de serviços disponíveis.");
+      console.error('[booking] Erro ao carregar serviços:', error);
+      setServicosError('Erro ao carregar serviços. Por favor, tente novamente mais tarde.');
       setServicos([]);
     } finally {
       setLoading(false);
     }
-  }, [resolveOwnerUserId, resolvePublicId]);
+  }, [resolveIdentifiers, db]);
 
   // Carregar produtos disponíveis (públicos ou fallback)
   const carregarProdutosPublicos = useCallback(async () => {
     try {
-      const publicId = await resolvePublicId();
-      if (publicId) {
+      const { ownerUserId: resolvedOwnerId, publicId: resolvedPublicId } = await resolveIdentifiers();
+
+      if (resolvedPublicId) {
         const { data, error } = (await withTiming('rpc:get_public_products', () => 
-          db.rpc('get_public_products', { p_public_id: publicId })
+          db.rpc('get_public_products', { p_public_id: resolvedPublicId })
         )) as any;
-        if (error) {
-          console.error('Erro ao carregar produtos públicos (rpc):', error);
-          setProdutos([]);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          setProdutos(data.map((p: any) => ({ 
+            id: p.id, 
+            nome: p.nome, 
+            valor: p.valor, 
+            categoria: p.categoria,
+            imagem_url: p.imagem_url
+          })));
           return;
         }
-        setProdutos((Array.isArray(data) ? data : []).map((p: any) => ({ 
-          id: p.id, 
-          nome: p.nome, 
-          valor: p.valor, 
-          categoria: p.categoria,
-          imagem_url: p.imagem_url
-        })));
-        return;
       }
 
-      const ownerId = await resolveOwnerUserId();
-      if (!ownerId) {
+      if (!resolvedOwnerId) {
         setProdutos([]);
         return;
       }
@@ -207,7 +179,7 @@ export const useAgendamentoOnlineService = () => {
           .select('id, nome, preco_venda, ativo, categoria, imagem_url')
           .eq('ativo', true)
           .eq('categoria', 'revenda')
-          .eq('user_id', ownerId)
+          .eq('user_id', resolvedOwnerId)
           .limit(200)
       )) as any;
 
@@ -220,10 +192,10 @@ export const useAgendamentoOnlineService = () => {
         imagem_url: p.imagem_url
       })));
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
+      console.error('[booking] Erro ao carregar produtos:', error);
       setProdutos([]);
     }
-  }, [resolveOwnerUserId, resolvePublicId]);
+  }, [resolveIdentifiers, db]);
 
   // A verificação de disponibilidade agora é feita pela função RPC do Supabase
 
@@ -235,17 +207,17 @@ export const useAgendamentoOnlineService = () => {
     setHorariosError(null);
     const servico = servicos.find(s => s.id === servicoId);
     if (!servico) {
-      console.log('Serviço não encontrado:', servicoId);
+      console.log('[booking] Serviço não encontrado:', servicoId);
       return [];
     }
 
     try {
-      const publicId = await resolvePublicId();
+      const { ownerUserId: resolvedOwnerId, publicId: resolvedPublicId } = await resolveIdentifiers();
 
-      const horariosResultCall = (publicId
+      const horariosResultCall = (resolvedPublicId
         ? await withTiming('rpc:get_public_time_slots', () =>
             db.rpc('get_public_time_slots', {
-              p_public_id: publicId,
+              p_public_id: resolvedPublicId,
               p_data: data,
               p_servico_id: servicoId,
             })
@@ -253,7 +225,7 @@ export const useAgendamentoOnlineService = () => {
         : await withTiming('rpc:buscar_horarios_com_multiplos_intervalos', async () =>
             db.rpc('buscar_horarios_com_multiplos_intervalos', {
               data_selecionada: data,
-              user_id_param: servico.user_id || (await resolveOwnerUserId()),
+              user_id_param: servico.user_id || resolvedOwnerId,
               duracao_servico: typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60,
             })
           )) as any;
@@ -284,7 +256,7 @@ export const useAgendamentoOnlineService = () => {
       setHorariosError(error instanceof Error ? error.message : 'Erro ao calcular horários disponíveis');
       return [];
     }
-  }, [resolvePublicId, servicos]);
+  }, [resolveIdentifiers, servicos]);
 
   // Criar cliente se não existir
   const criarClienteSeNaoExistir = useCallback(async (dados: AgendamentoOnlineData) => {
@@ -311,6 +283,8 @@ export const useAgendamentoOnlineService = () => {
   const criarAgendamento = useCallback(async (dados: AgendamentoOnlineData): Promise<boolean> => {
     setLoading(true);
     try {
+      const { ownerUserId: resolvedOwnerId } = await resolveIdentifiers();
+      
       const servico = servicos.find(s => s.id === dados.servico_id);
       if (!servico) {
         throw new Error('Serviço não encontrado');
@@ -318,7 +292,6 @@ export const useAgendamentoOnlineService = () => {
 
       const duracaoEfetiva = typeof servico.duracao === 'number' && servico.duracao > 0 ? servico.duracao : 60;
       const valorEfetivo = typeof servico.valor === 'number' && servico.valor >= 0 ? servico.valor : 0;
-      await resolveOwnerUserId();
 
       // Validação final de disponibilidade antes de criar
       // Se não for possível calcular horários (ex: erro de rede), tentamos prosseguir
@@ -348,6 +321,7 @@ export const useAgendamentoOnlineService = () => {
       // Criar agendamento online
       // Se houver campos de compra anexados no observações, manter
       const baseInsert: Record<string, any> = {
+          user_id: resolvedOwnerId, // Explicitamente associando ao dono do salão
           nome_completo: dados.nome_completo,
           email: dados.email,
           telefone: dados.telefone,
@@ -384,7 +358,7 @@ export const useAgendamentoOnlineService = () => {
     } finally {
       setLoading(false);
     }
-  }, [servicos, criarClienteSeNaoExistir, calcularHorariosDisponiveis, resolveOwnerUserId]);
+  }, [servicos, criarClienteSeNaoExistir, calcularHorariosDisponiveis, resolveIdentifiers]);
 
   return {
     loading,
@@ -392,8 +366,8 @@ export const useAgendamentoOnlineService = () => {
     servicosError,
     produtos,
     horariosError,
-    ownerUserId: ownerUserIdCache,
-    publicId: publicIdCache,
+    ownerUserId,
+    publicId,
     carregarServicos,
     carregarProdutosPublicos,
     calcularHorariosDisponiveis,

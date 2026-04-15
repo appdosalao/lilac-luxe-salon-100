@@ -6,6 +6,7 @@ import MobileBottomNav from "@/components/navigation/MobileBottomNav";
 
 import { Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
 
 const navigationItems = [
   { title: "Dashboard", href: "/" },
@@ -26,6 +27,10 @@ interface LayoutProps {
 
 function LayoutContent({ children }: LayoutProps) {
   const location = useLocation();
+  const { config } = useConfigAgendamentoOnline();
+
+  // Gerar o link público do agendamento online com o slug (s) ou o ID do usuário (uid)
+  const onlineBookingLink = `/agendamento-online?${config.public_id ? `s=${config.public_id}` : config.user_id ? `uid=${config.user_id}` : ''}`;
 
   return (
     <SidebarProvider>
@@ -49,7 +54,7 @@ function LayoutContent({ children }: LayoutProps) {
                 asChild
                 className="gap-1 xs:gap-2 border-primary/20 text-primary hover:bg-primary/5 btn-touch flex-shrink-0 text-responsive-xs"
               >
-                <a href="/agendamento-online" target="_blank" rel="noopener noreferrer">
+                <a href={onlineBookingLink} target="_blank" rel="noopener noreferrer">
                   <Calendar className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
                   <span className="hidden xs:inline">Agendamento Online</span>
                   <span className="xs:hidden">Online</span>

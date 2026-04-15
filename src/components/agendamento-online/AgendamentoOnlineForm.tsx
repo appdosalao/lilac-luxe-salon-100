@@ -551,7 +551,7 @@ Você receberá uma confirmação em breve.
   return (
     <div className="flex flex-col min-h-screen" style={{ '--primary': primaryHsl, '--ring': primaryHsl } as React.CSSProperties}>
       <SalonHeader config={configOnline} />
-      <div className="flex-1 bg-gradient-to-b from-transparent to-primary/5 p-4 sm:p-6">
+      <div className="flex-1 bg-gradient-to-b from-transparent to-primary/5 p-4 sm:p-6 pb-20">
         <div className="max-w-2xl mx-auto">
           <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden animate-in fade-in zoom-in duration-500">
             <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent border-b border-primary/5 p-6 sm:p-8">
@@ -649,32 +649,39 @@ Você receberá uma confirmação em breve.
                     )}
 
                     {!loading && servicos.length === 0 && (
-                      <Alert className="rounded-2xl border-amber-200 bg-amber-50">
-                        <AlertCircle className="h-4 w-4 text-amber-700" />
-                        <AlertDescription className="text-amber-900 text-sm font-medium">
-                          {servicosError?.includes('Use ?uid=') 
+                      <Alert className="rounded-3xl border-primary/20 bg-primary/5 p-6 shadow-sm animate-in fade-in duration-500">
+                        <AlertCircle className="h-6 w-6 text-primary" />
+                        <AlertDescription className="text-foreground text-sm font-medium ml-2">
+                          {servicosError?.includes('link') || servicosError?.includes('oficial') 
                             ? (
-                              <div className="space-y-2">
-                                <p>Link de agendamento incompleto.</p>
-                                <p className="text-xs font-normal opacity-80">
-                                  Para acessar a página de agendamento de um salão específico, você precisa usar o link completo fornecido pelo estabelecimento.
+                              <div className="space-y-3">
+                                <h3 className="text-lg font-black tracking-tight text-primary">Salão não identificado</h3>
+                                <p className="text-muted-foreground">
+                                  Para acessar a página de agendamento, você precisa utilizar o link oficial fornecido pelo estabelecimento.
                                 </p>
+                                <div className="p-4 bg-white/50 rounded-2xl border border-primary/10 text-xs text-muted-foreground">
+                                  <p className="font-bold mb-1 uppercase tracking-widest text-[10px]">Dica para o proprietário:</p>
+                                  Certifique-se de compartilhar o link completo com seu <code className="bg-primary/10 px-1 rounded text-primary">slug</code> ou <code className="bg-primary/10 px-1 rounded text-primary">ID</code> único.
+                                </div>
                                 {import.meta.env.DEV && (
                                   <Button 
-                                    variant="link" 
-                                    className="p-0 h-auto text-primary text-xs font-bold"
-                                    onClick={() => window.location.search = '?uid=demo'}
+                                    variant="outline" 
+                                    className="w-full h-10 rounded-xl border-primary/30 text-primary font-bold text-xs hover:bg-primary hover:text-white transition-all"
+                                    onClick={() => window.location.search = '?s=demo'}
                                   >
-                                    Tentar modo demonstração (apenas dev)
+                                    Acessar Modo Demonstração
                                   </Button>
                                 )}
                               </div>
                             )
                             : (
-                              <>
-                                Nenhum serviço disponível para agendamento agora.
-                                {servicosError ? ` (${servicosError})` : ''}
-                              </>
+                              <div className="space-y-2">
+                                <h3 className="text-lg font-black tracking-tight text-amber-600">Serviços Indisponíveis</h3>
+                                <p className="text-muted-foreground">
+                                  No momento não há serviços disponíveis para agendamento online neste salão.
+                                </p>
+                                {servicosError && <p className="text-xs opacity-60">Detalhes: {servicosError}</p>}
+                              </div>
                             )
                           }
                         </AlertDescription>
