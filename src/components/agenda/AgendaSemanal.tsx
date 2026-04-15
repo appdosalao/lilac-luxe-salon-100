@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Calendar, DollarSign, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { safeToDate, timeToMinutes, overlaps } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AgendamentoEnriquecido } from '@/types/agendamento';
 
 type AgendaSemanalProps = {
   buscaTexto?: string;
@@ -18,10 +19,22 @@ type AgendaSemanalProps = {
 
 export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalProps) {
   const [semanaAtual, setSemanaAtual] = useState(new Date());
-  const { todosAgendamentos, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
+  const { 
+    todosAgendamentos, 
+    loading, 
+    converterAgendamentoOnlineParaRegular,
+    cancelarAgendamento,
+    excluirAgendamento
+  } = useAgendamentos() as {
+    todosAgendamentos: AgendamentoEnriquecido[];
+    loading: boolean;
+    converterAgendamentoOnlineParaRegular: (id: string) => Promise<boolean>;
+    cancelarAgendamento: (id: string) => Promise<boolean>;
+    excluirAgendamento: (id: string) => Promise<boolean>;
+  };
   const { getHorariosDisponiveis } = useHorariosTrabalho();
   const [detalheAberto, setDetalheAberto] = useState(false);
-  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<any | null>(null);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<AgendamentoEnriquecido | null>(null);
   const [diaDialogAberto, setDiaDialogAberto] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState<Date | null>(null);
 
@@ -34,8 +47,8 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
 
   const termo = buscaTexto.trim().toLowerCase();
   const getAgendamentosDoDia = (dia: Date) => {
-    return todosAgendamentos
-      .filter(ag => isSameDay(safeToDate(ag.data as any), dia))
+    return (todosAgendamentos as AgendamentoEnriquecido[])
+      .filter(ag => isSameDay(safeToDate(ag.data), dia))
       .filter(ag => {
         if (!termo) return true;
         const campos = [
@@ -296,16 +309,16 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
               </div>
 
               <div className="text-sm space-y-1">
-                {(agendamentoSelecionado as any).clienteTelefone && (
+                {agendamentoSelecionado.clienteTelefone && (
                   <div className="flex items-center gap-2">
                     <span>📞</span>
-                    <span>{(agendamentoSelecionado as any).clienteTelefone}</span>
+                    <span>{agendamentoSelecionado.clienteTelefone}</span>
                   </div>
                 )}
-                {(agendamentoSelecionado as any).clienteEmail && (
+                {agendamentoSelecionado.clienteEmail && (
                   <div className="flex items-center gap-2">
                     <span>✉️</span>
-                    <span>{(agendamentoSelecionado as any).clienteEmail}</span>
+                    <span>{agendamentoSelecionado.clienteEmail}</span>
                   </div>
                 )}
                 {agendamentoSelecionado.observacoes && (
@@ -317,6 +330,32 @@ export function AgendaSemanal({ buscaTexto = '', onSlotClick }: AgendaSemanalPro
               </div>
 
               <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDetalheAberto(false);
+                    onSlotClick?.(agendamentoSelecionado.data, agendamentoSelecionado.hora);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+                {agendamentoSelecionado && agendamentoSelecionado.status === 'agendado' && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      const ok = await cancelarAgendamento?.(agendamentoSelecionado.id);
+                      if (ok) {
+                        toast.success('Agendamento cancelado com sucesso');
+                        setDetalheAberto(false);
+                      }
+                    }}
+                  >
+                    Cancelar Agendamento
+                  </Button>
+                )}
                 {agendamentoSelecionado && String(agendamentoSelecionado.id).startsWith('online_') && (
                   <Button
                     variant="outline"

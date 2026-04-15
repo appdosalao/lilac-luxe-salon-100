@@ -137,7 +137,7 @@ export const useSupabaseConfiguracoes = () => {
 
       const { data, error } = await supabase
         .from('configuracoes_horarios')
-        .upsert(horarioData)
+        .upsert(horarioData, { onConflict: 'user_id,dia_semana' })
         .select();
 
       if (error) throw error;
@@ -273,7 +273,7 @@ export const useSupabaseConfiguracoes = () => {
   };
 
   // Obter horários disponíveis para um dia específico
-  const getHorariosDisponiveisDia = (diaSemana: number, duracaoServico = 60) => {
+  const getHorariosDisponiveisDia = (diaSemana: number, duracaoServico = 60, intervaloMinutos?: number) => {
     const config = buscarHorariosPorDia(diaSemana);
     if (!config || !config.ativo) return [];
 
@@ -284,7 +284,11 @@ export const useSupabaseConfiguracoes = () => {
     // Converter para minutos desde meia-noite
     const inicioMinutos = horaInicio * 60 + minInicio;
     const fimMinutos = horaFim * 60 + minFim;
-    const incrementoMinutos = 30; // Intervalos de 30 minutos
+    
+    // Lógica de intervalo:
+    // 1. Usa o parâmetro intervaloMinutos se fornecido (ex: vindo da duração do serviço)
+    // 2. Fallback para 30 minutos (padrão)
+    const incrementoMinutos = intervaloMinutos || 30;
 
     for (let minutoAtual = inicioMinutos; minutoAtual + duracaoServico <= fimMinutos; minutoAtual += incrementoMinutos) {
       const horas = Math.floor(minutoAtual / 60);

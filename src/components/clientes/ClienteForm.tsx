@@ -44,12 +44,13 @@ const clienteSchema = z.object({
 
 interface ClienteFormProps {
   cliente?: Cliente;
-  onSubmit: (data: ClienteFormData) => void;
+  onSubmit: (data: ClienteFormData) => Promise<boolean>;
   trigger?: ReactNode;
 }
 
 export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormProps) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<FormData>({
     resolver: zodResolver(clienteSchema),
@@ -65,11 +66,20 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
     },
   });
 
-  const handleSubmit = (data: FormData) => {
-    onSubmit(data);
-    form.reset();
-    setOpen(false);
-    toast.success(cliente ? "Cliente atualizada - Os dados da cliente foram atualizados com sucesso." : "Cliente cadastrada - Nova cliente foi cadastrada com sucesso.");
+  const handleSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    try {
+      const success = await onSubmit(data);
+      if (success) {
+        form.reset();
+        setOpen(false);
+        toast.success(cliente ? "Cliente atualizada - Os dados da cliente foram atualizados com sucesso." : "Cliente cadastrada - Nova cliente foi cadastrada com sucesso.");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar cliente:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const defaultTrigger = (
@@ -236,9 +246,10 @@ export default function ClienteForm({ cliente, onSubmit, trigger }: ClienteFormP
               </Button>
               <Button
                 type="submit"
+                disabled={isSubmitting}
                 className="flex-1 h-11 btn-touch bg-gradient-to-r from-primary to-lilac-primary"
               >
-                {cliente ? "Atualizar" : "Cadastrar"}
+                {isSubmitting ? "Salvando..." : (cliente ? "Atualizar" : "Cadastrar")}
               </Button>
             </div>
           </form>

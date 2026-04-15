@@ -84,10 +84,10 @@ export const useSupabaseLancamentos = () => {
 
       if (error) throw error;
       await loadLancamentos();
-      return data;
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar lançamento');
-      throw err;
+      return false;
     }
   };
 
@@ -116,9 +116,10 @@ export const useSupabaseLancamentos = () => {
 
       if (error) throw error;
       await loadLancamentos();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao atualizar lançamento');
-      throw err;
+      return false;
     }
   };
 

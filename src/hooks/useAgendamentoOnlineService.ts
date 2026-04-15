@@ -3,6 +3,45 @@ import { supabasePublic } from '@/integrations/supabase/publicClient';
 import { AgendamentoOnlineData, ServicoDisponivel, HorarioDisponivel } from '@/types/agendamento-online';
 import { toast } from 'sonner';
 
+const shouldDebug = () => {
+  try {
+    if (import.meta.env.DEV) return true;
+    return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugSupabase');
+  } catch {
+    return false;
+  }
+};
+
+const withTiming = async <T,>(op: string, fn: () => Promise<T>): Promise<T> => {
+  const startedAt = performance.now();
+  try {
+    const out = await fn();
+    if (shouldDebug()) console.debug('[booking]', op, 'ok', `${Math.round(performance.now() - startedAt)}ms`);
+    return out;
+  } catch (err) {
+    if (shouldDebug()) console.debug('[booking]', op, 'err', `${Math.round(performance.now() - startedAt)}ms`);
+    throw err;
+  }
+};
+
+const getPublicIdFromUrl = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('s') || params.get('public_id') || params.get('salao') || '';
+  } catch {
+    return '';
+  }
+};
+
+const getOwnerUserIdFromUrl = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('uid') || params.get('user_id') || params.get('owner') || '';
+  } catch {
+    return '';
+  }
+};
+
 export const useAgendamentoOnlineService = () => {
   const db = supabasePublic as any;
   const [loading, setLoading] = useState(false);
@@ -13,54 +52,28 @@ export const useAgendamentoOnlineService = () => {
   const [ownerUserIdCache, setOwnerUserIdCache] = useState<string | null>(null);
   const [publicIdCache, setPublicIdCache] = useState<string | null>(null);
 
-  const shouldDebug = () => {
-    try {
-      if (import.meta.env.DEV) return true;
-      return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugSupabase');
-    } catch {
-      return false;
-    }
-  };
-
-  const withTiming = async <T,>(op: string, fn: () => Promise<T>): Promise<T> => {
-    const startedAt = performance.now();
-    try {
-      const out = await fn();
-      if (shouldDebug()) console.debug('[booking]', op, 'ok', `${Math.round(performance.now() - startedAt)}ms`);
-      return out;
-    } catch (err) {
-      if (shouldDebug()) console.debug('[booking]', op, 'err', `${Math.round(performance.now() - startedAt)}ms`);
-      throw err;
-    }
-  };
-
-  const getPublicIdFromUrl = () => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('s') || params.get('public_id') || params.get('salao') || '';
-    } catch {
-      return '';
-    }
-  };
-
-  const getOwnerUserIdFromUrl = () => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('uid') || params.get('user_id') || params.get('owner') || '';
-    } catch {
-      return '';
-    }
-  };
-
   const resolvePublicId = useCallback(async (): Promise<string> => {
     const fromUrl = getPublicIdFromUrl();
     if (fromUrl) {
-      setPublicIdCache(fromUrl);
+      if (publicIdCache !== fromUrl) setPublicIdCache(fromUrl);
       return fromUrl;
     }
     if (publicIdCache) return publicIdCache;
+    
+    // Tentar buscar um ID público padrão se nada for fornecido
+    try {
+      const { data, error } = await db.rpc('get_default_public_id');
+      if (!error && data) {
+        const defaultId = String(data);
+        if (publicIdCache !== defaultId) setPublicIdCache(defaultId);
+        return defaultId;
+      }
+    } catch (e) {
+      console.warn('Erro ao buscar public_id padrão:', e);
+    }
+
     return '';
-  }, [publicIdCache]);
+  }, [publicIdCache, db]);
 
   const resolveOwnerUserId = useCallback(async (): Promise<string | null> => {
     if (ownerUserIdCache) return ownerUserIdCache;
@@ -69,7 +82,7 @@ export const useAgendamentoOnlineService = () => {
       // 1. Tentar pelo UID direto na URL
       const ownerFromUrl = getOwnerUserIdFromUrl();
       if (ownerFromUrl) {
-        setOwnerUserIdCache(ownerFromUrl);
+        if (ownerUserIdCache !== ownerFromUrl) setOwnerUserIdCache(ownerFromUrl);
         return ownerFromUrl;
       }
 
@@ -84,7 +97,7 @@ export const useAgendamentoOnlineService = () => {
           console.error('Erro ao resolver owner user_id pelo public_id:', error);
         } else if (data) {
           const next = String(data);
-          setOwnerUserIdCache(next);
+          if (ownerUserIdCache !== next) setOwnerUserIdCache(next);
           return next;
         }
       }
@@ -97,7 +110,7 @@ export const useAgendamentoOnlineService = () => {
       console.error('Erro ao resolver owner user_id:', error);
       return null;
     }
-  }, [ownerUserIdCache, resolvePublicId]);
+  }, [ownerUserIdCache, resolvePublicId, db]);
 
   // Carregar serviços disponíveis
   const carregarServicos = useCallback(async () => {
@@ -346,8 +359,7 @@ export const useAgendamentoOnlineService = () => {
           duracao: duracaoEfetiva,
           status: 'confirmado',
           origem: 'formulario_online',
-          user_agent: navigator.userAgent,
-          user_id: await resolveOwnerUserId()
+          user_agent: navigator.userAgent
       };
 
       let insertError: any = null;

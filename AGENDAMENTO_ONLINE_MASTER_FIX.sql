@@ -145,36 +145,30 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_user_id uuid;
+  v_usuario_id uuid;
   v_cliente_id uuid;
   v_ag_id uuid;
   v_servico_nome text;
+  v_valor_final numeric;
+  v_duracao_final integer;
 BEGIN
   -- Só executa se confirmado e não convertido
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') AND NEW.status = 'confirmado' AND NEW.agendamento_id IS NULL THEN
     
-    -- 1. Identificar proprietário e nome do serviço
-    -- Tenta primeiro pelo owner_user_id da tabela, se não houver, busca no serviço
-    v_user_id := NEW.owner_user_id;
-    
-    IF v_user_id IS NULL THEN
-        SELECT user_id, nome INTO v_user_id, v_servico_nome 
-        FROM public.servicos 
-        WHERE id = NEW.servico_id 
-        LIMIT 1;
-    ELSE
-        SELECT nome INTO v_servico_nome 
-        FROM public.servicos 
-        WHERE id = NEW.servico_id 
-        LIMIT 1;
-    END IF;
+    -- 1. Identificar proprietário e dados do serviço
+    -- Buscamos o dono diretamente pelo serviço já que a tabela agendamentos_online não tem coluna de dono
+    SELECT usuario_id, nome, COALESCE(NEW.valor, valor, 0), COALESCE(NEW.duracao, duracao, 60)
+    INTO v_usuario_id, v_servico_nome, v_valor_final, v_duracao_final
+    FROM public.servicos 
+    WHERE id = NEW.servico_id 
+    LIMIT 1;
 
-    IF v_user_id IS NULL THEN RETURN NEW; END IF;
+    IF v_usuario_id IS NULL THEN RETURN NEW; END IF;
 
     -- 2. Tentar encontrar cliente vinculado ao dono
     SELECT id INTO v_cliente_id 
     FROM public.clientes 
-    WHERE user_id = v_user_id 
+    WHERE usuario_id = v_usuario_id
       AND (email = NEW.email OR telefone = NEW.telefone)
     LIMIT 1;
 
@@ -182,27 +176,24 @@ BEGIN
     IF v_cliente_id IS NULL THEN
       v_cliente_id := gen_random_uuid();
       INSERT INTO public.clientes (id, user_id, nome, email, telefone, observacoes)
-      VALUES (v_cliente_id, v_user_id, NEW.nome_completo, NEW.email, NEW.telefone, 'Criado via Agendamento Online');
-    ELSE
-      -- Garantir que o cliente está vinculado ao user_id correto se for um cliente órfão
-      UPDATE public.clientes SET user_id = v_user_id WHERE id = v_cliente_id AND user_id IS NULL;
+      VALUES (v_cliente_id, v_usuario_id, NEW.nome_completo, NEW.email, NEW.telefone, 'Criado via Agendamento Online');
     END IF;
 
     -- 4. Criar agendamento real na agenda principal
     v_ag_id := gen_random_uuid();
     INSERT INTO public.agendamentos (
       id, user_id, cliente_id, servico_id,
-      data, hora, duracao, valor, valor_devido,
+      data, hora, duracao, valor, valor_pago, valor_devido,
       forma_pagamento, status_pagamento, status, origem, confirmado, observacoes
     )
     VALUES (
-      v_ag_id, v_user_id, v_cliente_id, NEW.servico_id,
-      NEW.data, NEW.horario::time, 
-      COALESCE(NEW.duracao, 60), COALESCE(NEW.valor, 0), COALESCE(NEW.valor, 0),
+      v_ag_id, v_usuario_id, v_cliente_id, NEW.servico_id,
+      NEW.data, NEW.horario::time,
+      v_duracao_final, v_valor_final, 0, v_valor_final,
       'fiado', 'em_aberto', 'agendado', 'online', true, NEW.observacoes
     );
 
-    -- 5. Marcar agendamento online como convertido e vincular ID
+    -- 5. Marcar agendamento online como convertido
     NEW.agendamento_id := v_ag_id;
     NEW.status := 'convertido';
     
@@ -243,14 +234,32 @@ DROP POLICY IF EXISTS "Public can insert online appointments" ON public.agendame
 CREATE POLICY "Public can insert online appointments" ON public.agendamentos_online FOR INSERT TO anon, public WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Public can view availability" ON public.agendamentos_online;
-CREATE POLICY "Public can view availability" ON public.agendamentos_online FOR SELECT TO anon, public USING (true);
+CREATE POLICY "Public can view availability" 
+ON public.agendamentos_online FOR SELECT 
+TO anon, public 
+USING ( (
+  SELECT user_id FROM public.servicos s WHERE s.id = agendamentos_online.servico_id
+) = ( 
+  SELECT user_id FROM public.configuracoes_agendamento_online 
+  WHERE public_id = current_setting('request.jwt.claims', true)::json->>'salon_slug' 
+  AND ativo = true
+  LIMIT 1 
+));
 
 DROP POLICY IF EXISTS "Owners can manage their online appointments" ON public.agendamentos_online;
 CREATE POLICY "Owners can manage their online appointments" ON public.agendamentos_online FOR ALL TO authenticated USING (true);
 
 -- POLÍTICAS PARA SERVIÇOS (Leitura pública total)
 DROP POLICY IF EXISTS "Public can view active services" ON public.servicos;
-CREATE POLICY "Public can view active services" ON public.servicos FOR SELECT TO anon, public USING (true);
+CREATE POLICY "Public can view active services" 
+ON public.servicos FOR SELECT 
+TO anon, public 
+USING (user_id = ( 
+  SELECT user_id FROM public.configuracoes_agendamento_online 
+  WHERE public_id = current_setting('request.jwt.claims', true)::json->>'salon_slug' 
+  AND ativo = true
+  LIMIT 1 
+));
 
 DROP POLICY IF EXISTS "Owners can manage their services" ON public.servicos;
 CREATE POLICY "Owners can manage their services" ON public.servicos FOR ALL TO authenticated USING (true);

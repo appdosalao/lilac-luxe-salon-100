@@ -12,7 +12,7 @@ export interface Agendamento {
   valorDevido: number;
   formaPagamento: 'dinheiro' | 'cartao' | 'pix' | 'fiado';
   statusPagamento: 'pago' | 'parcial' | 'em_aberto';
-  status: 'agendado' | 'concluido' | 'cancelado';
+  status: 'agendado' | 'concluido' | 'cancelado' | 'excluido';
   observacoes?: string;
   origem?: 'manual' | 'cronograma' | 'online';
   origem_cronograma: boolean;
@@ -23,9 +23,17 @@ export interface Agendamento {
   updatedAt: string;
 }
 
+export interface AgendamentoEnriquecido extends Agendamento {
+  clienteEmail?: string;
+  clienteTelefone?: string;
+  servicoDescricao?: string;
+  servicoValor?: number;
+  servicoDuracao?: number;
+}
+
 // Removendo interfaces duplicadas - usar as do arquivo específico de tipos
 
-export type AgendamentoStatus = 'agendado' | 'concluido' | 'cancelado';
+export type AgendamentoStatus = 'agendado' | 'concluido' | 'cancelado' | 'excluido';
 
 export interface AgendamentoFiltros {
   data?: string;

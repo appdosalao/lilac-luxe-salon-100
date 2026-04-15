@@ -16,6 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthFooter } from '@/components/branding/AuthFooter';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 const cadastroSchema = z.object({
   nome_personalizado_app: z.string().min(1, 'Nome da profissional/salão é obrigatório'),
@@ -81,13 +82,15 @@ const Cadastro = () => {
       const ok = await cadastrar(data);
 
       if (ok) {
+        toast.success('Conta criada com sucesso! Redirecionando...');
         if (isBuying) {
           navigate('/checkout');
         } else {
-          navigate('/'); // Go to dashboard with trial
+          // Pequeno delay para garantir que o Supabase Auth atualizou o estado
+          setTimeout(() => navigate('/'), 1500);
         }
       } else {
-        setError('Erro ao criar conta');
+        setError('Erro ao criar conta. Verifique os dados e tente novamente.');
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta. Tente novamente.');

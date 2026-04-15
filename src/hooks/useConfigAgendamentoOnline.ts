@@ -136,10 +136,8 @@ export function useConfigAgendamentoOnline() {
       return true;
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
-      // Se der erro no banco (como PGRST204), a configuração visual continuará funcionando localmente no navegador do usuário
-      // Mas não precisamos alertar o usuário final com mensagens técnicas de "backup"
-      toast.success('Alterações salvas e aplicadas! ✨');
-      return true; // Retornamos true para não travar o fluxo da UI
+      toast.error('Erro ao salvar as configurações. Tente novamente mais tarde.');
+      return false; // Retornamos false para expor a falha de consistência
     } finally {
       setSaving(false);
     }

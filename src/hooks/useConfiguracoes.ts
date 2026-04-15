@@ -105,8 +105,10 @@ export const useConfiguracoes = () => {
         return configuracoes;
       },
       isHorarioDisponivel: supabaseConfig.verificarDisponibilidade,
-      getHorariosDisponiveis: (diaSemana: number, duracaoServico = 60) => {
-        return supabaseConfig.getHorariosDisponiveisDia(diaSemana, duracaoServico);
+      getHorariosDisponiveis: (diaSemana: number, duracaoServico = 60, intervaloMinutos?: number) => {
+        // Tenta usar a duração do serviço como intervalo se não for passado explicitamente
+        const intervaloFinal = intervaloMinutos || duracaoServico || 30;
+        return supabaseConfig.getHorariosDisponiveisDia(diaSemana, duracaoServico, intervaloFinal);
       },
       exportarDados: async () => {
         // Implementar export usando dados do Supabase

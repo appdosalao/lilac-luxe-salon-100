@@ -106,11 +106,22 @@ BEGIN
   -- Só executa se confirmado e não convertido
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') AND NEW.status = 'confirmado' AND NEW.agendamento_id IS NULL THEN
     
-    -- 1. Identificar proprietário e dados do serviço usando usuario_id
+    -- 0. Validação de Segurança: O serviço deve pertencer ao usuário (salon/tenant)
+    -- Nota: Usamos usuario_id ou user_id conforme definido na sua tabela servicos
+    IF NOT EXISTS ( 
+      SELECT 1 FROM public.servicos 
+      WHERE id = NEW.servico_id 
+      AND (usuario_id = NEW.usuario_id OR user_id = NEW.usuario_id)
+    ) THEN 
+      RAISE EXCEPTION 'servico_id % nao pertence ao usuario_id %', 
+        NEW.servico_id, NEW.usuario_id; 
+    END IF;
+
+    -- 1. Identificar proprietário e dados do serviço
     v_usuario_id := NEW.usuario_id;
     
-    SELECT nome, COALESCE(NEW.valor, valor, 0), COALESCE(NEW.duracao, duracao, 60), COALESCE(v_usuario_id, usuario_id)
-    INTO v_servico_nome, v_valor_final, v_duracao_final, v_usuario_id
+    SELECT nome, COALESCE(NEW.valor, valor, 0), COALESCE(NEW.duracao, duracao, 60)
+    INTO v_servico_nome, v_valor_final, v_duracao_final
     FROM public.servicos 
     WHERE id = NEW.servico_id 
     LIMIT 1;
@@ -120,14 +131,14 @@ BEGIN
     -- 2. Tentar encontrar cliente vinculado ao dono
     SELECT id INTO v_cliente_id 
     FROM public.clientes 
-    WHERE usuario_id = v_usuario_id 
+    WHERE (usuario_id = v_usuario_id OR user_id = v_usuario_id)
       AND (email = NEW.email OR telefone = NEW.telefone)
     LIMIT 1;
 
     -- 3. Se não encontrou, criar cliente vinculado
     IF v_cliente_id IS NULL THEN
       v_cliente_id := gen_random_uuid();
-      INSERT INTO public.clientes (id, usuario_id, nome, email, telefone, observacoes)
+      INSERT INTO public.clientes (id, user_id, nome, email, telefone, observacoes)
       VALUES (v_cliente_id, v_usuario_id, NEW.nome_completo, NEW.email, NEW.telefone, 'Criado via Agendamento Online');
     END IF;
 
@@ -139,8 +150,8 @@ BEGIN
       forma_pagamento, status_pagamento, status, origem, confirmado, observacoes
     )
     VALUES (
-      v_ag_id, v_user_id, v_cliente_id, NEW.servico_id,
-      NEW.data, NEW.horario::time, (NEW.data || ' ' || NEW.horario)::timestamp with time zone,
+      v_ag_id, v_usuario_id, v_cliente_id, NEW.servico_id,
+      NEW.data, NEW.horario::time, (NEW.data || ' ' || NEW.horario)::timestamptz,
       v_duracao_final, v_valor_final, 0, v_valor_final,
       'fiado', 'em_aberto', 'agendado', 'online', true, NEW.observacoes
     );
@@ -172,8 +183,27 @@ ALTER TABLE public.agendamentos ENABLE ROW LEVEL SECURITY;
 
 -- Políticas Públicas
 CREATE POLICY "Public insert online" ON public.agendamentos_online FOR INSERT TO anon, public WITH CHECK (true);
-CREATE POLICY "Public select online" ON public.agendamentos_online FOR SELECT TO anon, public USING (true);
-CREATE POLICY "Public select services" ON public.servicos FOR SELECT TO anon, public USING (true);
+CREATE POLICY "Public select online" 
+ON public.agendamentos_online FOR SELECT 
+TO anon, public 
+USING ( (
+  SELECT user_id FROM public.servicos s WHERE s.id = agendamentos_online.servico_id
+) = ( 
+  SELECT user_id FROM public.configuracoes_agendamento_online 
+  WHERE public_id = current_setting('request.jwt.claims', true)::json->>'salon_slug' 
+  AND ativo = true
+  LIMIT 1 
+));
+
+CREATE POLICY "Public select services" 
+ON public.servicos FOR SELECT 
+TO anon, public 
+USING (user_id = ( 
+  SELECT user_id FROM public.configuracoes_agendamento_online 
+  WHERE public_id = current_setting('request.jwt.claims', true)::json->>'salon_slug' 
+  AND ativo = true
+  LIMIT 1 
+));
 CREATE POLICY "Public insert clients" ON public.clientes FOR INSERT TO anon, public WITH CHECK (true);
 
 -- Políticas de Gerenciamento (Dono)

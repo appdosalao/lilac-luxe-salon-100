@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,17 +102,30 @@ export function AgendamentoOnlineForm() {
   const [produtoCategoria, setProdutoCategoria] = useState<string>('todas');
   const [produtoOrdenacao, setProdutoOrdenacao] = useState<'nome' | 'preco'>('nome');
 
-  const agora = new Date();
-  const minAntecedenciaMin = typeof configOnline.tempo_minimo_antecedencia === 'number' && configOnline.tempo_minimo_antecedencia > 0
-    ? configOnline.tempo_minimo_antecedencia
-    : 0;
-  const minDateTime = new Date(agora.getTime() + minAntecedenciaMin * 60 * 1000);
-  const dataMinima = minDateTime.toISOString().split('T')[0];
+  const agora = useMemo(() => new Date(), []);
+  const minAntecedenciaMin = useMemo(() => 
+    typeof configOnline.tempo_minimo_antecedencia === 'number' && configOnline.tempo_minimo_antecedencia > 0
+      ? configOnline.tempo_minimo_antecedencia
+      : 0, 
+  [configOnline.tempo_minimo_antecedencia]);
+
+  const minDateTime = useMemo(() => 
+    new Date(agora.getTime() + minAntecedenciaMin * 60 * 1000),
+  [agora, minAntecedenciaMin]);
+
+  const dataMinima = useMemo(() => 
+    minDateTime.toISOString().split('T')[0],
+  [minDateTime]);
   
-  const maxMinutos = typeof configOnline.tempo_maximo_antecedencia === 'number' && configOnline.tempo_maximo_antecedencia > 0
-    ? configOnline.tempo_maximo_antecedencia
-    : 90 * 24 * 60;
-  const dataMaxima = new Date(agora.getTime() + maxMinutos * 60 * 1000).toISOString().split('T')[0];
+  const maxMinutos = useMemo(() => 
+    typeof configOnline.tempo_maximo_antecedencia === 'number' && configOnline.tempo_maximo_antecedencia > 0
+      ? configOnline.tempo_maximo_antecedencia
+      : 90 * 24 * 60,
+  [configOnline.tempo_maximo_antecedencia]);
+
+  const dataMaxima = useMemo(() => 
+    new Date(agora.getTime() + maxMinutos * 60 * 1000).toISOString().split('T')[0],
+  [agora, maxMinutos]);
 
   const steps = ['Dados', 'Agendamento', 'Finalização'];
 
@@ -129,60 +142,47 @@ export function AgendamentoOnlineForm() {
     });
   }, [configuracoes, loadingHorarios]);
 
-  useEffect(() => {
-    if (formData.servico_id && formData.data) {
-      carregarHorariosDisponiveis();
-    }
-  }, [formData.servico_id, formData.data]);
-
-  const carregarHorariosDisponiveis = async () => {
+  const carregarHorariosDisponiveis = useCallback(async () => {
     if (!formData.servico_id || !formData.data) return;
 
     const servicoSelecionado = servicos.find(s => s.id === formData.servico_id);
-    if (!servicoSelecionado) return;
+    if (!servicoSelecionado) {
+      console.warn('[booking] Serviço não encontrado:', formData.servico_id);
+      return;
+    }
 
     const dataSelecionada = new Date(formData.data + 'T00:00:00');
     const diaSemana = dataSelecionada.getDay();
 
-    console.log('Debug - Carregando horários:', {
-      data: formData.data,
-      diaSemana,
-      servicoId: formData.servico_id,
-      servicoNome: servicoSelecionado.nome,
-      servicoDuracao: servicoSelecionado.duracao,
-      isDiaAtivo: isDiaAtivo(diaSemana)
-    });
-
-    if (!isDiaAtivo(diaSemana)) {
-      console.log('Dia não está ativo:', diaSemana);
+    // Se as configurações ainda estão carregando, não bloqueamos.
+    // Se já carregou e existem configurações, validamos o dia.
+    if (!loadingHorarios && configuracoes.length > 0 && !isDiaAtivo(diaSemana)) {
+      console.log('[booking] Dia não ativo:', diaSemana);
       setHorariosDisponiveis([]);
       return;
     }
 
     try {
-      const horariosDisponiveis = await calcularHorariosDisponiveis(formData.servico_id!, formData.data);
-      console.log('Horários disponíveis considerando duração:', horariosDisponiveis);
+      console.log('[booking] Buscando horários:', formData.data, formData.servico_id);
+      const result = await calcularHorariosDisponiveis(formData.servico_id, formData.data);
       
-      // Garantir que horariosDisponiveis é um array antes de mapear
-      if (!Array.isArray(horariosDisponiveis)) {
-        console.error('Horários disponíveis não é um array:', horariosDisponiveis);
+      if (!Array.isArray(result)) {
+        console.warn('[booking] Resultado inválido:', result);
         setHorariosDisponiveis([]);
         return;
       }
 
-      // Transformar array de strings em array de objetos HorarioDisponivel
-      const horariosFormatados: HorarioDisponivel[] = horariosDisponiveis.map((h: any) => {
+      console.log('[booking] Horários encontrados:', result.length);
+      const horariosFormatados: HorarioDisponivel[] = result.map((h: any) => {
         if (typeof h === 'string') {
           return { horario: h, disponivel: true };
         }
-        // Se já for um objeto HorarioDisponivel
         if (h && typeof h === 'object' && 'horario' in h) {
           return h as HorarioDisponivel;
         }
         return { horario: String(h), disponivel: false };
       });
 
-      // Filtrar horários passados e antecedência mínima se for hoje
       const isHoje = formData.data === agora.toISOString().split('T')[0];
 
       const horariosFiltrados = isHoje
@@ -197,20 +197,15 @@ export function AgendamentoOnlineForm() {
 
       setHorariosDisponiveis(horariosFiltrados);
     } catch (error) {
-      console.error('Erro ao carregar horários:', error);
+      console.error('[booking] Erro ao carregar horários:', error);
       setHorariosDisponiveis([]);
     }
-  };
-
-  const formatarTelefone = (valor: string): string => {
-    const digits = valor.replace(/\D/g, '');
-    if (digits.length <= 2) return `(${digits}`;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-  };
+  }, [formData.servico_id, formData.data, servicos, loadingHorarios, configuracoes.length, isDiaAtivo, calcularHorariosDisponiveis, minDateTime, agora]);
 
   useEffect(() => {
     if (formData.servico_id && formData.data) {
+      carregarHorariosDisponiveis();
+
       const channel = supabasePublic
         .channel('configuracoes_horarios_online')
         .on('postgres_changes', {
@@ -218,7 +213,6 @@ export function AgendamentoOnlineForm() {
           schema: 'public',
           table: 'configuracoes_horarios'
         }, () => {
-          console.log('Configurações de horário atualizadas - recarregando horários disponíveis');
           carregarHorariosDisponiveis();
         })
         .subscribe();
@@ -228,6 +222,13 @@ export function AgendamentoOnlineForm() {
       };
     }
   }, [formData.servico_id, formData.data, carregarHorariosDisponiveis]);
+
+  const formatarTelefone = (valor: string): string => {
+    const digits = valor.replace(/\D/g, '');
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+  };
 
   const handleInputChange = (field: keyof AgendamentoOnlineData, value: string) => {
     if (field === 'telefone') {
@@ -414,73 +415,6 @@ Você receberá uma confirmação em breve.
     if (configuracoes.length === 0) return true;
     return isDiaAtivo(diaSemana);
   };
-
-  // Auto Test Runner: preenche e submete automaticamente quando ?autoTest=1
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const autoTest = params.get('autoTest');
-    if (!autoTest) return;
-    if (success) return;
-
-    // Etapa 1: preencher dados pessoais
-    if (currentStep === 1) {
-      setFormData(prev => ({
-        ...prev,
-        nome_completo: prev.nome_completo || 'Cliente Teste',
-        email: prev.email || 'cliente.teste@example.com',
-        telefone: prev.telefone || '(11) 99999-9999',
-      }));
-      setTimeout(() => setCurrentStep(2), 200);
-      return;
-    }
-
-    // Etapa 2: escolher serviço, data e horário
-    if (currentStep === 2 && servicos.length > 0) {
-      const escolherPrimeiraDataDisponivel = (): string | null => {
-        for (let i = 1; i <= 14; i++) {
-          const d = new Date();
-          d.setDate(d.getDate() + i);
-          const iso = d.toISOString().split('T')[0];
-          if (isDataDisponivel(iso)) return iso;
-        }
-        return null;
-      };
-
-      const primeiroServico = servicos[0];
-      const dataEscolhida = escolherPrimeiraDataDisponivel();
-
-      if (primeiroServico && dataEscolhida) {
-        setFormData(prev => ({
-          ...prev,
-          servico_id: primeiroServico.id,
-          data: dataEscolhida
-        }));
-
-        // Aguarda horários carregarem e seleciona o primeiro disponível
-        const tentarSelecao = async (tentativas = 0) => {
-          if (tentativas > 20) return;
-          if (horariosDisponiveis.length > 0) {
-            const h = horariosDisponiveis.find(h => h.disponivel) || horariosDisponiveis[0];
-            setFormData(prev => ({ ...prev, horario: h.horario }));
-            setTimeout(() => setCurrentStep(3), 150);
-          } else {
-            setTimeout(() => tentarSelecao(tentativas + 1), 250);
-          }
-        };
-        tentarSelecao();
-      }
-      return;
-    }
-
-    // Etapa 3: aceitar termos e submeter
-    if (currentStep === 3) {
-      if (!termsAccepted) setTermsAccepted(true);
-      if (!taxaAccepted) setTaxaAccepted(true);
-      setTimeout(() => {
-        formRef.current?.requestSubmit();
-      }, 200);
-    }
-  }, [currentStep, servicos, horariosDisponiveis, termsAccepted, taxaAccepted, success]);
 
   if (success) {
     return (
@@ -718,8 +652,31 @@ Você receberá uma confirmação em breve.
                       <Alert className="rounded-2xl border-amber-200 bg-amber-50">
                         <AlertCircle className="h-4 w-4 text-amber-700" />
                         <AlertDescription className="text-amber-900 text-sm font-medium">
-                          Nenhum serviço disponível para agendamento agora.
-                          {servicosError ? ` (${servicosError})` : ''}
+                          {servicosError?.includes('Use ?uid=') 
+                            ? (
+                              <div className="space-y-2">
+                                <p>Link de agendamento incompleto.</p>
+                                <p className="text-xs font-normal opacity-80">
+                                  Para acessar a página de agendamento de um salão específico, você precisa usar o link completo fornecido pelo estabelecimento.
+                                </p>
+                                {import.meta.env.DEV && (
+                                  <Button 
+                                    variant="link" 
+                                    className="p-0 h-auto text-primary text-xs font-bold"
+                                    onClick={() => window.location.search = '?uid=demo'}
+                                  >
+                                    Tentar modo demonstração (apenas dev)
+                                  </Button>
+                                )}
+                              </div>
+                            )
+                            : (
+                              <>
+                                Nenhum serviço disponível para agendamento agora.
+                                {servicosError ? ` (${servicosError})` : ''}
+                              </>
+                            )
+                          }
                         </AlertDescription>
                       </Alert>
                     )}

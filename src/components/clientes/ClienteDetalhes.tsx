@@ -16,7 +16,7 @@ interface ClienteDetalhesProps {
   cliente: Cliente | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (cliente: Cliente) => void;
+  onEdit: (cliente: Cliente) => Promise<boolean>;
 }
 
 export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }: ClienteDetalhesProps) {
@@ -28,9 +28,12 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
   useEffect(() => {
     if (cliente && open) {
       carregarVendasCliente();
-      carregarHistoricoServicos();
+      // O histórico de serviços e estatísticas já estão sendo carregados 
+      // via carregarEstatisticasCliente na página Clientes.tsx antes de abrir este modal.
+      // No entanto, atualizamos o estado local para refletir os dados do objeto cliente
+      setHistoricoServicosLocal(cliente.historicoServicos || []);
     }
-  }, [cliente?.id, open]);
+  }, [cliente?.id, cliente?.historicoServicos, open]);
 
   const carregarVendasCliente = async () => {
     if (!cliente) return;
@@ -49,45 +52,6 @@ export default function ClienteDetalhes({ cliente, open, onOpenChange, onEdit }:
       console.error('Erro ao carregar vendas:', error);
     } finally {
       setLoadingVendas(false);
-    }
-  };
-
-  const carregarHistoricoServicos = async () => {
-    if (!cliente) return;
-    try {
-      const parseValor = (v: any): number => {
-        if (typeof v === 'number') return v;
-        if (typeof v === 'string') {
-          const s = v.replace(/\./g, '').replace(',', '.');
-          const n = Number(s);
-          return isNaN(n) ? 0 : n;
-        }
-        return 0;
-      };
-      const { data: ags, error } = await supabase
-        .from('agendamentos')
-        .select('id, servico_id, data, hora, valor, valor_pago, status')
-        .eq('cliente_id', cliente.id)
-        .neq('status', 'cancelado')
-        .order('data', { ascending: false });
-      if (error) throw error;
-      const { data: servs } = await supabase
-        .from('servicos')
-        .select('id, nome');
-      const nomeMap = new Map((servs || []).map((s: any) => [s.id, s.nome]));
-      const hist = (ags || []).map(a => ({
-        id: a.id,
-        data: new Date(`${a.data}T${(a as any).hora || '00:00'}`),
-        servico: nomeMap.get(a.servico_id) || 'Serviço',
-        valor: (() => {
-          const vp = parseValor((a as any).valor_pago);
-          const vt = parseValor((a as any).valor);
-          return vp > 0 ? vp : vt;
-        })()
-      }));
-      setHistoricoServicosLocal(hist);
-    } catch {
-      setHistoricoServicosLocal(cliente?.historicoServicos || []);
     }
   };
 

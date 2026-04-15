@@ -3,6 +3,14 @@ import { useServicos } from './useServicos';
 import { useSupabaseClientes } from './useSupabaseClientes';
 import { useMemo } from 'react';
 
+// Função utilitária para construção segura de datas
+const parseSafeDate = (data: string, hora: string): Date => {
+  const [year, month, day] = data.split('-').map(Number);
+  const [hours, minutes] = hora.split(':').map(Number);
+  // Mês no JS Date é 0-indexado (0 = Janeiro, 1 = Fevereiro, etc)
+  return new Date(year, month - 1, day, hours, minutes);
+};
+
 export function useAgendamentos() {
   const agendamentosData = useSupabaseAgendamentos();
   const { todosServicos: servicos } = useServicos();
@@ -80,14 +88,14 @@ export function useAgendamentos() {
       return false;
     }
 
-    const dataHora = new Date(`${agendamento.data}T${agendamento.hora}`);
+    const dataHora = parseSafeDate(agendamento.data, agendamento.hora);
     const fimAgendamento = new Date(dataHora.getTime() + agendamento.duracao * 60000);
 
     return agendamentosData.todosAgendamentos.some(ag => {
       if (ag.id === excluirId) return false;
       if (ag.data !== agendamento.data) return false;
 
-      const dataHoraExistente = new Date(`${ag.data}T${ag.hora}`);
+      const dataHoraExistente = parseSafeDate(ag.data, ag.hora);
       const fimExistente = new Date(dataHoraExistente.getTime() + ag.duracao * 60000);
 
       return (

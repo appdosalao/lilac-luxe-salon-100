@@ -33,8 +33,18 @@ export function SalonHeader({ config }: { config: ConfigAgendamentoOnline }) {
       {/* Logo Flutuante 3D */}
       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 sm:left-12 sm:translate-x-0">
         <div className="p-1 bg-white rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.2)] transform transition-transform hover:scale-105 hover:rotate-3 duration-300">
-          <div className="bg-primary/5 rounded-full p-1 border-2 border-primary/20">
-            <AppLogo size={80} rounded="full" />
+          <div className="bg-primary/5 rounded-full p-1 border-2 border-primary/20 overflow-hidden w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={config.nome_salao} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="bg-primary/10 w-full h-full flex items-center justify-center">
+                <AppLogo size={64} rounded="full" />
+              </div>
+            )}
           </div>
         </div>
       </div>

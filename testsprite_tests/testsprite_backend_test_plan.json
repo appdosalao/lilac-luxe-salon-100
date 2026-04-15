@@ -1,0 +1,42 @@
+[
+  {
+    "id": "TC001",
+    "title": "rpc authusers signup signin flow",
+    "description": "Test the signup and signin process using the RPC auth.users endpoint with valid and invalid credentials, verifying correct status codes and session tokens are returned."
+  },
+  {
+    "id": "TC002",
+    "title": "profile management with publicusuarios endpoint",
+    "description": "Verify that authenticated users can retrieve and update their profile via GET and UPDATE on public.usuarios, and that unauthorized access is denied."
+  },
+  {
+    "id": "TC003",
+    "title": "fetch available time slots for service and date",
+    "description": "Test the RPC public.buscar_horarios_com_multiplos_intervalos endpoint anonymously with valid and invalid inputs to ensure correct available slots are returned or validation errors are handled."
+  },
+  {
+    "id": "TC004",
+    "title": "create public booking in agendamentosonline",
+    "description": "Verify anonymous users can create public bookings by inserting into public.agendamentos_online with valid customer data and receive booking confirmation, and that missing required fields cause validation errors."
+  },
+  {
+    "id": "TC005",
+    "title": "convert public booking to internal appointment",
+    "description": "Test the RPC public.converter_agendamento_online endpoint with valid booking_id and admin token to convert public bookings, and verify unauthorized calls are rejected."
+  },
+  {
+    "id": "TC006",
+    "title": "manage financial transactions with lancamentosfinanceiros",
+    "description": "Test authenticated CRUD operations on public.lancamentos_financeiros with valid and invalid data, ensuring correct creation, validation errors, and authorization enforcement."
+  },
+  {
+    "id": "TC007",
+    "title": "retrieve financial summary with resumofinanceiro view",
+    "description": "Verify that authenticated users can retrieve tenant-scoped financial summaries via public.resumo_financeiro and unauthorized access is denied."
+  },
+  {
+    "id": "TC008",
+    "title": "client management crud operations",
+    "description": "Test authenticated CRUD operations on public.clientes ensuring tenant isolation, correct creation, update, deletion, and proper error handling for non-existent clients."
+  }
+]

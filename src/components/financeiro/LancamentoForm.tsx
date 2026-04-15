@@ -57,7 +57,7 @@ type FormData = z.infer<typeof formSchema>;
 interface LancamentoFormProps {
   lancamento?: Lancamento;
   categorias: string[];
-  onSubmit: (data: NovoLancamento) => void;
+  onSubmit: (data: NovoLancamento) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -91,12 +91,14 @@ export default function LancamentoForm({
         categoria: data.categoria || undefined,
       };
 
-      onSubmit(novoLancamento);
+      const success = await onSubmit(novoLancamento);
       
-      toast({
-        title: lancamento ? "Lançamento atualizado" : "Lançamento criado",
-        description: `${lancamento ? "Alterações salvas" : "Novo lançamento adicionado"} com sucesso.`,
-      });
+      if (success) {
+        toast({
+          title: lancamento ? "Lançamento atualizado" : "Lançamento criado",
+          description: `${lancamento ? "Alterações salvas" : "Novo lançamento adicionado"} com sucesso.`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Erro",

@@ -9,8 +9,8 @@ export function useSoundLibrary() {
   const [sounds, setSounds] = useState<SoundItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fileToUrl = useCallback((base: '/sunds' | '/sounds', filename: string) => {
-    return `${base}/${encodeURIComponent(filename)}`;
+  const fileToUrl = useCallback((filename: string) => {
+    return `/sounds/${encodeURIComponent(filename)}`;
   }, []);
 
   const addUnique = (items: SoundItem[]) => {
@@ -22,26 +22,23 @@ export function useSoundLibrary() {
   };
 
   const loadManifest = useCallback(async () => {
-    const manifests = ['/sounds/sounds.json', '/sunds/sounds.json'];
-    for (const m of manifests) {
-      try {
-        const res = await fetch(m, { cache: 'no-cache' });
-        if (res.ok) {
-          const list = await res.json();
-          if (Array.isArray(list)) {
-            const base = m.startsWith('/sunds') ? '/sunds' : '/sounds';
-            const items = list
-              .filter((n) => typeof n === 'string' && (n.toLowerCase().endsWith('.mp3') || n.toLowerCase().endsWith('.wav')))
-              .map((n) => ({ name: n, src: fileToUrl(base, n) }));
-            addUnique(items);
-          }
+    const manifest = '/sounds/sounds.json';
+    try {
+      const res = await fetch(manifest, { cache: 'no-cache' });
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list)) {
+          const items = list
+            .filter((n) => typeof n === 'string' && (n.toLowerCase().endsWith('.mp3') || n.toLowerCase().endsWith('.wav')))
+            .map((n) => ({ name: n, src: fileToUrl(n) }));
+          addUnique(items);
         }
-      } catch { /* ignore */ }
-    }
+      }
+    } catch { /* ignore */ }
   }, [fileToUrl]);
 
   const loadDefaults = useCallback(() => {
-    addUnique(DEFAULTS.map(n => ({ name: n, src: fileToUrl('/sounds', n) })));
+    addUnique(DEFAULTS.map(n => ({ name: n, src: fileToUrl(n) })));
   }, [fileToUrl]);
 
   const loadCustomStorage = useCallback(() => {
@@ -49,7 +46,7 @@ export function useSoundLibrary() {
       const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
       if (raw) {
         const list: string[] = JSON.parse(raw);
-        addUnique(list.map(n => ({ name: n, src: fileToUrl('/sounds', n) })));
+        addUnique(list.map(n => ({ name: n, src: fileToUrl(n) })));
       }
     } catch { /* ignore */ }
   }, [fileToUrl]);
@@ -67,24 +64,22 @@ export function useSoundLibrary() {
   const addIfExists = useCallback(async (filename: string) => {
     const clean = filename.trim();
     if (!clean) return false;
-    const urls = [fileToUrl('/sounds', clean), fileToUrl('/sunds', clean)];
-    for (const u of urls) {
-      try {
-        const res = await fetch(u, { method: 'HEAD' });
-        if (res.ok) {
-          addUnique([{ name: clean, src: u }]);
-          try {
-            const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
-            const list: string[] = raw ? JSON.parse(raw) : [];
-            if (!list.includes(clean)) {
-              list.push(clean);
-              localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(list));
-            }
-          } catch { /* ignore */ }
-          return true;
-        }
-      } catch { /* ignore */ }
-    }
+    const url = fileToUrl(clean);
+    try {
+      const res = await fetch(url, { method: 'HEAD' });
+      if (res.ok) {
+        addUnique([{ name: clean, src: url }]);
+        try {
+          const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
+          const list: string[] = raw ? JSON.parse(raw) : [];
+          if (!list.includes(clean)) {
+            list.push(clean);
+            localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(list));
+          }
+        } catch { /* ignore */ }
+        return true;
+      }
+    } catch { /* ignore */ }
     return false;
   }, [fileToUrl]);
 

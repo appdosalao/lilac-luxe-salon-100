@@ -1,0 +1,63 @@
+version: "2"
+type: backend
+tech_stack:
+  - PostgreSQL (Supabase)
+  - Supabase Auth
+  - PL/pgSQL (RPC Functions)
+  - Row Level Security (RLS)
+features:
+  - name: User Management
+    description: Core user profile management and multi-tenancy
+    files:
+      - supabase_complete_schema.sql
+      - supabase_multi_tenant_rls.sql
+    endpoints:
+      - method: RPC
+        path: auth.users (Supabase Internal)
+        description: Sign up and Sign in
+        auth_required: false
+      - method: SELECT/UPDATE
+        path: public.usuarios
+        description: Profile management
+        auth_required: true
+  - name: Appointment System
+    description: Management of regular and online appointments
+    files:
+      - supabase_complete_schema.sql
+      - src/hooks/useSupabaseAgendamentos.ts
+    endpoints:
+      - method: RPC
+        path: public.buscar_horarios_com_multiplos_intervalos
+        description: Get available time slots for a service and date
+        auth_required: false
+      - method: RPC
+        path: public.converter_agendamento_online
+        description: Convert public online booking to regular appointment
+        auth_required: true
+      - method: INSERT
+        path: public.agendamentos_online
+        description: Create a public booking
+        auth_required: false
+  - name: Financial Core
+    description: Tracking income, expenses, and fixed costs
+    files:
+      - supabase_complete_schema.sql
+    endpoints:
+      - method: SELECT/INSERT/UPDATE/DELETE
+        path: public.lancamentos_financeiros
+        description: Manage financial transactions
+        auth_required: true
+      - method: VIEW
+        path: public.resumo_financeiro
+        description: Financial summary by user
+        auth_required: true
+  - name: Client Management
+    description: Tenant-isolated client database
+    files:
+      - supabase_complete_schema.sql
+    endpoints:
+      - method: SELECT/INSERT/UPDATE/DELETE
+        path: public.clientes
+        description: CRUD operations for clients
+        auth_required: true
+known_limitations: []

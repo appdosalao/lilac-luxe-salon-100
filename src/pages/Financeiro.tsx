@@ -113,13 +113,18 @@ export default function Financeiro() {
   };
 
   const handleSubmitLancamento = async (data: NovoLancamento) => {
+    let sucesso = false;
     if (lancamentoEditando) {
-      await atualizarLancamento(lancamentoEditando.id, data);
+      sucesso = await atualizarLancamento(lancamentoEditando.id, data);
     } else {
-      await adicionarLancamento(data);
+      sucesso = await adicionarLancamento(data);
     }
-    setViewMode('list');
-    setLancamentoEditando(undefined);
+    
+    if (sucesso) {
+      setViewMode('list');
+      setLancamentoEditando(undefined);
+    }
+    return sucesso;
   };
 
   const handleSubmitContaFixa = async (data: NovaContaFixa) => {

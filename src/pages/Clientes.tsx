@@ -9,19 +9,20 @@ import ClientesList from "@/components/clientes/ClientesList";
 import ClienteDetalhes from "@/components/clientes/ClienteDetalhes";
 
 export default function Clientes() {
-  const { clientes, criarCliente, atualizarCliente, excluirCliente, loading } = useSupabaseClientes();
+  const { clientes, criarCliente, atualizarCliente, excluirCliente, loading, carregarEstatisticasCliente } = useSupabaseClientes();
   const [clienteSelecionada, setClienteSelecionada] = useState<Cliente | null>(null);
   const [detalhesOpen, setDetalhesOpen] = useState(false);
 
   const handleAddCliente = async (data: ClienteFormData) => {
-    await criarCliente(data);
+    return await criarCliente(data);
   };
 
   const handleEditCliente = async (clienteAtualizada: Cliente) => {
-    await atualizarCliente(clienteAtualizada.id, clienteAtualizada);
-    if (clienteSelecionada?.id === clienteAtualizada.id) {
+    const sucesso = await atualizarCliente(clienteAtualizada.id, clienteAtualizada);
+    if (sucesso && clienteSelecionada?.id === clienteAtualizada.id) {
       setClienteSelecionada(clienteAtualizada);
     }
+    return sucesso;
   };
 
   const handleDeleteCliente = async (id: string) => {
@@ -32,9 +33,17 @@ export default function Clientes() {
     }
   };
 
-  const handleViewDetails = (cliente: Cliente) => {
+  const handleViewDetails = async (cliente: Cliente) => {
     setClienteSelecionada(cliente);
     setDetalhesOpen(true);
+    
+    // Carregar estatísticas sob demanda quando visualizar detalhes
+    if (cliente.historicoServicos?.length === 0) {
+      const stats = await carregarEstatisticasCliente(cliente.id);
+      if (stats && clienteSelecionada?.id === cliente.id) {
+        setClienteSelecionada(prev => prev ? { ...prev, ...stats } : null);
+      }
+    }
   };
 
   const clientesAtivas = clientes.length;

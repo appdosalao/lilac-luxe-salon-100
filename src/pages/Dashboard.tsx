@@ -33,8 +33,8 @@ import { AppLogo } from "@/components/branding/AppLogo";
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { agendamentosFiltrados } = useAgendamentos();
-  const { lancamentos } = useLancamentos();
+  const { agendamentosFiltrados, loading: loadingAgendamentos } = useAgendamentos() as any;
+  const { lancamentos, loading: loadingLancamentos } = useLancamentos();
   const { usuario, refreshProfile } = useSupabaseAuth();
 
   // Detectar retorno de pagamento bem-sucedido
@@ -44,13 +44,51 @@ export default function Dashboard() {
       // Limpar query param
       setSearchParams({});
       
-      // Forçar verificação de assinatura múltiplas vezes
-      toast.success('🎉 Pagamento confirmado! Verificando assinatura...');
-      setTimeout(() => void refreshProfile(), 1000);
-      setTimeout(() => void refreshProfile(), 3000);
-      setTimeout(() => void refreshProfile(), 6000);
+      const MAX_RETRIES = 10;
+      const RETRY_INTERVAL = 3000;
+      let retries = 0;
+      
+      const checkSubscription = async () => {
+        const toastId = toast.loading(`Verificando assinatura... (Tentativa ${retries + 1}/${MAX_RETRIES})`);
+        
+        try {
+          await refreshProfile();
+          
+          // O objeto 'usuario' no context pode levar um ciclo de render para atualizar,
+          // mas o refreshProfile no AuthContext já atualiza o estado interno.
+          // Como não temos acesso direto ao valor retornado do refreshProfile no hook atual,
+          // dependemos da re-renderização do Dashboard ou de uma verificação futura.
+          
+          // No entanto, podemos verificar o estado atual do usuário se ele já estiver 'active' ou 'paid_access'
+          if (usuario?.subscription_status === 'active' || usuario?.paid_access) {
+            toast.success('🎉 Assinatura confirmada! Bem-vindo ao Salão de Bolso Pro.', { id: toastId });
+            return;
+          }
+
+          if (retries < MAX_RETRIES - 1) {
+            retries++;
+            setTimeout(checkSubscription, RETRY_INTERVAL);
+            toast.dismiss(toastId);
+          } else {
+            toast.error('O pagamento foi processado, mas a liberação automática falhou. Por favor, aguarde alguns minutos ou entre em contato com o suporte.', { 
+              id: toastId,
+              duration: 10000 
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao verificar assinatura:', error);
+          if (retries < MAX_RETRIES - 1) {
+            retries++;
+            setTimeout(checkSubscription, RETRY_INTERVAL);
+          }
+          toast.dismiss(toastId);
+        }
+      };
+
+      toast.success('🎉 Pagamento recebido com sucesso!');
+      void checkSubscription();
     }
-  }, [searchParams, setSearchParams, refreshProfile]);
+  }, [searchParams, setSearchParams, refreshProfile, usuario?.subscription_status, usuario?.paid_access]);
 
   // Data atual
   const hoje = new Date();
@@ -172,7 +210,7 @@ export default function Dashboard() {
   }, [agendamentosHoje]);
 
   const carregandoDados =
-    agendamentosFiltrados.length === 0 && lancamentos.length === 0;
+    agendamentosFiltrados.length === 0 && lancamentos.length === 0 && (loadingAgendamentos || loadingLancamentos);
 
   return (
     <div className="space-y-3 sm:space-y-6">

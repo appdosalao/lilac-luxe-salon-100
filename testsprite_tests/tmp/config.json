@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8084/http://localhost:8080/",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "lilac-luxe-salon-100-main",
+    "projectPath": "d:\\TRABALHOS COM CODIGOS HTML\\SALAO DE BOLSO\\lilac-luxe-salon-100-main",
+    "testIds": [],
+    "additionalInstruction": "Execute os testes de Backend focando nas funções RPC do Supabase e nas políticas de RLS. Verifique se o isolamento entre usuários (multi-tenancy) está funcionando corretamente nas tabelas de clientes e agendamentos. O projeto usa Supabase como Backend.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-PDg9KBFgJ2UV_MLqQ0ozYMw3M3XQLPYvgALFLEtT4FkhCJ5fqPw7I7goyxd_5GTJL6XQ-gLDrgEf7IdJRTVlBshcyrKlZRRVkgbp01HXtZ9fKqdmjtV6N7XHTrZNhSzuS4U"
+    }
+  },
+  "serverPort": 63936,
+  "proxy": "http://f7d06d3c-f7d3-4232-827e-dc1f3d5e4e8e:BoFdUfj2MXkAN3EMnwyxAcBkrUXYNE9Z@tun.testsprite.com:8080"
+}

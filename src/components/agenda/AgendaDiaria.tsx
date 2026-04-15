@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, User, Tag, DollarSign, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { useAgendamentos } from '@/hooks/useAgendamentos';
 import { useHorariosTrabalho } from '@/hooks/useHorariosTrabalho';
 import { cn, toISODate, timeToMinutes, overlaps } from '@/lib/utils';
 import { getOrigemBadge, getStatusBadgeClass } from '@/components/agenda/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 type AgendaDiariaProps = {
   buscaTexto?: string;
@@ -18,8 +19,17 @@ type AgendaDiariaProps = {
 
 export function AgendaDiaria({ buscaTexto = '', onSlotClick }: AgendaDiariaProps) {
   const [dataSelecionada, setDataSelecionada] = useState(new Date());
-  const { todosAgendamentos, agendamentosFiltrados, loading, converterAgendamentoOnlineParaRegular } = useAgendamentos() as any;
+  const { 
+    todosAgendamentos, 
+    agendamentosFiltrados, 
+    loading, 
+    converterAgendamentoOnlineParaRegular,
+    cancelarAgendamento,
+    excluirAgendamento
+  } = useAgendamentos() as any;
   const { getHorariosDisponiveis, isAgendamentoValido } = useHorariosTrabalho();
+  const [detalheAberto, setDetalheAberto] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<any | null>(null);
 
   // Usar todos os agendamentos (incluindo online) para a agenda
   const termo = buscaTexto.trim().toLowerCase();
@@ -292,12 +302,16 @@ export function AgendaDiaria({ buscaTexto = '', onSlotClick }: AgendaDiariaProps
               <Card 
                 key={agendamento.id} 
                 className={cn(
-                  "group relative overflow-hidden border-0 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02]",
+                  "group relative overflow-hidden border-0 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer",
                   agendamento.origem === 'cronograma' && "bg-gradient-to-r from-purple-50/80 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20",
                   agendamento.status === 'concluido' && "bg-gradient-to-r from-green-50/80 to-green-100/30 dark:from-green-950/30 dark:to-green-900/20",
                   agendamento.status === 'cancelado' && "bg-gradient-to-r from-red-50/80 to-red-100/30 dark:from-red-950/30 dark:to-red-900/20"
                 )}
                 role="listitem"
+                onClick={() => {
+                  setAgendamentoSelecionado(agendamento);
+                  setDetalheAberto(true);
+                }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5" />
                 <CardContent className="relative p-5">
@@ -402,6 +416,116 @@ export function AgendaDiaria({ buscaTexto = '', onSlotClick }: AgendaDiariaProps
           </div>
         )}
       </div>
+
+      {/* Dialog de Detalhes do Agendamento */}
+      <Dialog open={detalheAberto} onOpenChange={setDetalheAberto}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Detalhes do agendamento</DialogTitle>
+            <DialogDescription className="sr-only">Informações do agendamento</DialogDescription>
+          </DialogHeader>
+          {agendamentoSelecionado && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>{agendamentoSelecionado.clienteNome}</span>
+                  <Badge className="bg-info/20 text-info border-0 capitalize">
+                    {agendamentoSelecionado.status}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription>
+                  {format(new Date(agendamentoSelecionado.data + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Horário</div>
+                  <div className="font-medium">{agendamentoSelecionado.hora} ({agendamentoSelecionado.duracao}min)</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Serviço</div>
+                  <div className="font-medium">{agendamentoSelecionado.servicoNome}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Valor</div>
+                  <div className="font-medium">R$ {Number(agendamentoSelecionado.valor ?? 0).toFixed(2)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Origem</div>
+                  <div className="font-medium capitalize">{agendamentoSelecionado.origem || 'manual'}</div>
+                </div>
+              </div>
+
+              <div className="text-sm space-y-1">
+                {(agendamentoSelecionado as any).clienteTelefone && (
+                  <div className="flex items-center gap-2">
+                    <span>📞</span>
+                    <span>{(agendamentoSelecionado as any).clienteTelefone}</span>
+                  </div>
+                )}
+                {(agendamentoSelecionado as any).clienteEmail && (
+                  <div className="flex items-center gap-2">
+                    <span>✉️</span>
+                    <span>{(agendamentoSelecionado as any).clienteEmail}</span>
+                  </div>
+                )}
+                {agendamentoSelecionado.observacoes && (
+                  <div className="mt-2 p-3 rounded-md bg-muted/60">
+                    <div className="text-muted-foreground mb-1">Observações</div>
+                    <div className="italic">"{agendamentoSelecionado.observacoes}"</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDetalheAberto(false);
+                    onSlotClick?.(agendamentoSelecionado.data, agendamentoSelecionado.hora);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+                {agendamentoSelecionado && agendamentoSelecionado.status === 'agendado' && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      const ok = await cancelarAgendamento?.(agendamentoSelecionado.id);
+                      if (ok) {
+                        toast.success('Agendamento cancelado com sucesso');
+                        setDetalheAberto(false);
+                      }
+                    }}
+                  >
+                    Cancelar Agendamento
+                  </Button>
+                )}
+                {agendamentoSelecionado && String(agendamentoSelecionado.id).startsWith('online_') && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const ok = await converterAgendamentoOnlineParaRegular?.(String(agendamentoSelecionado.id).replace('online_', ''));
+                      if (ok) {
+                        toast.success('Agendamento online convertido com sucesso');
+                      } else {
+                        toast.error('Falha ao converter agendamento online');
+                      }
+                    }}
+                  >
+                    Converter para regular
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setDetalheAberto(false)} autoFocus>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

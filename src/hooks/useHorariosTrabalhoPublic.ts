@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabasePublic } from '@/integrations/supabase/publicClient';
 
 interface ConfiguracaoHorarioPublica {
@@ -15,11 +15,7 @@ export const useHorariosTrabalhoPublic = (userId?: string) => {
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoHorarioPublica[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    carregarConfiguracoes();
-  }, [userId]);
-
-  const carregarConfiguracoes = async () => {
+  const carregarConfiguracoes = useCallback(async () => {
     try {
       if (!userId) {
         setConfiguracoes([]);
@@ -40,12 +36,16 @@ export const useHorariosTrabalhoPublic = (userId?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const isDiaAtivo = (diaSemana: number): boolean => {
+  useEffect(() => {
+    carregarConfiguracoes();
+  }, [carregarConfiguracoes]);
+
+  const isDiaAtivo = useCallback((diaSemana: number): boolean => {
     const config = configuracoes.find(c => c.dia_semana === diaSemana && c.ativo);
     return !!config;
-  };
+  }, [configuracoes]);
 
   return {
     configuracoes,

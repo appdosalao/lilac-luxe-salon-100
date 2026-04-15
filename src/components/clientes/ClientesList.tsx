@@ -44,7 +44,7 @@ import { useConfigAgendamentoOnline } from "@/hooks/useConfigAgendamentoOnline";
 
 interface ClientesListProps {
   clientes: Cliente[];
-  onEdit: (cliente: Cliente) => void;
+  onEdit: (cliente: Cliente) => Promise<boolean>;
   onDelete: (id: string) => void;
   onViewDetails: (cliente: Cliente) => void;
 }

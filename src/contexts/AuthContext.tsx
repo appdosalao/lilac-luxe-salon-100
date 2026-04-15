@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +11,7 @@ export interface AuthContextType {
   usuario: Usuario | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionError: boolean;
   login: (email: string, senha: string) => Promise<boolean>;
   cadastrar: (dados: UsuarioCadastro) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -19,13 +20,13 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
   return await new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => {
       reject(new Error('timeout'));
     }, ms);
 
-    promise
+    Promise.resolve(promise)
       .then((value) => {
         window.clearTimeout(timer);
         resolve(value);
@@ -77,16 +78,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState(false);
+  const hydrationLock = useRef<string | null>(null);
 
   const hydrateFromSession = async (nextSession: Session | null) => {
+    console.log('[Auth] hydrateFromSession chamado...', { userId: nextSession?.user?.id });
     // Se não houver sessão nova, e já tivermos um usuário, não limpamos imediatamente
     // para evitar "flicker" de redirecionamento em falhas temporárias de rede ao retomar foco
     if (!nextSession?.user) {
+      hydrationLock.current = null;
       // Limpamos o estado se não houver sessão ativa
       setSession(null);
       setUser(null);
       setUsuario(null);
+      setSessionError(false);
       applyTheme(localStorage.getItem('app-theme') as any);
+      return;
+    }
+
+    // Se já estamos hidratando ESTE usuário, evitamos chamadas paralelas
+    if (hydrationLock.current === nextSession.user.id) {
+      console.log(`[Auth] Hidratação já em curso para o usuário ${nextSession.user.id}, ignorando chamada redundante.`);
       return;
     }
 
@@ -94,73 +106,163 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // o estado de 'usuario' se não for necessário, prevenindo triggers em outros hooks
     const isSameUser = user?.id === nextSession.user.id;
     
+    // Atualiza sessão e usuário base (rápido, local)
     setSession(nextSession);
     setUser(nextSession.user);
+    
+    // Se estávamos mostrando o loader, agora podemos liberar o acesso básico
+    // O perfil carregará em background
+    setIsLoading(false);
 
     // Se for o mesmo usuário e já tivermos o objeto 'usuario', só atualizamos se houver mudança real
-    // Isso evita que o useEffect de hooks dependentes (como useSupabaseConfiguracoes) disparem sem necessidade
     if (isSameUser && usuario) {
+      setSessionError(false);
       return;
     }
 
-    let profile: any = null;
-    let profileError: any = null;
-    try {
-      // Aumentado timeout para 15s para carregar perfil
-      const res = await withTimeout(
-        supabase.from('usuarios').select('*').eq('id', nextSession.user.id).single(),
-        15000
-      );
-      profile = (res as any).data;
-      profileError = (res as any).error;
-    } catch {
-      profile = null;
-      profileError = new Error('timeout');
-    }
+    // Adquire o lock para este usuário
+    hydrationLock.current = nextSession.user.id;
 
-    if (profileError) {
-      // Se houver erro ao carregar o perfil (ex: timeout ao voltar da suspensão),
-      // mantemos o usuário atual se o ID for o mesmo para evitar logout indesejado
-      if (usuario && usuario.id === nextSession.user.id) {
-        console.warn('Falha temporária ao carregar perfil, mantendo estado atual.');
+    try {
+      let profile: any = null;
+      let profileError: any = null;
+      let attempts = 0;
+      const maxAttempts = 4; // Aumentado para 4 tentativas
+      const timeouts = [10000, 20000, 30000, 45000]; // Timeouts progressivos
+
+      while (attempts < maxAttempts) {
+        if (hydrationLock.current !== nextSession.user.id) return;
+
+        try {
+          console.log(`[Auth] Tentativa ${attempts + 1}/${maxAttempts} para carregar perfil de ${nextSession.user.id}... (Online: ${navigator.onLine})`);
+          const startTime = Date.now();
+          
+          const res = await withTimeout(
+            supabase.from('usuarios').select('*').eq('id', nextSession.user.id).single(),
+            timeouts[attempts]
+          );
+          
+          const duration = Date.now() - startTime;
+          profile = (res as any).data;
+          profileError = (res as any).error;
+          
+          if (!profileError && profile) {
+            console.log(`[Auth] Perfil carregado com sucesso em ${duration}ms.`);
+            break;
+          }
+          
+          if (profileError?.code === 'PGRST116') {
+            console.warn(`[Auth] Perfil não encontrado para ${nextSession.user.id}. Tentando criar perfil básico...`);
+            
+            // Tenta criar um perfil básico para evitar bloqueio
+            const { data: newProfile, error: insertError } = await supabase.from('usuarios').insert({
+              id: nextSession.user.id,
+              email: nextSession.user.email,
+              nome_completo: nextSession.user.user_metadata?.nome_completo || 'Novo Usuário',
+              nome_personalizado_app: nextSession.user.user_metadata?.nome_personalizado_app || 'Meu Salão',
+              tema_preferencia: nextSession.user.user_metadata?.tema_preferencia || 'feminino',
+            }).select().single();
+
+            if (!insertError && newProfile) {
+              profile = newProfile;
+              profileError = null;
+              console.log('[Auth] Perfil básico criado com sucesso.');
+            } else {
+              console.error('[Auth] Erro ao criar perfil básico:', insertError);
+            }
+            break;
+          }
+        } catch (err) {
+          profileError = err instanceof Error ? err : new Error('timeout');
+          console.warn(`[Auth] Erro na tentativa ${attempts + 1}: ${profileError.message}`);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts && !profile) {
+          const delay = attempts * 3000; // Delay progressivo: 3s, 6s...
+          console.warn(`[Auth] Aguardando ${delay/1000}s antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+
+      // Se o usuário mudou enquanto carregávamos o perfil, ignoramos o resultado
+      if (hydrationLock.current !== nextSession.user.id) return;
+
+      if (profileError) {
+        // Se houver erro ao carregar o perfil (ex: timeout ao voltar da suspensão),
+        // tentamos uma última vez sem timeout (confiando no default do Supabase/Navegador)
+        // apenas se for o mesmo usuário e não tivermos o perfil ainda.
+        if (profileError.message === 'timeout' && hydrationLock.current === nextSession.user.id && !usuario) {
+          console.log('[Auth] Tentativa final sem timeout manual...');
+          try {
+            const { data, error } = await supabase.from('usuarios').select('*').eq('id', nextSession.user.id).single();
+            if (!error && data) {
+              const nextUsuario = normalizeUsuario(data);
+              setUsuario(nextUsuario);
+              setSessionError(false);
+              return;
+            }
+          } catch (e) {
+            console.error('[Auth] Falha na tentativa final de emergência:', e);
+          }
+        }
+
+        // Se houver erro ao carregar o perfil (ex: timeout ao voltar da suspensão),
+        // mantemos o usuário atual se o ID for o mesmo para evitar logout indesejado
+        if (usuario && usuario.id === nextSession.user.id) {
+          console.warn('[Auth] Falha temporária ao carregar perfil, mantendo estado atual.');
+          setSessionError(false); // Mantemos o usuário antigo, então não é um erro bloqueante
+          return;
+        }
+        
+        console.error(`[Auth] Erro crítico ao carregar perfil para ${nextSession.user.id}:`, profileError);
+        if (profileError instanceof Error) {
+          console.error('[Auth] Detalhes do erro:', {
+            message: profileError.message,
+            stack: profileError.stack,
+            attempts
+          });
+        }
+        setUsuario(null);
+        setSessionError(true);
         return;
       }
-      setUsuario(null);
-      return;
-    }
 
-    const nextUsuario = normalizeUsuario(profile);
-    setUsuario(nextUsuario);
-    applyTheme(nextUsuario.tema_preferencia);
-    updateManifest(nextUsuario);
+      const nextUsuario = normalizeUsuario(profile);
+      setUsuario(nextUsuario);
+      setSessionError(false);
+      applyTheme(nextUsuario.tema_preferencia);
+      updateManifest(nextUsuario);
+    } finally {
+      // Só removemos o lock se ainda formos o mesmo usuário
+      if (hydrationLock.current === nextSession.user.id) {
+        hydrationLock.current = null;
+      }
+    }
   };
 
   const login: AuthContextType['login'] = async (email, senha) => {
+    setSessionError(false);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    
     if (error || !data?.user) {
       return false;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-
-    if (profileError) {
-      return false;
-    }
-
-    const nextUsuario = normalizeUsuario(profile);
+    // Definimos a sessão e usuário IMEDIATAMENTE para liberar a navegação
+    // O perfil (usuario) será carregado de forma assíncrona pelo onAuthStateChange ou hydrateFromSession
     setSession(data.session);
     setUser(data.user);
-    setUsuario(nextUsuario);
-    applyTheme(nextUsuario.tema_preferencia);
-    updateManifest(nextUsuario);
+    setSessionError(false);
+    
+    // Disparamos a hidratação em segundo plano sem esperar por ela aqui
+    void hydrateFromSession(data.session);
+    
     return true;
   };
 
   const cadastrar: AuthContextType['cadastrar'] = async (dados) => {
+    setSessionError(false);
     if (dados.senha !== dados.confirmar_senha) {
       throw new Error('Senhas não coincidem');
     }
@@ -197,29 +299,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsuario(null);
       setUser(null);
       setSession(null);
+      setSessionError(false);
     }
   };
 
   const refreshProfile: AuthContextType['refreshProfile'] = async () => {
-    if (!usuario?.id) {
+    const currentUserId = usuario?.id || user?.id;
+    if (!currentUserId) {
       setUsuario(null);
+      setSessionError(false);
       return;
     }
 
-    const { data: profile, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', usuario.id)
-      .single();
+    try {
+      let profile: any = null;
+      let profileError: any = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+      const timeouts = [10000, 20000, 30000];
 
-    if (error) {
-      return;
+      while (attempts < maxAttempts) {
+        try {
+          console.log(`[Auth] Refresh: Tentativa ${attempts + 1}/${maxAttempts} para ${currentUserId}...`);
+          const res = await withTimeout(
+            supabase.from('usuarios').select('*').eq('id', currentUserId).single(),
+            timeouts[attempts]
+          );
+          profile = (res as any).data;
+          profileError = (res as any).error;
+
+          if (!profileError && profile) break;
+          if (profileError?.code === 'PGRST116') break;
+        } catch (err) {
+          profileError = err instanceof Error ? err : new Error('timeout');
+        }
+
+        attempts++;
+        if (attempts < maxAttempts && !profile) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        }
+      }
+
+      if (profileError || !profile) {
+        console.warn('[Auth] Falha no refreshProfile após retentativas:', profileError);
+        if (!usuario) setSessionError(true);
+        return;
+      }
+
+      const nextUsuario = normalizeUsuario(profile);
+      setUsuario(nextUsuario);
+      setSessionError(false);
+      applyTheme(nextUsuario.tema_preferencia);
+      updateManifest(nextUsuario);
+    } catch (err) {
+      console.warn('[Auth] Erro inesperado no refreshProfile:', err);
+      if (!usuario) setSessionError(true);
     }
-
-    const nextUsuario = normalizeUsuario(profile);
-    setUsuario(nextUsuario);
-    applyTheme(nextUsuario.tema_preferencia);
-    updateManifest(nextUsuario);
   };
 
   useEffect(() => {
@@ -282,11 +417,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const needsLoader = !session && !usuario;
       if (needsLoader) setIsLoading(true);
 
-      try {
-        await hydrateFromSession(nextSession);
-      } finally {
-        if (active && needsLoader) setIsLoading(false);
-      }
+      // Iniciamos a hidratação em background sem aguardar o retorno aqui
+      // Isso permite que a sessão (user) seja disponibilizada imediatamente
+      // e o ProtectedRoute possa renderizar os filhos enquanto o perfil carrega
+      void hydrateFromSession(nextSession).finally(() => {
+        if (active) setIsLoading(false);
+      });
     });
 
     return () => {
@@ -303,6 +439,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     usuario,
     isAuthenticated,
     isLoading,
+    sessionError,
     login,
     cadastrar,
     logout,

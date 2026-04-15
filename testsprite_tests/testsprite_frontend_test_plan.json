@@ -1,0 +1,1317 @@
+[
+  {
+    "id": "TC001",
+    "title": "Sign in and reach the dashboard",
+    "description": "Verifies an authenticated user can sign in and is taken to the dashboard successfully.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Create a new appointment and see it in the agenda",
+    "description": "Verifies an authenticated user can create an appointment and then see it appear in the agenda.",
+    "category": "Agenda Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open the agenda"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a service for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid time for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select or create a client for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Save the appointment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new appointment is displayed in the agenda"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Complete a public online booking end-to-end",
+    "description": "Verifies an end customer can select a service, choose a date/time, provide details, and see a booking confirmation.",
+    "category": "Online Booking (Public)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /agendamento-online"
+      },
+      {
+        "type": "action",
+        "description": "Select a service from the available services"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the booking"
+      },
+      {
+        "type": "action",
+        "description": "Select an available time slot"
+      },
+      {
+        "type": "action",
+        "description": "Fill a client name into the client name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid email into the client email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid phone number into the client phone field"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a booking confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create a new client",
+    "description": "Verifies an authenticated user can create a new client and the new client appears in the client list.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open client management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new client"
+      },
+      {
+        "type": "action",
+        "description": "Fill Client Auto Test into the client name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid email into the client email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid phone number into the client phone field"
+      },
+      {
+        "type": "action",
+        "description": "Save the client"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Client Auto Test appears in the client list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Create a new service",
+    "description": "Verifies an authenticated user can create a service with duration and price and it appears in the service list.",
+    "category": "Service Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open service management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new service"
+      },
+      {
+        "type": "action",
+        "description": "Fill Service Auto Test into the service name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid duration for the service"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid price into the service price field"
+      },
+      {
+        "type": "action",
+        "description": "Save the service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Service Auto Test appears in the service list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Edit an existing appointment and see updates persist after refresh",
+    "description": "Verifies an authenticated user can edit an appointment and the updated details remain after reloading the page.",
+    "category": "Agenda Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open the agenda"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a service for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid time for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select or create a client for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Save the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Open the appointment details"
+      },
+      {
+        "type": "action",
+        "description": "Edit the appointment service, date, or time to a different valid value"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /minha-agenda"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the appointment shows the updated details"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "View client list",
+    "description": "Verifies an authenticated user can access Client Management and see the client list (or an empty state) successfully.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open client management"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the client list or an empty state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Cancel an appointment and confirm it no longer blocks the time slot",
+    "description": "Verifies an authenticated user can cancel an appointment and then book a new appointment in the same time slot.",
+    "category": "Agenda Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open the agenda"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a service for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select a specific time slot for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select or create a client for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Save the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Open the appointment details"
+      },
+      {
+        "type": "action",
+        "description": "Cancel the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the cancellation"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new appointment"
+      },
+      {
+        "type": "action",
+        "description": "Select the same service and the same date as before"
+      },
+      {
+        "type": "action",
+        "description": "Select the same time slot as before"
+      },
+      {
+        "type": "action",
+        "description": "Select a client for the appointment"
+      },
+      {
+        "type": "action",
+        "description": "Save the appointment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new appointment is displayed in the agenda"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Add an income transaction",
+    "description": "Verifies an authenticated user can add an income entry and it appears in the transaction list.",
+    "category": "Financial Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open financial management"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new transaction"
+      },
+      {
+        "type": "action",
+        "description": "Select income as the transaction type"
+      },
+      {
+        "type": "action",
+        "description": "Fill Income Auto Test into the description field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the amount field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Save the transaction"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Income Auto Test appears in the transaction list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Register a new account and reach the dashboard",
+    "description": "Verifies a new user can register and is taken to the dashboard after successful signup.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /cadastro"
+      },
+      {
+        "type": "action",
+        "description": "Fill a unique full name into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a unique email into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "View service catalog list",
+    "description": "Verifies an authenticated user can access Service Management and see the service list (or an empty state) successfully.",
+    "category": "Service Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open service management"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the service list or an empty state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "View appointments in agenda list or calendar",
+    "description": "Verifies an authenticated user can open the agenda and see appointments rendered in at least one view mode.",
+    "category": "Agenda Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open the agenda"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appointments are displayed in the agenda"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "View financial dashboard",
+    "description": "Verifies an authenticated user can access Financial Management and see totals and a transaction list (or empty state).",
+    "category": "Financial Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open financial management"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify financial totals are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the transaction list or an empty state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Add an expense transaction",
+    "description": "Verifies an authenticated user can add an expense entry and it appears in the transaction list.",
+    "category": "Financial Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open financial management"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new transaction"
+      },
+      {
+        "type": "action",
+        "description": "Select expense as the transaction type"
+      },
+      {
+        "type": "action",
+        "description": "Fill Expense Auto Test into the description field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the amount field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Save the transaction"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Expense Auto Test appears in the transaction list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Update an existing client",
+    "description": "Verifies an authenticated user can edit a client and the updated client details are shown afterward.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open client management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new client"
+      },
+      {
+        "type": "action",
+        "description": "Fill Client Edit Seed into the client name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid email into the client email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid phone number into the client phone field"
+      },
+      {
+        "type": "action",
+        "description": "Save the client"
+      },
+      {
+        "type": "action",
+        "description": "Select Client Edit Seed from the client list"
+      },
+      {
+        "type": "action",
+        "description": "Edit the client name to Client Edit Updated"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Client Edit Updated appears in the client list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Edit an existing service",
+    "description": "Verifies an authenticated user can update a service and the updated service appears in the list afterward.",
+    "category": "Service Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open service management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new service"
+      },
+      {
+        "type": "action",
+        "description": "Fill Service Edit Seed into the service name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid duration for the service"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid price into the service price field"
+      },
+      {
+        "type": "action",
+        "description": "Save the service"
+      },
+      {
+        "type": "action",
+        "description": "Select Service Edit Seed from the service list"
+      },
+      {
+        "type": "action",
+        "description": "Edit the service name to Service Edit Updated"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Service Edit Updated appears in the service list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Delete a client",
+    "description": "Verifies an authenticated user can delete a client and the client is removed from the list after confirming deletion.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open client management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new client"
+      },
+      {
+        "type": "action",
+        "description": "Fill Client Delete Seed into the client name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid email into the client email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid phone number into the client phone field"
+      },
+      {
+        "type": "action",
+        "description": "Save the client"
+      },
+      {
+        "type": "action",
+        "description": "Select Client Delete Seed from the client list"
+      },
+      {
+        "type": "action",
+        "description": "Delete the selected client"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Client Delete Seed is not present in the client list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Delete a service",
+    "description": "Verifies an authenticated user can delete a service after confirming and it is removed from the list.",
+    "category": "Service Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open service management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new service"
+      },
+      {
+        "type": "action",
+        "description": "Fill Service Delete Seed into the service name field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid duration for the service"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid price into the service price field"
+      },
+      {
+        "type": "action",
+        "description": "Save the service"
+      },
+      {
+        "type": "action",
+        "description": "Select Service Delete Seed from the service list"
+      },
+      {
+        "type": "action",
+        "description": "Delete the selected service"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Service Delete Seed is not present in the service list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Filter transactions by type",
+    "description": "Verifies an authenticated user can filter transactions by type and only matching transactions are shown.",
+    "category": "Financial Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open financial management"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new transaction"
+      },
+      {
+        "type": "action",
+        "description": "Select income as the transaction type"
+      },
+      {
+        "type": "action",
+        "description": "Fill Income Filter Seed into the description field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the amount field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Save the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new transaction"
+      },
+      {
+        "type": "action",
+        "description": "Select expense as the transaction type"
+      },
+      {
+        "type": "action",
+        "description": "Fill Expense Filter Seed into the description field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the amount field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Save the transaction"
+      },
+      {
+        "type": "action",
+        "description": "Filter transactions to show only income"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Income Filter Seed is shown and Expense Filter Seed is not shown in the transaction list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Require client details before confirming a public booking",
+    "description": "Verifies the public booking flow prevents confirmation and shows validation errors when required client details are missing.",
+    "category": "Online Booking (Public)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /agendamento-online"
+      },
+      {
+        "type": "action",
+        "description": "Select a service from the available services"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the booking"
+      },
+      {
+        "type": "action",
+        "description": "Select an available time slot"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to confirm the booking without filling required client details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify required-field validation errors are visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC021",
+    "title": "Reject invalid registration inputs",
+    "description": "Verifies the registration form blocks submission and shows a validation error when the email or password is invalid.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /cadastro"
+      },
+      {
+        "type": "action",
+        "description": "Fill a full name into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill an invalid email format into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a weak password into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a form validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC022",
+    "title": "Prevent saving a client with missing required details",
+    "description": "Verifies the client form blocks saving when required client details are missing and shows a validation error.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open client management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new client"
+      },
+      {
+        "type": "action",
+        "description": "Clear the client name field"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save the client"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC023",
+    "title": "Prevent saving a service with missing required fields",
+    "description": "Verifies the service form blocks saving when required fields are missing and shows a validation error.",
+    "category": "Service Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open service management"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a new service"
+      },
+      {
+        "type": "action",
+        "description": "Clear the service name field"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save the service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC024",
+    "title": "View Auditoria Dashboard",
+    "description": "Verifies an authenticated user can access the Auditoria page and see logs and statistics.",
+    "category": "Auditoria",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open Auditoria"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Auditoria summary cards and logs are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC025",
+    "title": "View Marketing Dashboard",
+    "description": "Verifies an authenticated user can access the Marketing page and see the loyalty program ranking.",
+    "category": "Marketing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open Marketing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the loyalty program ranking or statistics are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "View Product Inventory",
+    "description": "Verifies an authenticated user can access the Produtos page and see the inventory list.",
+    "category": "Product Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open Produtos"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product inventory list is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "View Salon Working Hours Settings",
+    "description": "Verifies an authenticated user can access the Configuracoes page and see the working hours settings.",
+    "category": "Configuration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation link to open Configuracoes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the working hours settings are visible"
+      }
+    ],
+    "priority": "Medium"
+  }
+]
