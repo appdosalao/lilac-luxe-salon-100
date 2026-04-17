@@ -89,6 +89,8 @@ export function FornecedoresList() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  title="Editar fornecedor"
+                  aria-label="Editar fornecedor"
                   onClick={() => {
                     setEditingFornecedor(fornecedor);
                     setShowForm(true);
@@ -99,6 +101,8 @@ export function FornecedoresList() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  title="Excluir fornecedor"
+                  aria-label="Excluir fornecedor"
                   onClick={() => handleDelete(fornecedor.id)}
                 >
                   <Trash2 className="h-4 w-4" />
