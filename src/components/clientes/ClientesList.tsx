@@ -216,6 +216,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                 size="sm"
                 onClick={handleClearSearch}
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+                aria-label="Limpar busca"
+                title="Limpar busca"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -274,6 +276,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 ligar(cliente.telefone);
                               }}
                               className="btn-touch"
+                              aria-label={`Ligar para ${cliente.nomeCompleto || cliente.nome}`}
+                              title="Ligar"
                             >
                               <Phone className="h-3 w-3" />
                             </Button>
@@ -285,6 +289,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 abrirWhatsApp(cliente.telefone, cliente.nomeCompleto || cliente.nome || '');
                               }}
                               className="btn-touch hover:bg-green-100"
+                              aria-label={`Enviar WhatsApp para ${cliente.nomeCompleto || cliente.nome}`}
+                              title="WhatsApp"
                             >
                               <MessageCircle className="h-3 w-3 text-green-600" />
                             </Button>
@@ -316,6 +322,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               onViewDetails(cliente);
                             }}
                             className="btn-touch"
+                            aria-label={`Ver detalhes de ${cliente.nomeCompleto || cliente.nome}`}
+                            title="Ver detalhes"
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
@@ -328,6 +336,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 variant="ghost"
                                 onClick={(e) => e.stopPropagation()}
                                 className="btn-touch"
+                                aria-label={`Editar ${cliente.nomeCompleto || cliente.nome}`}
+                                title="Editar"
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
@@ -340,6 +350,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 variant="ghost"
                                 onClick={(e) => e.stopPropagation()}
                                 className="btn-touch hover:bg-destructive/10 hover:text-destructive"
+                                aria-label={`Excluir ${cliente.nomeCompleto || cliente.nome}`}
+                                title="Excluir"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
@@ -509,6 +521,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    aria-label="Página anterior"
+                    title="Página anterior"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -520,6 +534,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
+                    aria-label="Próxima página"
+                    title="Próxima página"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
