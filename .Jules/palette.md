@@ -1,0 +1,3 @@
+## 2024-05-24 - Empty State Challenges in Playwright Verification
+**Learning:** Testing list components containing item-specific actions (like edit/delete buttons) often fails during automated visual verification (Playwright) if the initial state is empty. Interaction logic must be robust enough to handle creating dummy entries before testing item-level UI changes, or mocked states should be injected locally.
+**Action:** Before verifying list-item UI enhancements, proactively ensure test scripts either interact to populate data or use mocked data within the component to guarantee the UI elements are rendered.
