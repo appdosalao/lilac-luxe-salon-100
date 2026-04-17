@@ -93,6 +93,8 @@ export function FornecedoresList() {
                     setEditingFornecedor(fornecedor);
                     setShowForm(true);
                   }}
+                  title="Editar fornecedor"
+                  aria-label="Editar fornecedor"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -100,6 +102,8 @@ export function FornecedoresList() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDelete(fornecedor.id)}
+                  title="Excluir fornecedor"
+                  aria-label="Excluir fornecedor"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
