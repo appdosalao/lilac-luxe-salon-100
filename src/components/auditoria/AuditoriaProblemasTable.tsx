@@ -186,7 +186,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" aria-label="Filtrar entidades">
                 <Filter className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -295,6 +295,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Ir para a entidade"
                         onClick={() => irParaEntidade(problema.entidade)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Ir para a entidade"
@@ -305,6 +306,7 @@ export function AuditoriaProblemasTable({ problemas, onResolverLote, unresolvedK
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Marcar resolvido"
                           onClick={async () => {
                             await onResolverLote([problema]);
                             setSelecionados(prev => {
