@@ -1,0 +1,3 @@
+## 2024-05-15 - [Clear Search Button Accessibility]
+**Learning:** Icon-only clear buttons inside inputs often lack ARIA labels in custom input implementations, creating a pattern of accessibility issues for screen reader users.
+**Action:** When creating or reviewing search inputs or filters with an "X" or "clear" button, always ensure an `aria-label` like "Limpar busca" or "Limpar campo" is present on the button element.

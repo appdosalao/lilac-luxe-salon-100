@@ -153,6 +153,7 @@ export default function AgendamentosList({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Limpar busca"
                   onClick={() => onFiltrosChange({ ...filtros, busca: '' })}
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
                 >
