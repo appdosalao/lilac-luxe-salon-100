@@ -115,7 +115,7 @@ export function ClienteHistorico({ cliente, agendamentos, onClose }: ClienteHist
               <p className="text-sm text-muted-foreground">{formatarTelefone(cliente.telefone)}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0" aria-label="Fechar histórico">
             <X className="h-4 w-4" />
           </Button>
         </div>
