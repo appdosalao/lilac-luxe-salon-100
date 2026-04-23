@@ -1,0 +1,3 @@
+## 2024-05-24 - Missing ARIA labels in icon-only buttons
+**Learning:** Found multiple icon-only buttons in list components (like `FornecedoresList`) and tables (`AuditoriaProblemasTable`) that rely solely on visual icons (`Pencil`, `Trash2`, `Filter`, etc.) without `aria-label`s, breaking accessibility for screen reader users. Some buttons have a `title` prop, but not an `aria-label`.
+**Action:** Always add descriptive `aria-label`s in Portuguese to icon-only buttons, especially in mapped lists where context is crucial. Tooltips or `title` attributes alone aren't sufficient for comprehensive accessibility.
