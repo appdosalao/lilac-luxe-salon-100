@@ -212,6 +212,8 @@ export default function ServicosList({
                           size="sm"
                           onClick={() => onEdit(servico)}
                           className="h-8 w-8 p-0"
+                          aria-label="Editar serviço"
+                          title="Editar serviço"
                         >
                           <Edit className="h-3.5 w-3.5" />
                         </Button>
@@ -220,6 +222,8 @@ export default function ServicosList({
                           size="sm"
                           onClick={() => setServicoParaExcluir(servico)}
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                          aria-label="Excluir serviço"
+                          title="Excluir serviço"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -270,6 +274,8 @@ export default function ServicosList({
                         variant="ghost"
                         size="sm"
                         onClick={() => onEdit(servico)}
+                        aria-label="Editar serviço"
+                        title="Editar serviço"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -278,6 +284,8 @@ export default function ServicosList({
                         size="sm"
                         onClick={() => setServicoParaExcluir(servico)}
                         className="text-destructive hover:text-destructive"
+                        aria-label="Excluir serviço"
+                        title="Excluir serviço"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
