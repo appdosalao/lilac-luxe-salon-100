@@ -100,6 +100,18 @@ export default function Dashboard() {
   });
   const dataHoje = hoje.toISOString().split('T')[0];
 
+  const trialStart = typeof usuario?.trial_start_date === 'string' ? new Date(usuario.trial_start_date) : null;
+  const trialStartMs = trialStart && Number.isFinite(trialStart.getTime()) ? trialStart.getTime() : null;
+  const trialEndMs = typeof trialStartMs === 'number' ? trialStartMs + 7 * 24 * 60 * 60 * 1000 : null;
+  const trialRemainingDays =
+    typeof trialEndMs === 'number'
+      ? Math.max(0, Math.ceil((trialEndMs - Date.now()) / (1000 * 60 * 60 * 24)))
+      : null;
+  const trialValid = typeof trialEndMs === 'number' && Date.now() < trialEndMs;
+  const trialStatus = usuario?.subscription_status ?? null;
+  const showTrialRemainingCard =
+    !usuario?.paid_access && ((trialValid && typeof trialRemainingDays === 'number') || trialStatus === 'trial');
+
   // Agendamentos hoje
   const agendamentosHoje = useMemo(() => {
     return agendamentosFiltrados.filter(ag => 
@@ -237,6 +249,22 @@ export default function Dashboard() {
           <p className="text-xs sm:text-responsive-sm opacity-80">
             Tenha um dia produtivo e cheio de sucesso!
           </p>
+          {showTrialRemainingCard ? (
+            <div className="mt-3 rounded-lg border border-white/25 bg-white/10 p-3">
+              <div className="text-xs sm:text-sm font-semibold">Teste grátis ativo</div>
+              <div className="text-xs sm:text-sm opacity-90">
+                {typeof trialRemainingDays !== 'number' ? (
+                  <span>Atualize o status para ver quantos dias ainda restam.</span>
+                ) : trialRemainingDays === 0 ? (
+                  <span>Seu teste expira hoje.</span>
+                ) : (
+                  <span>
+                    Restam <span className="font-bold">{trialRemainingDays}</span> dia(s) para aproveitar o teste.
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
         <div className="absolute -right-4 sm:-right-8 -top-4 sm:-top-8 h-16 w-16 sm:h-32 sm:w-32 rounded-full bg-white/10" />
         <div className="absolute -bottom-6 sm:-bottom-12 -left-6 sm:-left-12 h-20 w-20 sm:h-40 sm:w-40 rounded-full bg-white/5" />

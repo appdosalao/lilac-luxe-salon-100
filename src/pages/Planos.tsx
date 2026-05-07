@@ -18,9 +18,9 @@ export default function Planos() {
               <Scissors className="h-7 w-7 text-primary" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold mb-2">Acesso Vitalício</h1>
+          <h1 className="text-4xl font-bold mb-2">Assinatura Mensal</h1>
           <p className="text-muted-foreground text-lg">
-            Tenha o Salão de Bolso para sempre, sem mensalidades.
+            Use o Salão de Bolso com acesso completo por R$ 7,90/mês.
           </p>
         </div>
 
@@ -29,30 +29,28 @@ export default function Planos() {
             {isPaid && (
               <div className="absolute top-4 right-4">
                 <Badge className="bg-green-600 hover:bg-green-700 text-white border-none shadow-sm">
-                  Adquirido
+                  Ativa
                 </Badge>
               </div>
             )}
             
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-3xl">Plano Vitalício</CardTitle>
-              <CardDescription>Licença permanente com pagamento único</CardDescription>
+              <CardTitle className="text-3xl">Plano Mensal</CardTitle>
+              <CardDescription>Assinatura recorrente com cobrança mensal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-4">
               <div className="text-center">
-                <div className="text-5xl font-extrabold text-primary leading-none">R$ [PREÇO]</div>
-                <p className="text-sm font-medium mt-2 uppercase tracking-wider text-muted-foreground">pagamento único via Cakto</p>
+                <div className="text-5xl font-extrabold text-primary leading-none">R$ 7,90</div>
+                <p className="text-sm font-medium mt-2 uppercase tracking-wider text-muted-foreground">por mês • checkout via Cakto</p>
               </div>
 
               <div className="space-y-3 bg-white/50 dark:bg-black/20 p-5 rounded-xl border border-border/50">
                 {[
-                  'Acesso completo e permanente ao app',
+                  'Acesso completo ao app enquanto a assinatura estiver ativa',
                   'Agendamentos e clientes ilimitados',
-                  'Controle financeiro avançado',
-                  'Auditoria e Marketing',
-                  'Todas as atualizações futuras inclusas',
-                  'Sem cobranças recorrentes',
-                  'Suporte prioritário',
+                  'Controle financeiro e relatórios',
+                  'Atualizações futuras inclusas',
+                  'Suporte e melhorias contínuas',
                 ].map((text) => (
                   <div key={text} className="flex items-start gap-3">
                     <div className="mt-0.5 bg-green-100 dark:bg-green-900/30 rounded-full p-0.5">
@@ -68,7 +66,7 @@ export default function Planos() {
                 className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
                 disabled={isPaid}
               >
-                {isPaid ? 'Você já possui o acesso' : 'Comprar Acesso Vitalício'}
+                {isPaid ? 'Assinatura ativa' : 'Assinar por R$ 7,90/mês'}
               </Button>
             </CardContent>
           </Card>

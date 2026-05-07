@@ -112,7 +112,7 @@ export default function RetornoPagamento() {
             </div>
 
             <Button variant="ghost" onClick={() => navigate('/checkout')} className="w-full">
-              Ir para o checkout vitalício
+              Ir para o checkout da assinatura
             </Button>
           </CardContent>
         </Card>

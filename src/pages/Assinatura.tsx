@@ -20,8 +20,7 @@ export default function Assinatura() {
   const trialEligible =
     usuario?.subscription_status === 'trial' ||
     usuario?.subscription_status === 'inactive' ||
-    usuario?.subscription_status === null ||
-    usuario?.subscription_status === '';
+    usuario?.subscription_status === null;
   const trialValid =
     trialEligible &&
     typeof trialStartMs === 'number' &&
@@ -42,14 +41,14 @@ export default function Assinatura() {
 
   const statusLabel = useMemo(() => {
     if (isPaidLoading) return 'Verificando...';
-    if (isPaid) return 'Acesso Vitalício Ativo';
+    if (isPaid) return 'Assinatura ativa';
     if (trialValid) return `Teste grátis ativo — ${trialRemainingDays ?? 0} dia(s) restante(s)`;
     if (usuario?.subscription_status === 'trial') return 'Teste grátis expirado — acesso pendente';
     return 'Acesso pendente';
   }, [isPaid, isPaidLoading, trialValid, trialRemainingDays, usuario?.subscription_status]);
 
   const planLabel = useMemo(() => {
-    return isPaid ? 'Vitalício (Acesso Permanente)' : 'Teste grátis (7 dias)';
+    return isPaid ? 'Mensal (R$ 7,90/mês)' : 'Teste grátis (7 dias)';
   }, [isPaid]);
 
   const refresh = async () => {
@@ -104,16 +103,16 @@ export default function Assinatura() {
                   Início: {formatDate(usuario?.trial_start_date)} · Expira: {trialEndMs ? formatDate(new Date(trialEndMs)) : '—'}
                 </div>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  Aproveite o app durante o teste. Após expirar, será necessário liberar o acesso vitalício para continuar.
+                  Aproveite o app durante o teste. Após expirar, será necessário assinar para continuar.
                 </div>
               </div>
             ) : null}
 
             {!isPaid && (
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
-                <h3 className="font-medium text-primary mb-2">Acesso Vitalício Disponível</h3>
+                <h3 className="font-medium text-primary mb-2">Assinatura mensal disponível</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Pagamento único para usar sempre. Ideal para quem quer profissionalizar a gestão do salão e ganhar tempo no dia a dia.
+                  Assine para manter acesso completo ao app. Ideal para quem quer profissionalizar a gestão do salão e ganhar tempo no dia a dia.
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {[
@@ -140,7 +139,7 @@ export default function Assinatura() {
                 variant={isPaid ? "outline" : "default"}
                 disabled={isPaid}
               >
-                {isPaid ? 'Acesso Vitalício Adquirido' : 'Comprar Acesso Vitalício'}
+                {isPaid ? 'Assinatura ativa' : 'Assinar por R$ 7,90/mês'}
               </Button>
               <Button onClick={() => void refresh()} variant="outline" disabled={loading || isPaidLoading} className="w-full h-11 gap-2">
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

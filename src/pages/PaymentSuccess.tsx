@@ -27,7 +27,7 @@ const PaymentSuccess: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-lg text-green-700 font-medium">
-            Seu acesso vitalício foi liberado com sucesso. Aproveite todas as funcionalidades do Salão de Bolso!
+            Sua assinatura foi ativada com sucesso. Aproveite todas as funcionalidades do Salão de Bolso!
           </p>
           <div className="flex flex-col items-center gap-2 text-muted-foreground pt-4">
             <Loader2 className="w-5 h-5 animate-spin text-green-600" />

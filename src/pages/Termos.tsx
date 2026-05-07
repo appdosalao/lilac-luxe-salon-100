@@ -42,9 +42,9 @@ const Termos = () => {
           </section>
 
           <section className="space-responsive-sm">
-            <h2 className="text-responsive-lg font-semibold">Acesso Vitalício e Pagamentos</h2>
+            <h2 className="text-responsive-lg font-semibold">Assinatura e Pagamentos</h2>
             <ul className="list-disc pl-6 text-muted-foreground">
-              <li>O acesso ao sistema é concedido por meio de pagamento único (licença vitalícia).</li>
+              <li>O acesso ao sistema é concedido por meio de assinatura mensal recorrente, conforme condições exibidas no checkout.</li>
               <li>O pagamento é processado por provedor externo (Cakto) e está sujeito às regras do provedor.</li>
               <li>Encargos e tributos aplicáveis podem ser adicionados conforme a legislação.</li>
             </ul>

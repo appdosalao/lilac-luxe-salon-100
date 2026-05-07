@@ -71,7 +71,7 @@ const caktoFindOrderByRefId = async (refId: string): Promise<CaktoOrder | null> 
   return first;
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -95,7 +95,7 @@ serve(async (req) => {
   const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: { persistSession: false },
-  });
+  }) as any;
 
   const body = (await req.json().catch(() => null)) as any;
   if (!body || typeof body !== "object") {
@@ -226,9 +226,18 @@ serve(async (req) => {
     payload.paid_at = new Date().toISOString();
   }
 
+  if (planType === "mensal" && subscriptionStatus === "active") {
+    payload.paid_access = true;
+    payload.paid_at = new Date().toISOString();
+  }
+
   if (planType === "vitalicio" && (subscriptionStatus === "expired" || subscriptionStatus === "inactive")) {
     payload.paid_access = false;
     payload.paid_at = null;
+  }
+
+  if (planType === "mensal" && (subscriptionStatus === "expired" || subscriptionStatus === "inactive")) {
+    payload.paid_access = false;
   }
 
   const cleaned = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== undefined));

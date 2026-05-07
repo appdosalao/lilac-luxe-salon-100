@@ -17,7 +17,7 @@ There is no test framework configured in this project.
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in:
-- `VITE_CAKTO_CHECKOUT_VITALICIO_URL` – Cakto payment checkout URL (vitalício)
+- `VITE_CAKTO_CHECKOUT_MENSAL_URL` – Cakto payment checkout URL (mensal)
 - The Supabase URL and keys are **hardcoded** in `src/integrations/supabase/client.ts` and `publicClient.ts`; the `.env.example` values are for Vercel deployment reference only.
 
 ## Architecture Overview
@@ -50,7 +50,7 @@ QueryClientProvider → BrowserRouter → SupabaseAuthProvider
 Every domain hook (`useSupabaseAgendamentos`, `useSupabaseClientes`, `useSupabaseServicos`, etc.) builds on top of this base. When adding a new data entity, create a `useSupabase{Entity}.ts` in `src/hooks/` following the same pattern.
 
 ### Subscription & Access Control
-Users have `subscription_status` (`trial | active | expired | inactive`) and `plan_type` (`mensal | vitalicio`). The `TrialBanner` component is shown inside the `Layout` when status is `trial`. Trial blocking is enforced at the database level via `enforce_trial_block.sql`. Payment goes through Cakto (see `/checkout`, `/pagamento/retorno`, `/integracao-cakto`).
+Users have `subscription_status` (`trial | active | expired | inactive`) and `plan_type` (`mensal | vitalicio`). The current commercial model is the mensal plan; vitalicio is legacy/optional. Trial blocking is enforced at the database level via `enforce_trial_block.sql`. Payment goes through Cakto (see `/checkout`, `/pagamento/retorno`, `/integracao-cakto`).
 
 ### Routing
 - **Public** (no auth required): `/login`, `/cadastro`, `/agendamento-online` (also `/agendar`, `/agendamento-publico`), `/planos`, `/checkout`, `/pagamento/retorno`, `/privacidade`, `/termos`, `/sobre`.

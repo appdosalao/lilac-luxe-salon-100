@@ -68,8 +68,8 @@ const onboardingSteps = [
     icon: Bell,
     features: [
       '7 dias grátis para testar todas as funcionalidades',
-      'Opção de Acesso Vitalício (pagamento único)',
-      'Sem mensalidades ou cobranças recorrentes',
+      'Assinatura mensal por R$ 7,90/mês',
+      'Acesso completo enquanto a assinatura estiver ativa',
       'Suporte prioritário e atualizações constantes'
     ]
   }

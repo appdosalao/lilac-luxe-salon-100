@@ -52,14 +52,14 @@ export default function Configuracoes() {
   };
 
   const statusLabel = (() => {
-    if (isPaid) return 'Acesso Vitalício Ativo';
+    if (isPaid) return 'Assinatura ativa';
     if (trialValid) return `Teste grátis ativo — ${trialRemainingDays ?? 0} dia(s) restante(s)`;
     if (usuario?.subscription_status === 'trial') return 'Teste grátis expirado — acesso pendente';
     return 'Acesso pendente';
   })();
 
   const planLabel = (() => {
-    if (isPaid) return 'Vitalício (Acesso Permanente)';
+    if (isPaid) return 'Mensal (R$ 7,90/mês)';
     return 'Teste grátis (7 dias)';
   })();
   useEffect(() => {
@@ -174,7 +174,7 @@ export default function Configuracoes() {
                 <span>Plano e Assinatura</span>
               </CardTitle>
               <CardDescription>
-                Acompanhe seu acesso, o período de teste e como liberar o vitalício
+                Acompanhe seu acesso, o período de teste e como assinar
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -188,7 +188,7 @@ export default function Configuracoes() {
                       <div className="text-sm font-semibold">{statusLabel}</div>
                     </div>
                     <Badge variant={isPaid ? 'default' : 'outline'} className={isPaid ? 'bg-green-600 hover:bg-green-700' : ''}>
-                      {isPaid ? 'Vitalício' : trialValid ? 'Teste grátis' : 'Pendente'}
+                      {isPaid ? 'Ativa' : trialValid ? 'Teste grátis' : 'Pendente'}
                     </Badge>
                   </div>
 
@@ -218,14 +218,14 @@ export default function Configuracoes() {
                         <div className="h-full bg-primary" style={{ width: `${trialProgress ?? 0}%` }} />
                       </div>
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Você pode usar o app normalmente durante o teste. Depois, será necessário liberar o acesso vitalício.
+                        Você pode usar o app normalmente durante o teste. Depois, será necessário assinar para continuar.
                       </div>
                     </div>
                   ) : null}
 
                   {!isPaid ? (
                     <div className="rounded-lg border border-border/60 bg-card/50 p-4">
-                      <div className="text-sm font-semibold">O que você recebe no vitalício</div>
+                      <div className="text-sm font-semibold">O que você recebe na assinatura</div>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {[
                           'Agenda com visão diária/semana',
@@ -260,7 +260,7 @@ export default function Configuracoes() {
                       variant={isPaid ? "outline" : "default"}
                     >
                       <CreditCard className="h-4 w-4" />
-                      {isPaid ? 'Acesso Vitalício Adquirido' : 'Comprar Acesso Vitalício'}
+                      {isPaid ? 'Assinatura ativa' : 'Assinar por R$ 7,90/mês'}
                     </Button>
                     <Button
                       variant="outline"

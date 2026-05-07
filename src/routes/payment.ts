@@ -135,7 +135,7 @@ router.post('/webhook', async (req, res) => {
       return res.status(500).json({ error: 'database_error' });
     }
 
-    console.log(`Acesso vitalício liberado para o usuário: ${externalId}`);
+    console.log(`Acesso liberado para o usuário: ${externalId}`);
     return res.status(200).json({ received: true });
 
   } catch (error) {

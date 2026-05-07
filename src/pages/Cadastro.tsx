@@ -396,7 +396,7 @@ const Cadastro = () => {
                       <span className="flex items-center gap-2 text-primary">Processando...</span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Comprar Agora (Acesso Vitalício)
+                        Assinar Agora (R$ 7,90/mês)
                         <CreditCard className="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" />
                       </span>
                     )}

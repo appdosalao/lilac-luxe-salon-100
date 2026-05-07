@@ -25,7 +25,7 @@ export const requirePaidAccess = async (req: AuthenticatedRequest, res: Response
       .single();
 
     if (error || !data) {
-      console.error('Erro ao verificar acesso vitalício:', error);
+      console.error('Erro ao verificar acesso pago:', error);
       return res.status(500).json({ 
         error: "internal_error", 
         message: "Erro ao consultar status de pagamento" 
@@ -38,7 +38,7 @@ export const requirePaidAccess = async (req: AuthenticatedRequest, res: Response
 
     return res.status(402).json({
       error: "payment_required",
-      message: "Acesso vitalício necessário"
+      message: "Assinatura ativa necessária"
     });
 
   } catch (error) {

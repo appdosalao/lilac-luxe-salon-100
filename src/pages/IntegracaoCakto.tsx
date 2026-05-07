@@ -7,7 +7,9 @@ export default function IntegracaoCakto() {
   const { usuario, user } = useSupabaseAuth();
   const { isPaid } = usePaidAccess();
 
-  const vitalicioUrlConfigured = Boolean(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL);
+  const mensalUrlConfigured = Boolean(
+    import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL || import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -27,9 +29,9 @@ export default function IntegracaoCakto() {
           <CardContent className="space-y-6">
             <div className="grid gap-3">
               <div className="flex items-center justify-between gap-4">
-                <div className="text-sm text-muted-foreground">Checkout Vitalício configurado</div>
-                <Badge variant={vitalicioUrlConfigured ? 'default' : 'outline'}>
-                  {vitalicioUrlConfigured ? 'OK' : 'Faltando'}
+                <div className="text-sm text-muted-foreground">Checkout mensal configurado</div>
+                <Badge variant={mensalUrlConfigured ? 'default' : 'outline'}>
+                  {mensalUrlConfigured ? 'OK' : 'Faltando'}
                 </Badge>
               </div>
               <div className="flex items-center justify-between gap-4">
@@ -60,8 +62,8 @@ export default function IntegracaoCakto() {
                 <CardDescription>Itens mínimos para o fluxo funcionar</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div>1) Produto/Oferta: crie um produto vitalício (pagamento único).</div>
-                <div>2) Link de checkout: configure em `VITE_CAKTO_CHECKOUT_VITALICIO_URL`.</div>
+                <div>1) Produto/Oferta: crie um produto de assinatura mensal (recorrente).</div>
+                <div>2) Link de checkout: configure em `VITE_CAKTO_CHECKOUT_MENSAL_URL`.</div>
                 <div>3) Webhook: cadastre o endpoint e selecione pelo menos `purchase_approved`.</div>
                 <div>4) Chave secreta: defina a mesma `CAKTO_WEBHOOK_SECRET` no webhook e no backend.</div>
                 <div>5) Testes: use “Enviar evento de teste” para validar o recebimento.</div>

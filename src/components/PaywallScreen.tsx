@@ -17,7 +17,9 @@ export const PaywallScreen: React.FC = () => {
 
   const handleBuyAccess = async () => {
     const userId = session?.user?.id ?? null;
-    const baseUrl = String(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || '').trim();
+    const baseUrl = String(
+      import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL || import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || ''
+    ).trim();
 
     if (!userId) {
       toast.error('Você precisa estar logado para comprar o acesso.');
@@ -25,7 +27,7 @@ export const PaywallScreen: React.FC = () => {
     }
 
     if (!baseUrl) {
-      toast.error('Checkout vitalício não configurado.');
+      toast.error('Checkout mensal não configurado.');
       return;
     }
 
@@ -61,10 +63,10 @@ export const PaywallScreen: React.FC = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Acesso Vitalício ao Salão de Bolso</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Assinatura mensal do Salão de Bolso</h1>
                     <Badge variant="outline" className="gap-1">
                       <Zap className="h-3.5 w-3.5" />
-                      Sem mensalidades
+                      R$ 7,90/mês
                     </Badge>
                   </div>
                   <p className="mt-2 text-muted-foreground">
@@ -78,7 +80,7 @@ export const PaywallScreen: React.FC = () => {
                     }, {
                       icon: ShieldCheck,
                       title: 'Acesso permanente',
-                      desc: 'Você compra uma vez e usa sempre.'
+                      desc: 'Acesso liberado enquanto a assinatura estiver ativa.'
                     }, {
                       icon: Headphones,
                       title: 'Suporte prioritário',
@@ -133,9 +135,9 @@ export const PaywallScreen: React.FC = () => {
               <h2 className="text-lg font-semibold">Perguntas frequentes</h2>
               <Accordion type="single" collapsible className="mt-2">
                 <AccordionItem value="faq-1">
-                  <AccordionTrigger>O acesso é realmente vitalício?</AccordionTrigger>
+                  <AccordionTrigger>Como funciona a assinatura mensal?</AccordionTrigger>
                   <AccordionContent>
-                    Sim. É uma licença com pagamento único. Após aprovado, seu usuário fica com acesso liberado.
+                    Após o pagamento aprovado, seu usuário fica com acesso liberado. A cobrança é recorrente mensalmente conforme regras exibidas no checkout.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-2">
@@ -165,16 +167,16 @@ export const PaywallScreen: React.FC = () => {
               <CardHeader className="space-y-1">
                 <CardTitle className="text-xl">Desbloquear acesso agora</CardTitle>
                 <CardDescription>
-                  Pagamento único para usar sempre.
+                  Assinatura mensal recorrente.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-xl border bg-primary/5 p-4">
                   <div className="text-sm text-muted-foreground">Valor do acesso</div>
-                  <div className="text-2xl font-extrabold text-primary">Consulte no checkout</div>
+                  <div className="text-2xl font-extrabold text-primary">R$ 7,90/mês</div>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Checkout Cakto</span>
-                    <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Acesso permanente</span>
+                    <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Acesso enquanto ativo</span>
                   </div>
                 </div>
 
@@ -190,7 +192,7 @@ export const PaywallScreen: React.FC = () => {
                       Abrindo checkout...
                     </>
                   ) : (
-                    'Comprar Acesso Vitalício'
+                    'Assinar por R$ 7,90/mês'
                   )}
                 </Button>
 

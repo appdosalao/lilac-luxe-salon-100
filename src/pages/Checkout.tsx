@@ -13,17 +13,19 @@ import { buildCaktoCheckoutUrl } from '@/lib/caktoCheckout';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const [vitalicioConsent, setVitalicioConsent] = useState(false);
+  const [mensalConsent, setMensalConsent] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { isAuthenticated, session, usuario } = useSupabaseAuth();
 
   const resumo = useMemo(() => {
-    return 'Acesso vitalício (pagamento único)';
+    return 'Assinatura mensal (R$ 7,90/mês)';
   }, []);
 
   const redirectToCakto = async () => {
     const userId = session?.user?.id ?? null;
-    const baseUrl = String(import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || '').trim();
+    const baseUrl = String(
+      import.meta.env.VITE_CAKTO_CHECKOUT_MENSAL_URL || import.meta.env.VITE_CAKTO_CHECKOUT_VITALICIO_URL || ''
+    ).trim();
 
     if (!isAuthenticated || !userId || !usuario) {
       toast.error('Faça login para continuar');
@@ -32,12 +34,12 @@ export default function Checkout() {
     }
 
     if (!baseUrl) {
-      toast.error('Checkout vitalício não configurado');
+      toast.error('Checkout mensal não configurado');
       return;
     }
 
-    if (!vitalicioConsent) {
-      toast.error('Confirme o termo do plano vitalício para continuar');
+    if (!mensalConsent) {
+      toast.error('Confirme o termo da assinatura mensal para continuar');
       return;
     }
 
@@ -86,10 +88,10 @@ export default function Checkout() {
             </div>
             <div className="rounded-xl border bg-primary/5 p-4">
               <div className="text-sm text-muted-foreground">Você está adquirindo</div>
-              <div className="mt-1 text-lg font-semibold">Licença vitalícia do Salão de Bolso</div>
+              <div className="mt-1 text-lg font-semibold">Assinatura mensal do Salão de Bolso</div>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {[
-                  'Acesso completo e permanente ao app',
+                  'Acesso completo ao app enquanto a assinatura estiver ativa',
                   'Agendamentos e clientes ilimitados',
                   'Controle financeiro e relatórios',
                   'Atualizações futuras inclusas',
@@ -128,20 +130,20 @@ export default function Checkout() {
 
             <div className="flex items-start gap-3 rounded-lg border p-4 bg-muted/30">
               <Checkbox
-                id="vitalicio-consent"
-                checked={vitalicioConsent}
-                onCheckedChange={(v) => setVitalicioConsent(Boolean(v))}
+                id="mensal-consent"
+                checked={mensalConsent}
+                onCheckedChange={(v) => setMensalConsent(Boolean(v))}
                 className="mt-1"
               />
-              <label htmlFor="vitalicio-consent" className="text-sm leading-snug cursor-pointer font-medium">
-                Li e concordo que estou adquirindo uma licença vitalícia e confirmo estar ciente das políticas de pagamento/reembolso.
+              <label htmlFor="mensal-consent" className="text-sm leading-snug cursor-pointer font-medium">
+                Li e concordo que estou assinando um plano mensal recorrente de R$ 7,90/mês e confirmo estar ciente das políticas de pagamento/cancelamento.
               </label>
             </div>
 
             <Button 
               onClick={redirectToCakto} 
               className="w-full h-14 text-lg font-bold"
-              disabled={isRedirecting || !vitalicioConsent}
+              disabled={isRedirecting || !mensalConsent}
             >
               {isRedirecting ? (
                 <>
@@ -176,9 +178,9 @@ export default function Checkout() {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-3">
-                  <AccordionTrigger>Vou ter atualizações futuras?</AccordionTrigger>
+                  <AccordionTrigger>A assinatura renova automaticamente?</AccordionTrigger>
                   <AccordionContent>
-                    Sim. O acesso vitalício inclui melhorias e atualizações do sistema.
+                    Sim. Por ser um plano mensal, a cobrança é recorrente conforme as regras exibidas no checkout. Você pode cancelar conforme a política do provedor de pagamento.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
