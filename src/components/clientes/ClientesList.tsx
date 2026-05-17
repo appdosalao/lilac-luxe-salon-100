@@ -274,6 +274,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 ligar(cliente.telefone);
                               }}
                               className="btn-touch"
+                              aria-label="Ligar"
+                              title="Ligar"
                             >
                               <Phone className="h-3 w-3" />
                             </Button>
@@ -285,6 +287,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 abrirWhatsApp(cliente.telefone, cliente.nomeCompleto || cliente.nome || '');
                               }}
                               className="btn-touch hover:bg-green-100"
+                              aria-label="Enviar mensagem no WhatsApp"
+                              title="Enviar mensagem no WhatsApp"
                             >
                               <MessageCircle className="h-3 w-3 text-green-600" />
                             </Button>
@@ -316,6 +320,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                               onViewDetails(cliente);
                             }}
                             className="btn-touch"
+                            aria-label="Ver detalhes do cliente"
+                            title="Ver detalhes do cliente"
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
@@ -328,6 +334,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 variant="ghost"
                                 onClick={(e) => e.stopPropagation()}
                                 className="btn-touch"
+                                aria-label="Editar cliente"
+                                title="Editar cliente"
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
@@ -340,6 +348,8 @@ export default function ClientesList({ clientes, onEdit, onDelete, onViewDetails
                                 variant="ghost"
                                 onClick={(e) => e.stopPropagation()}
                                 className="btn-touch hover:bg-destructive/10 hover:text-destructive"
+                                aria-label="Excluir cliente"
+                                title="Excluir cliente"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>

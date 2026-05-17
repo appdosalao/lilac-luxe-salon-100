@@ -1,0 +1,3 @@
+## 2024-04-19 - Accessibility of Icon-Only Buttons in Lists
+**Learning:** In list views like `ClientesList`, there are dense areas of icon-only buttons (Phone, WhatsApp, Edit, Delete, View) used as quick actions. Without `aria-label` and `title` attributes, these buttons rely entirely on icon recognition, which is inaccessible to screen readers and potentially confusing to visually impaired or newer users who don't recognize the icons.
+**Action:** Always verify that every icon-only button inside dense list rows has a descriptive `aria-label` and native `title` in Portuguese, improving both screen-reader accessibility and providing native tooltips.
