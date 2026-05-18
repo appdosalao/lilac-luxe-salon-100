@@ -155,6 +155,8 @@ export default function AgendamentosList({
                   size="sm"
                   onClick={() => onFiltrosChange({ ...filtros, busca: '' })}
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+                  aria-label="Limpar busca"
+                  title="Limpar busca"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -294,7 +296,7 @@ export default function AgendamentosList({
                         {/* Menu de ações - sempre visível no mobile */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9" aria-label="Opções do agendamento" title="Opções do agendamento">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
